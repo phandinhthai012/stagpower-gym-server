@@ -23,10 +23,22 @@ npm run dev
 ### Environment Variables
 Create a `.env` file in the root directory:
 ```env
-PORT=5000
+# Server Configuration
 NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/stagpower-gym
+PORT=5000
+HOSTNAME=localhost
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DATABASE=stagpower_gym
+
+# JWT Configuration
 JWT_SECRET=your-secret-key
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+# CORS Configuration
+CORS_ORIGIN=
 ```
 
 ## 📊 API Endpoints
