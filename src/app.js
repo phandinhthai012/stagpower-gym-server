@@ -27,7 +27,7 @@ const corsOptions = {
     'Accept',
     'Origin',
   ],
-}
+};
 
 (async () => {
   await connectDB();
