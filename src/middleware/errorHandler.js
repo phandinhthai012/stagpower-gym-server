@@ -19,7 +19,7 @@ const errorHandler = (err, req, res, next) => {
     if (err.code === 11000) {
         const field = Object.keys(err.keyValue)[0];
         const message = `${field} already exists`;
-        error = { message, statusCode: 400 };
+        error = { message, statusCode: 409 };
     }
 
     // Mongoose validation error
@@ -54,8 +54,11 @@ const errorHandler = (err, req, res, next) => {
     // Response với format nhất quán
     res.status(error.statusCode || 500).json({
         success: false,
-        error: error.message || 'Internal Server Error',
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+        statusCode: error.statusCode || 500,
+        data: null,
+        message: error.message || 'Internal Server Error',
+        stack: error.stack || undefined,
+        timestamp: new Date().toISOString()
     });
 }
 

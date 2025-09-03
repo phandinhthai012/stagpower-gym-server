@@ -5,7 +5,10 @@ import morgan from 'morgan'; //một middleware logging cho Express.js, được
 import dotenv from 'dotenv';
 import path from 'path';
 import connectDB from './config/database.js';
-// Load environment variables
+import errorHandler from './middleware/errorHandler.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+
+// Load environment variables 
 dotenv.config();
 
 
@@ -41,11 +44,18 @@ const corsOptions = {
 
   app.use(express.static(path.join(__dirname, "public")));
   app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
+
+  // routes
 
   app.get('/', (req, res) => {
     res.send('server is running..');
   });
+
+  // error handler
+  app.use(notFoundHandler);
+  app.use(errorHandler);
   
   app.listen(port, hostname, () => {
     console.log(`Server is running on http://${hostname}:${port}`);
