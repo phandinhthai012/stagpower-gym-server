@@ -4,8 +4,7 @@ import bcrypt from 'bcryptjs';
 const userSchema = new mongoose.Schema({
     uid: {
         type: String,
-        unique: true,
-        sparse: true // allow null or undefined
+        
     },
     role: {
         type: String,
@@ -21,7 +20,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: [true, 'Email is required'],
-        unique: true,
+        // unique: true,
         lowercase: true,
         trim: true,
         match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
@@ -145,7 +144,6 @@ const userSchema = new mongoose.Schema({
         position: {
             type: String,
             enum: ['manager', 'trainer', 'staff', 'receptionist'],
-            default: 'staff'
         },
     },
     // adminInfo - if role is admin
@@ -163,6 +161,44 @@ const userSchema = new mongoose.Schema({
     timestamps: true,
     collection: 'users'
 })
+
+// custom toJSON method
+userSchema.set('toJSON', {
+    transform: function (doc, ret) {
+        delete ret.password;
+        delete ret.__v;
+        const basicInfo = {
+            _id: ret._id,
+            uid: ret.uid,
+            fullName: ret.fullName,
+            email: ret.email,
+            phone: ret.phone,
+            gender: ret.gender,
+            dateOfBirth: ret.dateOfBirth,
+            photo: ret.photo,
+            joinDate: ret.joinDate,
+            status: ret.status,
+            role: ret.role,
+            createdAt: ret.createdAt,
+            updatedAt: ret.updatedAt
+        };
+        switch (ret.role) {
+            case 'member':
+                basicInfo.memberInfo = ret.memberInfo;
+                break;
+            case 'trainer':
+                basicInfo.trainerInfo = ret.trainerInfo;
+                break;
+            case 'staff':
+                basicInfo.staffInfo = ret.staffInfo;
+                break;
+            case 'admin':
+                basicInfo.adminInfo = ret.adminInfo;
+                break;
+        }
+        return basicInfo;
+    }
+});
 
 // indexs for better query performance
 userSchema.index({ uid: 1 }, { unique: true, sparse: true });

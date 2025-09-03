@@ -7,6 +7,7 @@ import path from 'path';
 import connectDB from './config/database.js';
 import errorHandler from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
+import router from './routes/index.js';
 
 // Load environment variables 
 dotenv.config();
@@ -48,10 +49,13 @@ const corsOptions = {
 
 
   // routes
-
   app.get('/', (req, res) => {
     res.send('server is running..');
   });
+  const API_PREFIX = '/api';
+  app.use(API_PREFIX, router);
+
+
 
   // error handler
   app.use(notFoundHandler);
