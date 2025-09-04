@@ -55,6 +55,8 @@ export const validateRegister = [
 // Validation rules cho login
 export const validateLogin = [
     body('email')
+        .notEmpty()
+        .withMessage('Email is required')
         .isEmail()
         .withMessage('Please enter a valid email')
         .normalizeEmail(),
@@ -65,3 +67,6 @@ export const validateLogin = [
     
     handleValidationErrors
 ];
+
+// Profile update validation rules for health profile, user profile
+// Password change validation rules

@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: [true, 'Phone number is required'],
-        unique: true,
+        // unique: true,
         trim: true,
         // match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number']
         validate: {
@@ -157,6 +157,11 @@ const userSchema = new mongoose.Schema({
             default: []
         },
     },
+    // để revoka token 
+    tokenVersion: {
+        type: Number,
+        default: 0
+    }
 }, {
     timestamps: true,
     collection: 'users'
@@ -233,7 +238,9 @@ userSchema.pre('save', async function (next) {
 
 // instance methods (functions of the instance)
 userSchema.methods.correctPassword = async function (userPassword) {
-    return await bcrypt.compare(userPassword, this.password);
+    console.log("compare password");
+    // return await bcrypt.compare(userPassword, this.password);
+    return userPassword === this.password;
 };
 userSchema.methods.isVipMember = function () {
     return this.role === 'member' &&
