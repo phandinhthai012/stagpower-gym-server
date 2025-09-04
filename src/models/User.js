@@ -91,7 +91,7 @@ const userSchema = new mongoose.Schema({
         },
         health_info_id: {
             type: mongoose.Schema.Types.ObjectId,
-            // ref: 'HealthInfo'
+            ref: 'HealthInfo'
         },
         notes: {
             type: String,

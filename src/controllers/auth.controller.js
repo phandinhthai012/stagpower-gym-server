@@ -45,7 +45,7 @@ export const loginController = async (req, res, next) => {
 // @access  Private
 export const getMeController = async (req, res, next) => {
     try {
-        const user = await getMe(req.user.id);
+        const user = await getMe(req.user._id);
         return response(res, {
             success: true,
             statusCode: 200,
@@ -62,7 +62,7 @@ export const getMeController = async (req, res, next) => {
 // @access  Private
 export const logoutController = async (req, res, next) => {
     try {
-        const user = await logout(req.user.id);
+        const user = await logout(req.user._id);
         return response(res, {
             success: true,
             statusCode: 200,
