@@ -1,4 +1,5 @@
-import { register, login, getMe, logout } from "../services/auth.service";
+import { register, login, getMe,getRefreshToken } from "../services/auth.service";
+import { revokeRefreshToken } from "../services/refreshToken.service";
 import response from "../utils/response";
 
 
@@ -62,17 +63,36 @@ export const getMeController = async (req, res, next) => {
 // @access  Private
 export const logoutController = async (req, res, next) => {
     try {
-        const user = await logout(req.user._id);
+        // get refresh token from body or headers
+        const {refreshToken} = req.body || req.headers['refresh-token'];
+        await revokeRefreshToken({refreshToken});
         return response(res, {
             success: true,
             statusCode: 200,
-            message: "User logged out successfully",
-            data: {
-                logout: true,
-                message: "User logged out successfully"
-            }
+            message: "User logged out successfully"
         });
     } catch (error) {
+        return next(error);
+    }
+}
+
+// @desc    Refresh token
+// @route   POST /api/auth/refresh
+// @access  Private
+export const refreshTokenController = async (req, res, next) => {
+    try {
+        const {refreshToken,user} = req;
+        // console.log(refreshToken,user);
+
+        const data = await getRefreshToken({refreshToken,user});
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Token refreshed successfully",
+            data: data
+        });
+    }
+    catch (error) {
         return next(error);
     }
 }

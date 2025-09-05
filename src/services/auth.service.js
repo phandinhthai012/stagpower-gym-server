@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import User from "../models/User";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
+import { createRefreshToken, revokeRefreshToken } from "./refreshToken.service.js";
 
 dotenv.config();
 
@@ -56,11 +56,15 @@ export const login = async (data) => {
     const accessToken = generateAccessToken({userId: user._id, role: user.role, tokenVersion: user.tokenVersion});
     const refreshToken = generateRefreshToken({userId: user._id, role: user.role, tokenVersion: user.tokenVersion});
     delete user.password;
+
+    // create refresh token in database
+    await createRefreshToken({userId: user._id, refreshToken: refreshToken});
     return {
         user: user,
         accessToken: accessToken,
         refreshToken: refreshToken
     }
+
 }
 
 export const getMe = async (userId) => {
@@ -74,17 +78,14 @@ export const getMe = async (userId) => {
     return user;
 }
 
-export const logout = async (userId) => {
-    const user = await User.findByIdAndUpdate(
-        userId,
-        {$inc: {tokenVersion: 1}},
-        {new: true}
-    );
-    if(!user) {
-        const error = new Error("User not found");
-        error.statusCode = 404;
-        error.code = "NOT_FOUND";
-        throw error;
+export const getRefreshToken = async ({ refreshToken,user }) => {
+    // console.log(refreshToken,user);
+    await revokeRefreshToken({refreshToken});
+    const accessToken = generateAccessToken({userId: user._id, role: user.role, tokenVersion: user.tokenVersion});
+    const newRefreshToken = generateRefreshToken({userId: user._id, role: user.role, tokenVersion: user.tokenVersion});
+    await createRefreshToken({userId: user._id, refreshToken: newRefreshToken});
+    return {
+        accessToken: accessToken,
+        refreshToken: newRefreshToken
     }
-    return user;
 }
