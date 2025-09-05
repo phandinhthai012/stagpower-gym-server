@@ -28,12 +28,12 @@ export const authenticateToken = async (req, res, next) => {
         }
 
         // check if token version is the same as the user's token version
-        // if (decoded.tokenVersion !== user.tokenVersion) {
-        //     const error = new Error('Token version is not the same as the user\'s token version');
-        //     error.statusCode = 401;
-        //     error.code = 'UNAUTHORIZED';
-        //     return next(error);
-        // }
+        if (decoded.tokenVersion !== user.tokenVersion) {
+            const error = new Error('Token version is not the same as the user\'s token version');
+            error.statusCode = 401;
+            error.code = 'UNAUTHORIZED';
+            return next(error);
+        }
         
         req.user = user;
 

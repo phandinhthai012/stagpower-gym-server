@@ -13,9 +13,10 @@ router.post("/login", validateLogin, loginController);
 
 router.get("/me", authenticateToken, getMeController);
 
-router.post("/logout", authenticateToken, logoutController);
+router.post("/logout", verifyRefreshToken, logoutController);
 
-router.post("/refreshtoken", verifyRefreshToken, refreshTokenController);
+
+router.post("/refresh", verifyRefreshToken, refreshTokenController);
 
 // �� POST /api/auth/forgot-password - Quên mật khẩu
 // �� POST /api/auth/reset-password  - Reset mật khẩu

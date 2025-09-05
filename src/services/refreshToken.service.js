@@ -25,11 +25,17 @@ const createRefreshToken = async ({ userId, refreshToken }) => {
 }
 
 const revokeRefreshToken = async ({ refreshToken }) => {
-
     if(!refreshToken) {
         const error = new Error("Refresh token is required");
         error.statusCode = 400;
         error.code = "BAD_REQUEST";
+        throw error;
+    }
+    const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    if(!storedToken) {
+        const error = new Error("Refresh token is invalid");
+        error.statusCode = 404;
+        error.code = "NOT_FOUND";
         throw error;
     }
     await RefreshToken.updateOne({ token: refreshToken }, { $set: { isRevoked: true } });

@@ -78,6 +78,18 @@ export const getMe = async (userId) => {
     return user;
 }
 
+export const logout = async ({ refreshToken, user }) => {
+    await revokeRefreshToken({refreshToken});
+    //await User.findByIdAndUpdate(user._id, {tokenVersion: user.tokenVersion + 1});
+    //return user;
+}
+
+// export const logoutAll = async ({ refreshToken, user }) => {
+//     await revokeRefreshToken({refreshToken});
+//     await User.findByIdAndUpdate(user._id, {$inc: {tokenVersion: 1}});
+//     return user;
+// }
+
 export const getRefreshToken = async ({ refreshToken,user }) => {
     // console.log(refreshToken,user);
     await revokeRefreshToken({refreshToken});

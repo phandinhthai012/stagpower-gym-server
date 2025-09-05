@@ -232,6 +232,29 @@ userSchema.pre('save', async function (next) {
         next();
     }
 })
+// hash password middleware
+// userSchema.pre('save', async function (next) {
+//     if (!this.isModified('password')) return next();
+//     this.password = await bcrypt.hash(this.password, 10);
+//     next();
+// })
+// userSchema.pre('findOneAndUpdate', async function (next) {
+//     const update = this.getUpdate();
+    
+//     // Nếu có password trong update
+//     if (update && update.password) {
+//         try {
+//             const salt = await bcrypt.genSalt(12);
+//             update.password = await bcrypt.hash(update.password, salt);
+//             next();
+//         } catch (error) {
+//             next(error);
+//         }
+//     } else {
+//         next();
+//     }
+// });
+
 // Auto generate qr code for member
 // validation middleware
 
