@@ -36,6 +36,7 @@ const corsOptions = {
 (async () => {
   await connectDB();
 
+  // await verifyConnection();
 
   app.use(cors(corsOptions));
 

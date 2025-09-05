@@ -101,3 +101,27 @@ export const getRefreshToken = async ({ refreshToken,user }) => {
         refreshToken: newRefreshToken
     }
 }
+
+export const changePassword = async ({userId, oldPassword, newPassword}) => {
+    const user = await User.findById(userId).select('+password');
+    if(!user) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
+        error.code = "NOT_FOUND";
+        throw error;
+    }
+    const isPasswordValid = await user.correctPassword(oldPassword);
+    if(!isPasswordValid) {
+        const error = new Error("Invalid old password");
+        error.statusCode = 401;
+        error.code = "INVALID_CREDENTIALS";
+        throw error;
+    }
+    user.password = newPassword;
+    await user.save();
+    // // revoke all tokens by incrementing tokenVersion and user have to login again
+    // bỏ dòng này sẽ không cần login lại
+    // await User.findByIdAndUpdate(userId, {$inc: {tokenVersion: 1}});
+    // delete user.password;
+    return user;
+}

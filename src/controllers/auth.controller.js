@@ -1,4 +1,4 @@
-import { register, login, getMe,getRefreshToken, logout } from "../services/auth.service";
+import { register, login, getMe,getRefreshToken, logout, changePassword } from "../services/auth.service";
 import response from "../utils/response";
 
 
@@ -92,6 +92,26 @@ export const refreshTokenController = async (req, res, next) => {
             success: true,
             statusCode: 200,
             message: "Token refreshed successfully",
+            data: data
+        });
+    }
+    catch (error) {
+        return next(error);
+    }
+}
+
+// @desc    Change password
+// @route   POST /api/auth/change-password
+// @access  Private
+export const changePasswordController = async (req, res, next) => {
+    try {
+        const {oldPassword, newPassword} = req.body;
+        const user = req.user;
+        const data = await changePassword({userId: user._id, oldPassword, newPassword});
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Password changed successfully",
             data: data
         });
     }

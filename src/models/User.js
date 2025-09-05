@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'Password is required'],
-        minlength: [8, 'Password must be at least 8 characters long'],
+        minlength: [6, 'Password must be at least 6 characters long'],
         select: false
     },
     cccd: {
@@ -161,6 +161,11 @@ const userSchema = new mongoose.Schema({
     tokenVersion: {
         type: Number,
         default: 0
+    },
+    otp: {
+        code: { type: String, default: null },
+        expiresAt: { type: Date, default: null },
+        isUsed: { type: Boolean, default: false }
     }
 }, {
     timestamps: true,

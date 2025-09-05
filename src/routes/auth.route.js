@@ -1,6 +1,6 @@
 import express from "express";
-import { validateRegister, validateLogin } from "../middleware/validations";
-import { registerController, loginController, getMeController, logoutController, refreshTokenController } from "../controllers/auth.controller";
+import { validateRegister, validateLogin, validateChangePassword } from "../middleware/validations";
+import { registerController, loginController, getMeController, logoutController, refreshTokenController, changePasswordController } from "../controllers/auth.controller";
 import { authenticateToken, verifyRefreshToken } from "../middleware/auth";
 
 
@@ -18,9 +18,12 @@ router.post("/logout", verifyRefreshToken, logoutController);
 
 router.post("/refresh", verifyRefreshToken, refreshTokenController);
 
+router.put("/change-password", authenticateToken, validateChangePassword, changePasswordController);
+
+
 // �� POST /api/auth/forgot-password - Quên mật khẩu
 // �� POST /api/auth/reset-password  - Reset mật khẩu
-// 🔄 PUT  /api/auth/change-password - Đổi mật khẩu
+
 
 
 export default router;

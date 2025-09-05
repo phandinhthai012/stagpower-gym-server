@@ -21,7 +21,7 @@ export const authenticateToken = async (req, res, next) => {
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = await User.findById(decoded.userId);
         if (!user) {
-            const error = new Error('User not found');
+            const error = new Error('You are not authorized to access this resource');
             error.statusCode = 401;
             error.code = 'UNAUTHORIZED';
             return next(error);
@@ -55,7 +55,7 @@ export const authenticateToken = async (req, res, next) => {
 
 export const verifyRefreshToken = async (req, res, next) => {
     try {
-        const {refreshToken} = req.body || req.headers['refresh-token'];
+        const refreshToken = req.body.refreshToken || req.headers['refresh-token'];
         // console.log(refreshToken);
         if(!refreshToken) {
             const error = new Error("Refresh token is required");
@@ -66,7 +66,7 @@ export const verifyRefreshToken = async (req, res, next) => {
         const decoded = jwt.verify(refreshToken, JWT_SECRET);
         const user = await User.findById(decoded.userId);
         if(!user) {
-            const error = new Error("User not found");
+            const error = new Error("You are not authorized to access this resource");
             error.statusCode = 401;
             error.code = "UNAUTHORIZED";
             return next(error);
@@ -77,10 +77,11 @@ export const verifyRefreshToken = async (req, res, next) => {
             error.code = "UNAUTHORIZED";
             return next(error);
         }
+        
         // kiểm tra refresh token có trong database không
         const storedRefreshToken = await RefreshToken.findOne({token: refreshToken});
         if(!storedRefreshToken) {
-            const error = new Error("Refresh token not found");
+            const error = new Error("Refresh token is revoked");
             error.statusCode = 401;
             error.code = "UNAUTHORIZED";
             return next(error);
