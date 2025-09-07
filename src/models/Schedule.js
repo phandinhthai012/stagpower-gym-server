@@ -20,7 +20,7 @@ const scheduleSchema = new mongoose.Schema({
     branchId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',
-        // required: [true, 'Branch ID is required'],
+        required: [true, 'Branch ID is required'],
     },
     dateTime: { // ngày giờ buổi tập với trainer
         type: Date,
@@ -40,6 +40,12 @@ const scheduleSchema = new mongoose.Schema({
         type: String,
         maxlength: [500, 'Notes cannot exceed 500 characters']
     },
+    assignedExercises: [{
+        exerciseId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Exercise',
+        },
+    }],
 }, {
     timestamps: true,
     collection: 'schedules'
@@ -65,10 +71,8 @@ scheduleSchema.statics.findByTrainer = function (trainerId, limit = 10) {
         .populate('memberId branchId subscriptionId')
         .sort({ dateTime: -1 })
         .limit(limit);
-    
-};
-scheduleSchema
 
+};
 
 const Schedule = mongoose.model('Schedule', scheduleSchema);
 

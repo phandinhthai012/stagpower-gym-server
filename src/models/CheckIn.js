@@ -9,7 +9,7 @@ const checkInSchema = new mongoose.Schema({
     branchId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',
-        // required: [true, 'Branch ID is required'],
+        required: [true, 'Branch ID is required'],
     },
     checkInTime: {
         type: Date,
