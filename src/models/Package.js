@@ -13,7 +13,7 @@ const packageSchema = new mongoose.Schema({
         enum: {
             values: ['Membership', 'Combo', 'PT'],
             message: 'Package type must be Membership, Combo, or PT'
-        }
+        },
     },
     packageCategory: {
         type: String,

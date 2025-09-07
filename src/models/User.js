@@ -74,7 +74,7 @@ const userSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'inactive', 'pending'],
+        enum: ['active', 'inactive', 'pending','Banned'],
         default: 'active'
     },
     // memberInfo - if role is member
