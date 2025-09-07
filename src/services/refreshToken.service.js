@@ -41,7 +41,9 @@ const revokeRefreshToken = async ({ refreshToken }) => {
     await RefreshToken.updateOne({ token: refreshToken }, { $set: { isRevoked: true } });
 }
 
-
+// const revokeAllRefreshTokens = async ({ userId }) => {
+//     await RefreshToken.updateMany({ userId }, { $set: { isRevoked: true } });
+// }
 
 
 export { createRefreshToken, revokeRefreshToken };

@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import User from "../models/User";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
-import { createRefreshToken, revokeRefreshToken } from "./refreshToken.service.js";
+import { createRefreshToken, revokeRefreshToken, revokeAllRefreshTokens } from "./refreshToken.service.js";
 
 dotenv.config();
 
@@ -78,14 +78,16 @@ export const getMe = async (userId) => {
     return user;
 }
 
+// Không cần tăng tokenVersion cho logout single device
+// Chỉ cần revoke refresh token là đủ
 export const logout = async ({ refreshToken, user }) => {
     await revokeRefreshToken({refreshToken});
     //await User.findByIdAndUpdate(user._id, {tokenVersion: user.tokenVersion + 1});
     //return user;
 }
 
-// export const logoutAll = async ({ refreshToken, user }) => {
-//     await revokeRefreshToken({refreshToken});
+// export const logoutAllDevices = async ({user }) => {
+//     await revokeAllRefreshTokens({userId: user._id});
 //     await User.findByIdAndUpdate(user._id, {$inc: {tokenVersion: 1}});
 //     return user;
 // }

@@ -54,7 +54,7 @@ const errorHandler = (err, req, res, next) => {
         statusCode: statusCode,
         data: null,
         code: code,
-        message: message+ " ",
+        message: message,
         ...(details ? { details } : {}),
         // stack: err.stack || undefined,
         timestamp: new Date().toISOString()
