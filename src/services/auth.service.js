@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import User from "../models/User";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { createRefreshToken, revokeRefreshToken, revokeAllRefreshTokens } from "./refreshToken.service.js";
+import { createOtp, isExpired, compareOtp } from "../utils/otp.js";
 
 dotenv.config();
 
@@ -16,8 +17,8 @@ export const register = async (data) => {
         dateOfBirth,
         gender } = data;
 
-    const existingUser = await User.findOne({email});
-    if(existingUser) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
         const error = new Error("User already exists");
         error.statusCode = 409;
         error.code = "DUPLICATE_KEY";
@@ -37,28 +38,28 @@ export const register = async (data) => {
 }
 
 export const login = async (data) => {
-    const {email, password} = data;
-    const user = await User.findOne({email}).select('+password');
-    
-    if(!user) {
+    const { email, password } = data;
+    const user = await User.findOne({ email }).select('+password');
+
+    if (!user) {
         const error = new Error("Invalid email or password");
         error.statusCode = 401;
         error.code = "INVALID_CREDENTIALS";
         throw error;
     }
     const isPasswordValid = await user.correctPassword(password);
-    if(!isPasswordValid) {
+    if (!isPasswordValid) {
         const error = new Error("Invalid email or password");
         error.statusCode = 401;
         error.code = "INVALID_CREDENTIALS";
         throw error;
     }
-    const accessToken = generateAccessToken({userId: user._id, role: user.role, tokenVersion: user.tokenVersion});
-    const refreshToken = generateRefreshToken({userId: user._id, role: user.role, tokenVersion: user.tokenVersion});
+    const accessToken = generateAccessToken({ userId: user._id, role: user.role, tokenVersion: user.tokenVersion });
+    const refreshToken = generateRefreshToken({ userId: user._id, role: user.role, tokenVersion: user.tokenVersion });
     delete user.password;
 
     // create refresh token in database
-    await createRefreshToken({userId: user._id, refreshToken: refreshToken});
+    await createRefreshToken({ userId: user._id, refreshToken: refreshToken });
     return {
         user: user,
         accessToken: accessToken,
@@ -69,7 +70,7 @@ export const login = async (data) => {
 
 export const getMe = async (userId) => {
     const user = await User.findById(userId);
-    if(!user) {
+    if (!user) {
         const error = new Error("User not found");
         error.statusCode = 404;
         error.code = "NOT_FOUND";
@@ -81,7 +82,7 @@ export const getMe = async (userId) => {
 // Không cần tăng tokenVersion cho logout single device
 // Chỉ cần revoke refresh token là đủ
 export const logout = async ({ refreshToken, user }) => {
-    await revokeRefreshToken({refreshToken});
+    await revokeRefreshToken({ refreshToken });
     //await User.findByIdAndUpdate(user._id, {tokenVersion: user.tokenVersion + 1});
     //return user;
 }
@@ -92,28 +93,28 @@ export const logout = async ({ refreshToken, user }) => {
 //     return user;
 // }
 
-export const getRefreshToken = async ({ refreshToken,user }) => {
+export const getRefreshToken = async ({ refreshToken, user }) => {
     // console.log(refreshToken,user);
-    await revokeRefreshToken({refreshToken});
-    const accessToken = generateAccessToken({userId: user._id, role: user.role, tokenVersion: user.tokenVersion});
-    const newRefreshToken = generateRefreshToken({userId: user._id, role: user.role, tokenVersion: user.tokenVersion});
-    await createRefreshToken({userId: user._id, refreshToken: newRefreshToken});
+    await revokeRefreshToken({ refreshToken });
+    const accessToken = generateAccessToken({ userId: user._id, role: user.role, tokenVersion: user.tokenVersion });
+    const newRefreshToken = generateRefreshToken({ userId: user._id, role: user.role, tokenVersion: user.tokenVersion });
+    await createRefreshToken({ userId: user._id, refreshToken: newRefreshToken });
     return {
         accessToken: accessToken,
         refreshToken: newRefreshToken
     }
 }
 
-export const changePassword = async ({userId, oldPassword, newPassword}) => {
+export const changePassword = async ({ userId, oldPassword, newPassword }) => {
     const user = await User.findById(userId).select('+password');
-    if(!user) {
+    if (!user) {
         const error = new Error("User not found");
         error.statusCode = 404;
         error.code = "NOT_FOUND";
         throw error;
     }
     const isPasswordValid = await user.correctPassword(oldPassword);
-    if(!isPasswordValid) {
+    if (!isPasswordValid) {
         const error = new Error("Invalid old password");
         error.statusCode = 401;
         error.code = "INVALID_CREDENTIALS";
@@ -127,3 +128,85 @@ export const changePassword = async ({userId, oldPassword, newPassword}) => {
     // delete user.password;
     return user;
 }
+
+// @desc    Forgot password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async ({ email }) => {
+    const user = await User.findOne({ email });
+    if (!user) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
+        error.code = "NOT_FOUND";
+        throw error;
+    }
+    const OTP = createOtp();
+    user.otp = {
+        code: OTP.code,
+        expiresAt: OTP.expiresAt,
+        isUsed: OTP.isUsed
+    }
+    await user.save();
+    return {
+        OTP: OTP.code, // sau sẽ remove OTP.code
+        message: "OTP sent to and expires in 10 minutes"
+    };
+}
+
+export const verifyOtp = async ({ email, otp }) => {
+    const user = await User.findOne({ email });
+    if (!user || !user.otp) {
+        const error = new Error("Invalid or expired OTP");
+        error.statusCode = 404;
+        error.code = "NOT_FOUND";
+        throw error;
+    }
+    const { code, expiresAt, isUsed } = user.otp;
+    if (isUsed || !code || isExpired(expiresAt)) {
+        const err = new Error('Invalid or expired OTP');
+        err.statusCode = 400;
+        err.code = 'INVALID_OTP';
+        throw err;
+    }
+    const isOtpValid = compareOtp(otp, code);
+    if (!isOtpValid) {
+        const error = new Error("Invalid OTP");
+        error.statusCode = 400;
+        error.code = "INVALID_OTP";
+        throw error;
+    }
+    return { verified: true };
+}
+
+export const resetPassword = async ({email,otp, newPassword}) => {
+    const user = await User.findOne({email});
+    if (!user || !user.otp) {
+        const err = new Error('Invalid or expired OTP');
+        err.statusCode = 400; err.code = 'INVALID_OTP';
+        throw err;
+      }
+    const { code, expiresAt, isUsed } = user.otp;
+    if (isUsed || !code ) {
+        const err = new Error('Invalid or expired OTP');
+        err.statusCode = 400; err.code = 'INVALID_OTP';
+        throw err;
+    }
+    if (isExpired(expiresAt)) {
+        const err = new Error('Expired OTP');
+        err.statusCode = 400; err.code = 'INVALID_OTP';
+        throw err;
+    }
+    const isOtpValid = compareOtp(otp, code);
+    if (!isOtpValid) {
+        const error = new Error("Invalid OTP");
+        error.statusCode = 400;
+        error.code = "INVALID_OTP";
+        throw error;
+    }
+    user.otp.isUsed = true;
+    user.otp.expiresAt = null;
+    user.password = newPassword;
+    await user.save();
+    return { message: "Password reset successfully" };
+}
+
