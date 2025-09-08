@@ -24,11 +24,12 @@ export const validateRegister = [
         .withMessage('Please enter a valid email')
         .normalizeEmail(),
     
+    // password: ít nhất 6 kí tự , bao gồm ít nhất 1 chữ cái viết hoa, 1 chữ cái viết thường, 1 số, có thể có kí tự đặc biệt
     body('password')
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),
-        // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        // .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+        // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/)
+        // .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number, and can have special characters'),
     
     body('phone')
         .matches(/^(0|\+84|84)[0-9]{9}$/)
@@ -79,6 +80,8 @@ export const validateChangePassword = [
         .withMessage('New password is required')
         .isLength({ min: 6 })
         .withMessage('New password must be at least 6 characters long'),
+        // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/)
+        // .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number, and can have special characters'),
     handleValidationErrors
 ];
 

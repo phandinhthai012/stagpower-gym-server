@@ -121,3 +121,30 @@ export const verifyRefreshToken = async (req, res, next) => {
 //     }
 //     return res;
 //   });
+
+// Role-based authorization middleware
+// Usage: authorize(["admin", "trainer"]) or authorize("admin")
+export const authorize = (allowedRoles) => {
+    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+    return (req, res, next) => {
+        try {
+            if (!req.user || !req.user.role) {
+                const error = new Error('You are not authorized to access this resource');
+                error.statusCode = 403;
+                error.code = 'FORBIDDEN';
+                return next(error);
+            }
+            if (roles.length > 0 && !roles.includes(req.user.role)) {
+                const error = new Error('Insufficient permissions');
+                error.statusCode = 403;
+                error.code = 'FORBIDDEN';
+                return next(error);
+            }
+            return next();
+        } catch (error) {
+            error.statusCode = error.statusCode || 403;
+            error.code = error.code || 'FORBIDDEN';
+            return next(error);
+        }
+    };
+}

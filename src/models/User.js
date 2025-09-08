@@ -43,6 +43,7 @@ const userSchema = new mongoose.Schema({
         enum: ['male', 'female', 'other'],
         default: 'male'
     },
+    // ít nhất 6 kí tự , bao gồm ít nhất 1 chữ cái viết hoa, 1 chữ cái viết thường, 1 số, có thể có kí tự đặc biệt
     password: {
         type: String,
         required: [true, 'Password is required'],
@@ -238,37 +239,20 @@ userSchema.pre('save', async function (next) {
     }
 })
 // hash password middleware
-// userSchema.pre('save', async function (next) {
-//     if (!this.isModified('password')) return next();
-//     this.password = await bcrypt.hash(this.password, 10);
-//     next();
-// })
-// userSchema.pre('findOneAndUpdate', async function (next) {
-//     const update = this.getUpdate();
-    
-//     // Nếu có password trong update
-//     if (update && update.password) {
-//         try {
-//             const salt = await bcrypt.genSalt(12);
-//             update.password = await bcrypt.hash(update.password, salt);
-//             next();
-//         } catch (error) {
-//             next(error);
-//         }
-//     } else {
-//         next();
-//     }
-// });
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+})
 
 // Auto generate qr code for member
-// validation middleware
 
 
 // instance methods (functions of the instance)
 userSchema.methods.correctPassword = async function (userPassword) {
     console.log("compare password");
-    // return await bcrypt.compare(userPassword, this.password);
-    return userPassword === this.password;
+    return await bcrypt.compare(userPassword, this.password);
+    // return userPassword === this.password;
 };
 userSchema.methods.isVipMember = function () {
     return this.role === 'member' &&
