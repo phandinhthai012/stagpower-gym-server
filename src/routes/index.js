@@ -5,7 +5,7 @@ import authRoutes from "./auth.route";
 const router = express.Router();
 
 router.get("/ping", (req, res) => {
-    return res.status(200).json({message: "Server is running"});
+    return res.status(200).json({success: true,message: "Server is running",data:new Date().toISOString()});
 });
 
 
