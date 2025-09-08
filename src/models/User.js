@@ -4,8 +4,7 @@ import bcrypt from 'bcryptjs';
 const userSchema = new mongoose.Schema({
     uid: {
         type: String,
-        unique: true,
-        sparse: true // allow null or undefined
+        
     },
     role: {
         type: String,
@@ -21,7 +20,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: [true, 'Email is required'],
-        unique: true,
+        // unique: true,
         lowercase: true,
         trim: true,
         match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
@@ -29,7 +28,7 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: [true, 'Phone number is required'],
-        unique: true,
+        // unique: true,
         trim: true,
         // match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number']
         validate: {
@@ -47,7 +46,8 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'Password is required'],
-        minlength: [8, 'Password must be at least 8 characters long']
+        minlength: [6, 'Password must be at least 6 characters long'],
+        select: false
     },
     cccd: {
         type: String,
@@ -74,7 +74,7 @@ const userSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'inactive', 'pending'],
+        enum: ['active', 'inactive', 'pending','Banned'],
         default: 'active'
     },
     // memberInfo - if role is member
@@ -91,7 +91,7 @@ const userSchema = new mongoose.Schema({
         },
         health_info_id: {
             type: mongoose.Schema.Types.ObjectId,
-            // ref: 'HealthInfo'
+            ref: 'HealthInfo'
         },
         notes: {
             type: String,
@@ -144,7 +144,6 @@ const userSchema = new mongoose.Schema({
         position: {
             type: String,
             enum: ['manager', 'trainer', 'staff', 'receptionist'],
-            default: 'staff'
         },
     },
     // adminInfo - if role is admin
@@ -158,10 +157,58 @@ const userSchema = new mongoose.Schema({
             default: []
         },
     },
+    // để revoka token 
+    tokenVersion: {
+        type: Number,
+        default: 0
+    },
+    otp: {
+        code: { type: String, default: null },
+        expiresAt: { type: Date, default: null },
+        isUsed: { type: Boolean, default: false }
+    }
 }, {
     timestamps: true,
     collection: 'users'
 })
+
+// custom toJSON method
+userSchema.set('toJSON', {
+    transform: function (doc, ret) {
+        delete ret.password;
+        delete ret.__v;
+        const basicInfo = {
+            _id: ret._id,
+            uid: ret.uid,
+            fullName: ret.fullName,
+            email: ret.email,
+            phone: ret.phone,
+            gender: ret.gender,
+            dateOfBirth: ret.dateOfBirth,
+            photo: ret.photo,
+            joinDate: ret.joinDate,
+            status: ret.status,
+            role: ret.role,
+            createdAt: ret.createdAt,
+            updatedAt: ret.updatedAt
+        };
+        switch (ret.role) {
+            case 'member':
+                basicInfo.memberInfo = ret.memberInfo;
+                break;
+            case 'trainer':
+                basicInfo.trainerInfo = ret.trainerInfo;
+                break;
+            case 'staff':
+                basicInfo.staffInfo = ret.staffInfo;
+                break;
+            case 'admin':
+                basicInfo.adminInfo = ret.adminInfo;
+                break;
+        }
+        return basicInfo;
+    }
+});
 
 // indexs for better query performance
 userSchema.index({ uid: 1 }, { unique: true, sparse: true });
@@ -190,13 +237,38 @@ userSchema.pre('save', async function (next) {
         next();
     }
 })
+// hash password middleware
+// userSchema.pre('save', async function (next) {
+//     if (!this.isModified('password')) return next();
+//     this.password = await bcrypt.hash(this.password, 10);
+//     next();
+// })
+// userSchema.pre('findOneAndUpdate', async function (next) {
+//     const update = this.getUpdate();
+    
+//     // Nếu có password trong update
+//     if (update && update.password) {
+//         try {
+//             const salt = await bcrypt.genSalt(12);
+//             update.password = await bcrypt.hash(update.password, salt);
+//             next();
+//         } catch (error) {
+//             next(error);
+//         }
+//     } else {
+//         next();
+//     }
+// });
+
 // Auto generate qr code for member
 // validation middleware
 
 
 // instance methods (functions of the instance)
 userSchema.methods.correctPassword = async function (userPassword) {
-    return await bcrypt.compare(userPassword, this.password);
+    console.log("compare password");
+    // return await bcrypt.compare(userPassword, this.password);
+    return userPassword === this.password;
 };
 userSchema.methods.isVipMember = function () {
     return this.role === 'member' &&
