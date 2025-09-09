@@ -191,7 +191,8 @@ userSchema.set('toJSON', {
             status: ret.status,
             role: ret.role,
             createdAt: ret.createdAt,
-            updatedAt: ret.updatedAt
+            updatedAt: ret.updatedAt,
+            otp: ret.otp
         };
         switch (ret.role) {
             case 'member':
@@ -205,6 +206,8 @@ userSchema.set('toJSON', {
                 break;
             case 'admin':
                 basicInfo.adminInfo = ret.adminInfo;
+                break;
+            default:
                 break;
         }
         return basicInfo;
