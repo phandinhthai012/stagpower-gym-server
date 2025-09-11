@@ -164,9 +164,22 @@ export const changeStatus = async ({ userId, status }) => {
     );
     return updated;
 }
-
 export const searchUsers = async (query) => {
-    const users = await User.find(query).select("-password -otp");
-    return users;
+    // const { fullName, phone, email, status } = query;
+    // const searchQuery = {};
+    // if (fullName) {
+    //     searchQuery.fullName = { $regex: fullName, $options: "i" };
+    // }
+    // if (phone) {
+    //     searchQuery.phone = { $regex: phone, $options: "i" };
+    // }
+    // if (email) {
+    //     searchQuery.email = { $regex: email, $options: "i" };
+    // }
+    // if (status) {
+    //     searchQuery.status = status;
+    // }
+    // const users = await User.find(searchQuery).select("-password -otp");
+    // return users;
 }
 

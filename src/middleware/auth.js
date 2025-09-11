@@ -148,3 +148,32 @@ export const authorize = (allowedRoles) => {
         }
     };
 }
+
+// Middleware to check if user can update another user
+// // Allows: 1. User updating themselves, 2. Admin updating any user
+// export const canUpdateUser = (req, res, next) => {
+//     try {
+//         const { userId } = req.params;
+//         const currentUser = req.user;
+        
+//         // Check if user is updating themselves
+//         if (currentUser._id.toString() === userId) {
+//             return next();
+//         }
+        
+//         // Check if current user is admin
+//         if (currentUser.role === 'admin') {
+//             return next();
+//         }
+        
+//         // If neither condition is met, deny access
+//         const error = new Error('You can only update your own profile or need admin privileges');
+//         error.statusCode = 403;
+//         error.code = 'FORBIDDEN';
+//         return next(error);
+//     } catch (error) {
+//         error.statusCode = error.statusCode || 403;
+//         error.code = error.code || 'FORBIDDEN';
+//         return next(error);
+//     }
+// }
