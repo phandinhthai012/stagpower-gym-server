@@ -2,8 +2,9 @@ import response from "../utils/response";
 
 import {
     createHealthInfo,
+    getHealthInfoById,
     getHealthInfoByMemberId,
-    updateHealthInfo
+    updateHealthInfoById
 } from "../services/healthInfo.service";
 
 
@@ -14,9 +15,9 @@ const ALLOWED_FIELDS = [
 ];
 
 // create health info
-export const createMemberHealthInfoController = async (req, res, next) => {
+export const createHealthInfoController = async (req, res, next) => {
     try {
-        const memberId = req.params.userId;
+        const memberId = req.params.memberId;
         const {
             height,
             weight,
@@ -39,7 +40,7 @@ export const createMemberHealthInfoController = async (req, res, next) => {
         });
         return response(res, {
             success: true,
-            statusCode: 200,
+            statusCode: 201,
             message: "Health info created successfully",
             data: healthInfo
         });
@@ -48,11 +49,65 @@ export const createMemberHealthInfoController = async (req, res, next) => {
     }
 }
 
+export const getHealthInfoByIdController = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const healthInfo = await getHealthInfoById(id);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Health info fetched successfully",
+            data: healthInfo
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+
 
 // membergetme
-export const getMemberHealthInfoController = async (req, res, next) => {
+export const getHealthInfoByMemberIdController = async (req, res, next) => {
     try {
-       
+        const memberId = req.params.memberId;
+        const healthInfo = await getHealthInfoByMemberId(memberId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Health info fetched successfully",
+            data: healthInfo
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+
+export const getMyHealthInfoController = async (req, res, next) => {
+    try {
+        const memberId = req.user._id;
+        const healthInfo = await getHealthInfoByMemberId(memberId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Health info fetched successfully",
+            data: healthInfo
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const updateHealthInfoByIdController = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const healthInfo = await updateHealthInfoById(id, req.body);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Health info updated successfully",
+            data: healthInfo
+        });
     } catch (error) {
         return next(error);
     }

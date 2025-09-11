@@ -49,7 +49,7 @@ const healthInfoSchema = new mongoose.Schema({
     goal: {
         type: String,
         required: true,
-        enum: ['weightLoss', 'muscleGain', 'health', 'endurance', 'other'],
+        // enum: ['weightLoss', 'muscleGain', 'health', 'endurance', 'other'],
         lowercase: true
     },
     experience: {
