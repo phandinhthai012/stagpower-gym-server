@@ -4,7 +4,9 @@ import {
     createHealthInfo,
     getHealthInfoById,
     getHealthInfoByMemberId,
-    updateHealthInfoById
+    updateHealthInfoById,
+    getAllHealthInfo,
+    deleteHealthInfoById
 } from "../services/healthInfo.service";
 
 
@@ -107,6 +109,35 @@ export const updateHealthInfoByIdController = async (req, res, next) => {
             statusCode: 200,
             message: "Health info updated successfully",
             data: healthInfo
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const getAllHealthInfoController = async (req, res, next) => {
+    try {
+        const healthInfos = await getAllHealthInfo();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Health info fetched successfully",
+            data: healthInfos
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const deleteHealthInfoByIdController = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        await deleteHealthInfoById(id);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Health info deleted successfully",
+            data: { message: "Health info deleted successfully" }
         });
     } catch (error) {
         return next(error);

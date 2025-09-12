@@ -80,13 +80,7 @@ export const verifyRefreshToken = async (req, res, next) => {
         
         // kiểm tra refresh token có trong database không
         const storedRefreshToken = await RefreshToken.findOne({token: refreshToken});
-        if(!storedRefreshToken) {
-            const error = new Error("Refresh token is revoked");
-            error.statusCode = 401;
-            error.code = "UNAUTHORIZED";
-            return next(error);
-        }
-        if(storedRefreshToken.isRevoked) {
+        if(!storedRefreshToken || storedRefreshToken.isRevoked) {
             const error = new Error("Refresh token is revoked");
             error.statusCode = 401;
             error.code = "UNAUTHORIZED";

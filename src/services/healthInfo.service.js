@@ -67,3 +67,19 @@ export const updateHealthInfoById = async (id, healthInfo) => {
     }
     return updated;
 };
+
+export const getAllHealthInfo = async () => {
+    const healthInfo = await HealthInfo.find();
+    return healthInfo;
+}
+
+export const deleteHealthInfoById = async (id) => {
+    const deleted = await HealthInfo.findByIdAndDelete(id);
+    if (!deleted) {
+        const err = new Error("Health info not found");
+        err.statusCode = 404;
+        err.code = "HEALTH_INFO_NOT_FOUND";
+        throw err;
+    }
+    return deleted;
+}

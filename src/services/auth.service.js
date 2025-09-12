@@ -206,6 +206,7 @@ export const resetPassword = async ({email,otp, newPassword}) => {
     user.otp.isUsed = true;
     user.otp.expiresAt = null;
     user.password = newPassword;
+    user.tokenVersion = user.tokenVersion + 1;
     await user.save();
     return { message: "Password reset successfully" };
 }
