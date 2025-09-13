@@ -109,28 +109,28 @@ export const validateHealthProfileCreate = [
 
     body('gender')
         .notEmpty().withMessage('Gender is required')
-        .trim().toLowerCase()
+        .trim()
         .isIn(['male', 'female']).withMessage('Gender must be male or female'),
 
     body('goal')
         .notEmpty().withMessage('Goal is required')
-        .trim().toLowerCase(),
+        .trim(),
 
     body('experience')
         .notEmpty().withMessage('Experience is required')
-        .trim().toLowerCase()
+        .trim()
         .isIn(['beginner', 'intermediate', 'advanced'])
         .withMessage('Experience must be beginner, intermediate, or advanced'),
 
     body('fitnessLevel')
         .notEmpty().withMessage('Fitness level is required')
-        .trim().toLowerCase()
+        .trim()
         .isIn(['low', 'medium', 'high'])
         .withMessage('Fitness level must be low, medium, or high'),
 
     body('preferredTime')
         .optional()
-        .trim().toLowerCase()
+        .trim()
         .isIn(['morning', 'afternoon', 'evening'])
         .withMessage('Preferred time must be morning, afternoon, or evening'),
 
@@ -170,28 +170,28 @@ export const validateHealthProfileUpdate = [
 
     body('gender')
         .optional()
-        .trim().toLowerCase()
+        .trim()
         .isIn(['male', 'female']).withMessage('Gender must be male or female'),
 
     body('goal')
         .optional()
-        .trim().toLowerCase(),
+        .trim(),
 
     body('experience')
         .optional()
-        .trim().toLowerCase()
+        .trim()
         .isIn(['beginner', 'intermediate', 'advanced'])
         .withMessage('Experience must be beginner, intermediate, or advanced'),
 
     body('fitnessLevel')
         .optional()
-        .trim().toLowerCase()
+        .trim()
         .isIn(['low', 'medium', 'high'])
         .withMessage('Fitness level must be low, medium, or high'),
 
     body('preferredTime')
         .optional()
-        .trim().toLowerCase()
+        .trim()
         .isIn(['morning', 'afternoon', 'evening'])
         .withMessage('Preferred time must be morning, afternoon, or evening'),
 
@@ -212,3 +212,60 @@ export const validateHealthProfileUpdate = [
 
     handleValidationErrors
 ];
+
+// Validation rules cho package
+export const validatePackageCreate = [
+    body('name')
+        .notEmpty().withMessage('Name is required')
+        .trim()
+        .isLength({ max: 100 }).withMessage('Name must not exceed 100 characters'),
+    
+    body('type')
+        .notEmpty().withMessage('Type is required')
+        .trim(),
+    
+    body('packageCategory')
+        .notEmpty().withMessage('Package category is required')
+        .trim(),
+    
+    body('durationMonths')
+        .notEmpty().withMessage('Duration months is required')
+        .isInt({ min: 1}).withMessage('Duration months must be at least 1 month'),
+
+    body('price')
+        .notEmpty().withMessage('Price is required')
+        .isFloat({ gte: 0 }).withMessage('Price must be greater than 0'),
+    body('ptSessions')
+        .optional()
+        .isInt({ min: 0 }).withMessage('PT sessions must be at least 0'),
+    body('ptSessionDuration')
+        .optional()
+        .isInt({ min: 30, max: 150 }).withMessage('PT session duration must be between 30 and 150 minutes'),
+    handleValidationErrors
+]
+
+export const validatePackageUpdate = [
+    body('name')
+        .optional()
+        .trim()
+        .isLength({ max: 100 }).withMessage('Name must not exceed 100 characters'),
+    body('type')
+        .optional()
+        .trim(),
+    body('packageCategory')
+        .optional()
+        .trim(),
+    body('durationMonths')
+        .optional()
+        .isInt({ min: 1}).withMessage('Duration months must be at least 1 month'),
+    body('price')
+        .optional()
+        .isFloat({ gte: 0 }).withMessage('Price must be greater than 0'),
+    body('ptSessions')
+        .optional()
+        .isInt({ min: 0 }).withMessage('PT sessions must be at least 0'),
+    body('ptSessionDuration')
+        .optional()
+        .isInt({ min: 30, max: 150 }).withMessage('PT session duration must be between 30 and 150 minutes'),
+    handleValidationErrors
+]

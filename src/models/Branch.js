@@ -45,7 +45,6 @@ const branchSchema = new mongoose.Schema({
     email: {
         type: String,
         trim: true,
-        lowercase: true,
         validate: {
             validator: function (value) {
                 if (!value) return true; // Optional field

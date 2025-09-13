@@ -50,7 +50,6 @@ const healthInfoSchema = new mongoose.Schema({
         type: String,
         required: true,
         // enum: ['weightLoss', 'muscleGain', 'health', 'endurance', 'other'],
-        lowercase: true
     },
     experience: {
         type: String,
