@@ -60,15 +60,13 @@ bookingRequestSchema.pre('validate', function(next) {
 
 
 // Static methods
-bookingRequestSchema.statics.findByMember = function(memberId, limit = 10) {
+bookingRequestSchema.statics.findByMember = function(memberId) {
     return this.find({ memberId })
         .sort({ requestDateTime: -1 })
-        .limit(limit);
 };
-bookingRequestSchema.statics.findByTrainer = function(trainerId, limit = 10) {
+bookingRequestSchema.statics.findByTrainer = function(trainerId) {
     return this.find({ trainerId })
         .sort({ requestDateTime: -1 })
-        .limit(limit);
 };
 
 

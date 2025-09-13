@@ -24,10 +24,10 @@ export const createHealthInfo = async (memberId, healthInfo) => {
 export const getHealthInfoById = async (id) => {
     const healthInfo = await HealthInfo.findById(id);
     if (!healthInfo) {
-        const err = new Error("Health info not found");
-        err.statusCode = 404;
-        err.code = "HEALTH_INFO_NOT_FOUND";
-        throw err;
+        const error = new Error("Health info not found");
+        error.statusCode = 404;
+        error.code = "HEALTH_INFO_NOT_FOUND";
+        throw error;
     }
     return healthInfo;
 }
@@ -35,10 +35,10 @@ export const getHealthInfoById = async (id) => {
 export const getHealthInfoByMemberId = async (memberId) => {
     const healthInfo = await HealthInfo.findOne({ memberId });
     if (!healthInfo) {
-        const err = new Error("Health info not found");
-        err.statusCode = 404;
-        err.code = "HEALTH_INFO_NOT_FOUND";
-        throw err;
+        const error = new Error("Health info not found");
+        error.statusCode = 404;
+        error.code = "HEALTH_INFO_NOT_FOUND";
+        throw error;
     }
     return healthInfo;
 }
@@ -60,10 +60,10 @@ export const updateHealthInfoById = async (id, healthInfo) => {
         { new: true, runValidators: true }
     );
     if (!updated) {
-        const err = new Error("Health info not found");
-        err.statusCode = 404;
-        err.code = "HEALTH_INFO_NOT_FOUND";
-        throw err;
+        const error = new Error("Health info not found");
+        error.statusCode = 404;
+        error.code = "HEALTH_INFO_NOT_FOUND";
+        throw error;
     }
     return updated;
 };
@@ -76,10 +76,10 @@ export const getAllHealthInfo = async () => {
 export const deleteHealthInfoById = async (id) => {
     const deleted = await HealthInfo.findByIdAndDelete(id);
     if (!deleted) {
-        const err = new Error("Health info not found");
-        err.statusCode = 404;
-        err.code = "HEALTH_INFO_NOT_FOUND";
-        throw err;
+        const error = new Error("Health info not found");
+        error.statusCode = 404;
+        error.code = "HEALTH_INFO_NOT_FOUND";
+        throw error;
     }
     return deleted;
 }

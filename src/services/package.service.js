@@ -22,8 +22,8 @@ export const getPackageById = async (id) => {
     return pkg;
 }
 
-export const updatePackageById = async (id, data) => {
-    const pkg = await Package.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+export const updatePackageById = async (id, packageNewData) => {
+    const pkg = await Package.findByIdAndUpdate(id, packageNewData, { new: true, runValidators: true });
     if (!pkg) {
         const error = new Error("Package not found");
         error.statusCode = 404;
@@ -46,4 +46,15 @@ export const deletePackageById = async (id) => {
 export const searchPackages = async (query) => {
     const packages = await Package.find(query);
     return packages;
+}
+
+export const changePackageStatus = async (id, status) => {
+    const pkg = await Package.findByIdAndUpdate(id, { status }, { new: true, runValidators: true });
+    if (!pkg) {
+        const error = new Error("Package not found");
+        error.statusCode = 404;
+        error.code = "PACKAGE_NOT_FOUND";
+        throw error;
+    }
+    return pkg;
 }

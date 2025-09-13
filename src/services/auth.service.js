@@ -64,7 +64,7 @@ export const login = async (data) => {
         user: user,
         accessToken: accessToken,
         refreshToken: refreshToken
-    }
+    };
 
 }
 
@@ -102,7 +102,7 @@ export const getRefreshToken = async ({ refreshToken, user }) => {
     return {
         accessToken: accessToken,
         refreshToken: newRefreshToken
-    }
+    };
 }
 
 export const changePassword = async ({ userId, oldPassword, newPassword }) => {
@@ -145,7 +145,7 @@ export const forgotPassword = async ({ email }) => {
         code: OTP.code,
         expiresAt: OTP.expiresAt,
         isUsed: OTP.isUsed
-    }
+    };
     await user.save();
     return {
         OTP: OTP.code, // sau sẽ remove OTP.code
@@ -163,10 +163,10 @@ export const verifyOtp = async ({ email, otp }) => {
     }
     const { code, expiresAt, isUsed } = user.otp;
     if (isUsed || !code || isExpired(expiresAt)) {
-        const err = new Error('Invalid or expired OTP');
-        err.statusCode = 400;
-        err.code = 'INVALID_OTP';
-        throw err;
+        const error = new Error('Invalid or expired OTP');
+        error.statusCode = 400;
+        error.code = 'INVALID_OTP';
+        throw error;
     }
     const isOtpValid = compareOtp(otp, code);
     if (!isOtpValid) {
@@ -181,20 +181,20 @@ export const verifyOtp = async ({ email, otp }) => {
 export const resetPassword = async ({email,otp, newPassword}) => {
     const user = await User.findOne({email});
     if (!user || !user.otp) {
-        const err = new Error('Invalid or expired OTP');
-        err.statusCode = 400; err.code = 'INVALID_OTP';
-        throw err;
+        const error = new Error('Invalid or expired OTP');
+        error.statusCode = 400; error.code = 'INVALID_OTP';
+        throw error;
       }
     const { code, expiresAt, isUsed } = user.otp;
     if (isUsed || !code ) {
-        const err = new Error('Invalid or expired OTP');
-        err.statusCode = 400; err.code = 'INVALID_OTP';
-        throw err;
+        const error = new Error('Invalid or expired OTP');
+        error.statusCode = 400; error.code = 'INVALID_OTP';
+        throw error;
     }
     if (isExpired(expiresAt)) {
-        const err = new Error('Expired OTP');
-        err.statusCode = 400; err.code = 'INVALID_OTP';
-        throw err;
+        const error = new Error('Expired OTP');
+        error.statusCode = 400; error.code = 'INVALID_OTP';
+        throw error;
     }
     const isOtpValid = compareOtp(otp, code);
     if (!isOtpValid) {

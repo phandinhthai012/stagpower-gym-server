@@ -17,13 +17,15 @@ const branchSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Open time is required'],
         trim: true,
-        match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$/, 'Please enter a valid time format (e.g., 6:00 AM)']
+        match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$/, 'Please enter a valid time format (e.g., 6:00 AM)'],
+        
     },
     closeTime: {
         type: String,
         required: [true, 'Close time is required'],
         trim: true,
-        match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$/, 'Please enter a valid time format (e.g., 10:00 PM)']
+        match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9] (AM|PM)$/, 'Please enter a valid time format (e.g., 10:00 PM)'],
+        
     },
     status: {
         type: String,
