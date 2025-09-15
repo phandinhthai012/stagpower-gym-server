@@ -108,7 +108,7 @@ paymentSchema.pre('save', function(next) {
 
 // Static methods
 paymentSchema.statics.findByMember = function(memberId) {
-    return this.find({ memberId });
+    return this.find({ memberId }).sort({ paymentDate: -1 });
 };
 
 

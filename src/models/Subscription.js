@@ -57,8 +57,8 @@ const subscriptionSchema = new mongoose.Schema({
     status: {
         type: String,
         required: [true, 'Status is required'],
-        enum: ['Active', 'Expired', 'Suspended'],
-        default: 'Active',
+        enum: ['Active', 'Expired', 'Suspended', 'PendingPayment'],
+        default: 'PendingPayment',
     },
     suspensionHistory: [{
         startDate: {
