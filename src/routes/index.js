@@ -4,6 +4,7 @@ import userRoutes from "./user.routes";
 import healthInfoRoutes from "./healthInfo.routes";
 import packageRoutes from "./package.routes.js";
 import subscriptionRoutes from "./subscription.route.js";
+import paymentRoutes from "./payment.route.js";
 
 
 const router = express.Router();
@@ -23,6 +24,7 @@ router.use("/packages", packageRoutes);
 
 router.use("/subscriptions", subscriptionRoutes);
 
+router.use("/payments", paymentRoutes);
 
 
 export default router;

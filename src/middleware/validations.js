@@ -269,3 +269,6 @@ export const validatePackageUpdate = [
         .isInt({ min: 30, max: 150 }).withMessage('PT session duration must be between 30 and 150 minutes'),
     handleValidationErrors
 ]
+
+// Validation rules cho subscription
+// validation rules cho payment

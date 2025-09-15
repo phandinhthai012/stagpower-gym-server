@@ -28,7 +28,7 @@ const paymentSchema = new mongoose.Schema({
         type: {
             type: String,
             enum: ['HSSV', 'VIP', 'Group', 'Company', 'Voucher'],
-        }, 
+        },
         discountPercentage: {
             type: Number,
             min: [0, 'Discount percentage cannot be negative'],
@@ -59,13 +59,13 @@ const paymentSchema = new mongoose.Schema({
     paymentStatus: {
         type: String,
         required: [true, 'Payment status is required'],
-        enum: ['Pending', 'Completed', 'Failed', 'Refunded','Cancelled'],
+        enum: ['Pending', 'Completed', 'Failed', 'Refunded', 'Cancelled'],
         default: 'Pending'
     },
     invoiceNumber: {
         type: String,
-        required: [true, 'Invoice number is required'],
-        unique: true,
+        // required: [true, 'Invoice number is required'],
+        // unique: true,
         // index: true,
         // default: function() {
         //     return `INV${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -73,7 +73,7 @@ const paymentSchema = new mongoose.Schema({
     },
     transactionId: {
         type: String,
-        index: true 
+        index: true
     },
     notes: {
         type: String,
@@ -99,15 +99,17 @@ paymentSchema.index({ invoiceNumber: 1 });
 
 
 // Pre-save middleware
-paymentSchema.pre('save', function(next) {
+paymentSchema.pre('save', function (next) {
     if (!this.invoiceNumber) {
-        this.invoiceNumber = `INV${Date.now()}${Math.floor(Math.random() * 1000)}`;
+        const now = Date.now(); // mili giây
+        const randomNum = Math.floor(1000 + Math.random() * 9999000);
+        this.invoiceNumber = `INV${now}${randomNum}`;
     }
     next();
 });
 
 // Static methods
-paymentSchema.statics.findByMember = function(memberId) {
+paymentSchema.statics.findByMember = function (memberId) {
     return this.find({ memberId }).sort({ paymentDate: -1 });
 };
 

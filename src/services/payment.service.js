@@ -15,6 +15,11 @@ export const getAllPayments = async () => {
 
 export const getPaymentById = async (id) => {
     const payment = await Payment.findById(id);
+    if(!payment) {
+        const error = new Error("Payment not found");
+        error.statusCode = 404;
+        throw error;
+    }
     return payment;
 }
 
