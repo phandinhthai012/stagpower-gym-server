@@ -3,6 +3,7 @@ import authRoutes from "./auth.route";
 import userRoutes from "./user.routes";
 import healthInfoRoutes from "./healthInfo.routes";
 import packageRoutes from "./package.routes.js";
+import subscriptionRoutes from "./subscription.route.js";
 
 
 const router = express.Router();
@@ -19,6 +20,9 @@ router.use("/user", userRoutes);
 router.use("/health-info", healthInfoRoutes);
 
 router.use("/packages", packageRoutes);
+
+router.use("/subscriptions", subscriptionRoutes);
+
 
 
 export default router;
