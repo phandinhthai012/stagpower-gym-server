@@ -271,4 +271,6 @@ export const validatePackageUpdate = [
 ]
 
 // Validation rules cho subscription
+
+
 // validation rules cho payment

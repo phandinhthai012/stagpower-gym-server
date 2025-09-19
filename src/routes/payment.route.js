@@ -19,7 +19,7 @@ router.post('/', createPaymentController);
 
 router.get('/', authenticateToken, authorize(['admin', "staff"]), getAllPaymentsController);
 
-router.get('/:id', getPaymentByIdController);
+router.get('/:id',authenticateToken, getPaymentByIdController);
 
 router.put('/:id', authenticateToken, authorize(['admin', "staff"]), updatePaymentController);
 
