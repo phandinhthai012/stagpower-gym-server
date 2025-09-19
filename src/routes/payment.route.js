@@ -5,24 +5,34 @@ import {
     getPaymentByIdController,
     updatePaymentController,
     deletePaymentController,
-    getPaymentByMemberIdController
+    getPaymentByMemberIdController,
+    momoIpnController,
+    momoPaymentController
+
 } from '../controllers/payment.controller.js'
 
-import {authenticateToken,authorize} from '../middleware/auth.js';
+import { authenticateToken, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
 router.post('/', createPaymentController);
 
-router.get('/', getAllPaymentsController);
+router.get('/', authenticateToken, authorize(['admin', "staff"]), getAllPaymentsController);
 
 router.get('/:id', getPaymentByIdController);
 
-router.put('/:id', updatePaymentController);
+router.put('/:id', authenticateToken, authorize(['admin', "staff"]), updatePaymentController);
 
-router.delete('/:id',authenticateToken,authorize(['admin']), deletePaymentController);
+router.delete('/:id', authenticateToken, authorize(['admin']), deletePaymentController);
 
-router.get('/member/:memberId', getPaymentByMemberIdController);
+router.get('/member/:memberId', authenticateToken, getPaymentByMemberIdController);
+
+
+// payment momo method
+router.post('/momo/create', momoPaymentController);
+// callback momo methods
+router.post('/momo/ipn', momoIpnController);
+
 
 export default router;
 

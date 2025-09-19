@@ -74,4 +74,23 @@ export const deleteSubscription = async (id) => {
     return subscription;
 };
 
+export const changeSubscriptionStatus = async (id, status) => {
+    const subscription = await Subscription.findById(id);
+    if (!subscription) {
+        const error = new Error("Subscription not found");
+        error.statusCode = 404;
+        error.code = "SUBSCRIPTION_NOT_FOUND";
+        throw error;
+    }
+    if(subscription.status ===status){
+        const error = new Error("Subscription status is conflict");
+        error.statusCode = 409;
+        error.code = "SUBSCRIPTION_STATUS_CONFLICT";
+        throw error;
+    }
+    subscription.status = status;
+    await subscription.save();
+    return subscription;
+}
+
 // thêm service như gia hạn, kế thừ PT, tạm ngưng, hủy gói, 

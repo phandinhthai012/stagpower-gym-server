@@ -101,9 +101,8 @@ paymentSchema.index({ invoiceNumber: 1 });
 // Pre-save middleware
 paymentSchema.pre('save', function (next) {
     if (!this.invoiceNumber) {
-        const now = Date.now(); // mili giây
-        const randomNum = Math.floor(1000 + Math.random() * 9999000);
-        this.invoiceNumber = `INV${now}${randomNum}`;
+        const now = new Date().getTime();
+        this.invoiceNumber = `INV${now}`;
     }
     next();
 });

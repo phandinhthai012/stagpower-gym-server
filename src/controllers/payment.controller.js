@@ -5,8 +5,12 @@ import {
     getPaymentByMemberId,
     updatePayment,
     deletePayment,
-    completePayment
+    completePaymentMomo
 } from '../services/payment.service.js';
+import {
+    createMomoPayment,
+    verifyIpnSignature
+} from "../config/momo";
 
 import response from "../utils/response";
 
@@ -79,7 +83,7 @@ export const updatePaymentController = async (req, res, next) => {
     try {
         const { id } = req.params;
         // có thẻ update nhiều field sau chỉnh sửa thêm ở dây
-        const { 
+        const {
             paymentStatus,
             paymentMethod
         } = req.body;
@@ -97,7 +101,7 @@ export const updatePaymentController = async (req, res, next) => {
 
 export const deletePaymentController = async (req, res, next) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         const payment = await deletePayment(id);
         return response(res, {
             success: true,
@@ -112,7 +116,7 @@ export const deletePaymentController = async (req, res, next) => {
 
 export const getPaymentByMemberIdController = async (req, res, next) => {
     try {
-        const {memberId} = req.params;
+        const { memberId } = req.params;
         const payment = await getPaymentByMemberId(memberId);
         return response(res, {
             success: true,
@@ -121,6 +125,81 @@ export const getPaymentByMemberIdController = async (req, res, next) => {
             data: payment
         });
     } catch (error) {
+        next(error);
+    }
+}
+
+// payment momo method
+export const momoPaymentController = async (req, res, next) => {
+    try {
+        const {
+            subscriptionId,
+            memberId,
+            originalAmount,
+            amount,
+            discountDetails,
+            paymentMethod,
+            paymentStatus,
+            paymentDate,
+        } = req.body;
+        const newPayment = await createPayment({
+            subscriptionId,
+            memberId,
+            originalAmount,
+            amount,
+            discountDetails,
+            paymentMethod: paymentMethod || 'Momo',
+            paymentStatus: paymentStatus || 'Pending',
+            paymentDate,
+        });
+        const momoPayment = await createMomoPayment(newPayment.amount, newPayment._id, newPayment.invoiceNumber);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Payment created successfully",
+            data: momoPayment
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const momoIpnController = async (req, res, next) => {
+    try {
+        const {
+            orderId,
+            requestId,
+            amount,
+            resultCode,
+            signature,
+            transId,
+        } = req.body;
+        if (!orderId || !requestId || !amount || resultCode === undefined || !signature) {
+            return response(res, {
+                success: false,
+                statusCode: 400,
+                message: "Missing required fields"
+            });
+          }
+        // console.log('verify signature');
+        if(!verifyIpnSignature(req.body)){
+            console.log('invalid signature');
+            return response(res, {
+                success: false,
+                statusCode: 403,
+                message: "Invalid signature"
+            });
+        }
+        let payment = await completePaymentMomo(orderId,transId,resultCode);
+        
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Payment completed successfully",
+            data: payment
+        });
+    } catch (error) {
+        console.log(error);
         next(error);
     }
 }

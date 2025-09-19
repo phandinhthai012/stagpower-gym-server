@@ -1,10 +1,8 @@
-import dotenv from "dotenv";
+
 import User from "../models/User";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { createRefreshToken, revokeRefreshToken, revokeAllRefreshTokens } from "./refreshToken.service.js";
 import { createOtp, isExpired, compareOtp } from "../utils/otp.js";
-
-dotenv.config();
 
 
 export const register = async (data) => {
