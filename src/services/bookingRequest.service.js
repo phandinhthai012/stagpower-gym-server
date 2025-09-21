@@ -48,8 +48,11 @@ export const createBookingRequest = async (bookingRequestData) => {
         throw error;
     }
 
+    // Chuyển đổi requestDateTime thành Date object
+    const requestDate = new Date(requestDateTime);
+
     // Kiểm tra thời gian không được trong quá khứ
-    if (new Date(requestDateTime) < new Date()) {
+    if (requestDate < new Date()) {
         const error = new Error("Request date time cannot be in the past");
         error.statusCode = 400;
         error.code = "INVALID_DATETIME";
@@ -65,15 +68,22 @@ export const createBookingRequest = async (bookingRequestData) => {
     }
 
     // Kiểm tra trainer có conflict với booking khác không
-    const startTime = new Date(requestDateTime.getTime() - duration * 60000);
-    const endTime = new Date(requestDateTime.getTime() + duration * 60000);
+    const startTime = new Date(requestDate.getTime());
+    const endTime = new Date(requestDate.getTime() + duration * 60000);
     const existingBooking = await BookingRequest.findOne({
         trainerId,
-        requestDateTime: {
-            $gte: startTime,
-            $lte: endTime
-        },
-        status: { $in: ['Pending', 'Confirmed'] }
+        status: { $in: ['Pending', 'Confirmed'] },
+        $or: [
+            {
+                requestDateTime: { $gte: startTime, $lte: endTime }
+            },
+            {
+                requestDateTime: {
+                    $gte: new Date(startTime.getTime() - duration * 60000),
+                    $lte: startTime
+                }
+            }
+        ]
     });
 
     if (existingBooking) {
@@ -87,7 +97,7 @@ export const createBookingRequest = async (bookingRequestData) => {
         memberId,
         trainerId,
         subscriptionId,
-        requestDateTime,
+        requestDateTime: requestDate,
         duration,
         notes,
         status: 'Pending'
@@ -135,6 +145,10 @@ export const getBookingRequestsByTrainer = async (trainerId) => {
     return bookingRequests;
 };
 
+export const getBookingRequestByStatus = async (status) => {
+    const bookingRequests = await BookingRequest.find({ status });
+    return bookingRequests;
+};
 
 const checkBookingRequest = async (bookingRequestData) => {
     const {
@@ -145,8 +159,9 @@ const checkBookingRequest = async (bookingRequestData) => {
         duration,
         notes
     } = bookingRequestData;
-    const startTime = new Date(requestDateTime.getTime() - duration * 60000);
-    const endTime = new Date(requestDateTime.getTime() + duration * 60000);
+    const requestDate = new Date(requestDateTime);
+    const startTime = new Date(requestDate.getTime() - duration * 60000);
+    const endTime = new Date(requestDate.getTime() + duration * 60000);
     const existingBooking = await BookingRequest.findOne({
         trainerId,
         requestDateTime: {
@@ -156,4 +171,40 @@ const checkBookingRequest = async (bookingRequestData) => {
         status: { $in: ['Pending', 'Confirmed'] }
     });
     return !!existingBooking;
+}
+
+export const updateBookingRequestById = async (id, bookingRequestData) => {
+    const bookingRequest = await BookingRequest.findByIdAndUpdate(id, bookingRequestData, { new: true, runValidators: true });
+    if (!bookingRequest) {
+        const error = new Error("Booking request not found");
+        error.statusCode = 404;
+        error.code = "BOOKING_REQUEST_NOT_FOUND";
+        throw error;
+    }
+    return bookingRequest;
+}
+
+export const confirmBookingRequest = async (id) => {
+    const bookingRequest = await BookingRequest.findByIdAndUpdate(id, { status: 'Confirmed' }, { new: true });
+    if (!bookingRequest) {
+        const error = new Error("Booking request not found");
+        error.statusCode = 404;
+        error.code = "BOOKING_REQUEST_NOT_FOUND";
+        throw error;
+    }
+    return bookingRequest;
+}
+
+export const rejectBookingRequest = async (id, rejectReason) => {
+    const bookingRequest = await BookingRequest.findByIdAndUpdate(id, {
+        status: 'Rejected',
+        rejectReason: rejectReason
+    }, { new: true });
+    if (!bookingRequest) {
+        const error = new Error("Booking request not found");
+        error.statusCode = 404;
+        error.code = "BOOKING_REQUEST_NOT_FOUND";
+        throw error;
+    }
+    return bookingRequest;
 }

@@ -1,5 +1,5 @@
 import User from "../models/User";
-
+import { paginate } from "../utils/pagination";
 
 export const getAllMembers = async () => {
     const members = await User.find({ role: "member" });
@@ -183,3 +183,31 @@ export const searchUsers = async (query) => {
     // return users;
 }
 
+export const getAllUsersWithPagination = async (options = {}) => {
+    const query = {};
+    
+    // Add role filter if provided
+    if (options.role) {
+        query.role = options.role;
+    }
+    
+    // Add search if provided
+    if (options.search) {
+        query.$or = [
+            { fullName: { $regex: options.search, $options: 'i' } },
+            { email: { $regex: options.search, $options: 'i' } }
+        ];
+    }
+    
+    // Add status filter if provided
+    if (options.status) {
+        query.isActive = options.status === 'active';
+    }
+    
+    return await paginate(User, query, {
+        ...options,
+        select: '-password -otp', // Exclude sensitive fields
+        sort: options.sort || 'createdAt',
+        order: options.order || 'desc'
+    });
+};

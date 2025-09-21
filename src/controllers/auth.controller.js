@@ -4,7 +4,8 @@ import {
     getMe,
     getRefreshToken,
     logout, changePassword, forgotPassword,
-    resetPassword
+    resetPassword,
+    logoutAllDevices
 } from "../services/auth.service";
 import response from "../utils/response";
 
@@ -84,6 +85,23 @@ export const logoutController = async (req, res, next) => {
     }
 }
 
+// @desc    Logout all devices
+// @route   POST /api/auth/logout-all-devices
+// @access  Private
+export const logoutAllDevicesController = async (req, res, next) => {
+    try {
+        const user = req.user;
+        await logoutAllDevices({ user });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "User logged out from all devices successfully",
+            data: null
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
 
 
 // @desc    Refresh token

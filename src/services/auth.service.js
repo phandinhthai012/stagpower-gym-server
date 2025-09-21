@@ -85,11 +85,11 @@ export const logout = async ({ refreshToken, user }) => {
     //return user;
 }
 
-// export const logoutAllDevices = async ({user }) => {
-//     await revokeAllRefreshTokens({userId: user._id});
-//     await User.findByIdAndUpdate(user._id, {$inc: {tokenVersion: 1}});
-//     return user;
-// }
+export const logoutAllDevices = async ({user }) => {
+    await revokeAllRefreshTokens({userId: user._id});
+    await User.findByIdAndUpdate(user._id, {$inc: {tokenVersion: 1}});
+    return user;
+}
 
 export const getRefreshToken = async ({ refreshToken, user }) => {
     // console.log(refreshToken,user);

@@ -6,6 +6,7 @@ import {
     refreshTokenController, changePasswordController,
     forgotPasswordController,
     resetPasswordController,
+    logoutAllDevicesController,
 } from "../controllers/auth.controller";
 import { authenticateToken, verifyRefreshToken } from "../middleware/auth";
 
@@ -21,6 +22,7 @@ router.get("/me", authenticateToken, getMeController);
 
 router.post("/logout", verifyRefreshToken, logoutController);
 
+router.post("/logout-all-devices", authenticateToken, logoutAllDevicesController);
 
 router.post("/refresh", verifyRefreshToken, refreshTokenController);
 

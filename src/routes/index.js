@@ -6,6 +6,11 @@ import packageRoutes from "./package.routes.js";
 import subscriptionRoutes from "./subscription.route.js";
 import paymentRoutes from "./payment.route.js";
 import branchRoutes from "./branch.route.js";
+import discountRoutes from "./discount.route.js";
+import bookingRequestRoutes from "./bookingrequest.route.js";
+import scheduleRoutes from "./schedule.route.js";
+import checkInRoutes from "./checkIn.route.js";
+import exerciseRoutes from "./exercise.route.js";
 
 const router = express.Router();
 
@@ -27,5 +32,15 @@ router.use("/subscriptions", subscriptionRoutes);
 router.use("/payments", paymentRoutes);
 
 router.use("/branches", branchRoutes);
+
+router.use("/discounts", discountRoutes);
+
+router.use("/booking-requests", bookingRequestRoutes);
+
+router.use("/schedules", scheduleRoutes);
+
+router.use("/check-ins", checkInRoutes);
+
+router.use("/exercises", exerciseRoutes);
 
 export default router;

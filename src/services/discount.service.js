@@ -43,3 +43,14 @@ export const changeDiscountStatus = async (id, status) => {
     }
     return discount;
 }
+
+export const deleteDiscountById = async (id) => {
+    const discount = await Discount.findByIdAndDelete(id);
+    if(!discount){
+        const error = new Error("Discount not found");
+        error.statusCode = 404;
+        error.code = "DISCOUNT_NOT_FOUND";
+        throw error;
+    }
+    return discount;
+}

@@ -4,12 +4,16 @@ import {
     updateMyProfileController,
     getAllMembersController,
     getAllStaffsController,
-    changeStatusController
+    changeStatusController,
+    getAllUsersWithPaginationController
 } from "../controllers/user.controller";
 
 import { authenticateToken, authorize } from "../middleware/auth";
 
 const router = express.Router();
+
+//paginated
+router.get("/paginated", getAllUsersWithPaginationController);
 
 
 // Specific routes should come before parameterized routes
@@ -35,3 +39,7 @@ router.get("/:userId", getUserByIdController);
 // router.put("/:userId/trainer-info", , updateTrainerInfoController);
 
 export default router;
+
+
+// GET /api/users/paginated
+// GET /api/users/role/:role/paginated

@@ -37,3 +37,6 @@ router.post('/momo/ipn', momoIpnController);
 export default router;
 
 
+
+// GET /api/payments/paginated
+// GET /api/payments/member/:memberId/paginated

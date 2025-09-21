@@ -44,16 +44,25 @@ export const deleteExerciseById = async (id) => {
 };
 
 export const searchExercises = async (keyword) => {
-    return await Exercise.find({
+    const exercises = await Exercise.find({
       $or: [
         { name: new RegExp(keyword, "i") },
         { description: new RegExp(keyword, "i") }
       ]
     });
-  };
+    return exercises;
+};
 
 
 export const getExercisesByLevel = async (level) => {
-    const exercises = await Exercise.find({ difficultyLevel: level });
+    const validLevels = ['Beginner', 'Intermediate', 'Advanced'];
+    if (!level || !validLevels.includes(level)) {
+        const error = new Error("Invalid difficulty level");
+        error.statusCode = 400;
+        error.code = "INVALID_DIFFICULTY_LEVEL";
+        throw error;
+    }
+    
+    const exercises = await Exercise.find({ difficultyLevel: level, isActive: true });
     return exercises;
 };
