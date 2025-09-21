@@ -1,4 +1,11 @@
-import { register, login, getMe,getRefreshToken, logout, changePassword } from "../services/auth.service";
+import {
+    register,
+    login,
+    getMe,
+    getRefreshToken,
+    logout, changePassword, forgotPassword,
+    resetPassword
+} from "../services/auth.service";
 import response from "../utils/response";
 
 
@@ -65,7 +72,7 @@ export const logoutController = async (req, res, next) => {
         // get refresh token from body or headers
         const refreshToken = req.body.refreshToken || req.headers['refresh-token'];
         const user = req.user;
-        await logout({refreshToken, user});
+        await logout({ refreshToken, user });
         return response(res, {
             success: true,
             statusCode: 200,
@@ -84,10 +91,10 @@ export const logoutController = async (req, res, next) => {
 // @access  Private
 export const refreshTokenController = async (req, res, next) => {
     try {
-        const {refreshToken,user} = req;
+        const { refreshToken, user } = req;
         // console.log(refreshToken,user);
 
-        const data = await getRefreshToken({refreshToken,user});
+        const data = await getRefreshToken({ refreshToken, user });
         return response(res, {
             success: true,
             statusCode: 200,
@@ -105,9 +112,9 @@ export const refreshTokenController = async (req, res, next) => {
 // @access  Private
 export const changePasswordController = async (req, res, next) => {
     try {
-        const {oldPassword, newPassword} = req.body;
+        const { oldPassword, newPassword } = req.body;
         const user = req.user;
-        const data = await changePassword({userId: user._id, oldPassword, newPassword});
+        const data = await changePassword({ userId: user._id, oldPassword, newPassword });
         return response(res, {
             success: true,
             statusCode: 200,
@@ -119,3 +126,36 @@ export const changePasswordController = async (req, res, next) => {
         return next(error);
     }
 }
+
+export const forgotPasswordController = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const data = await forgotPassword({ email });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "OTP sent to email",
+            data: data
+        });
+    }
+    catch (error) {
+        return next(error);
+    }
+}
+
+export const resetPasswordController = async (req, res, next) => {
+    try {
+        const {email, otp, newPassword} = req.body;
+        const data = await resetPassword({email, otp, newPassword});
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Password reset successfully",
+            data: data
+        });
+    }
+    catch (error) {
+        return next(error);
+    }
+}
+

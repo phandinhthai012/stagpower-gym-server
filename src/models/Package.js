@@ -21,13 +21,12 @@ const packageSchema = new mongoose.Schema({
         enum: {
             values: ['ShortTerm', 'MediumTerm', 'LongTerm', 'Trial'],
             message: 'Package category must be ShortTerm, MediumTerm, LongTerm, or Trial'
-        }
+        },
     },
     durationMonths: {
         type: Number,
         required: [true, 'Duration in months is required'],
         min: [1, 'Duration must be at least 1 month'],
-        max: [24, 'Duration cannot exceed 24 months']
     },
     membershipType: {
         type: String,
@@ -54,7 +53,7 @@ const packageSchema = new mongoose.Schema({
     ptSessionDuration: {
         type: Number,
         min: [30, 'PT session duration must be at least 30 minutes'],
-        max: [120, 'PT session duration cannot exceed 120 minutes'],
+        max: [150, 'PT session duration cannot exceed 150 minutes'],
         required: function() {
             return this.type === 'PT' || this.type === 'Combo';
         }

@@ -20,6 +20,11 @@ const healthInfoSchema = new mongoose.Schema({
         min: [10, 'BMI must be at least 10'],
         max: [60, 'BMI cannot exceed 60']
     },
+    bodyFatPercent : {
+        type: Number,
+        min: [0, 'Body fat percentage must be at least 0'],
+        max: [100, 'Body fat percentage cannot exceed 100']
+    },
     gender: {
         type: String,
         required: true,
@@ -44,8 +49,7 @@ const healthInfoSchema = new mongoose.Schema({
     goal: {
         type: String,
         required: true,
-        enum: ['weightLoss', 'muscleGain', 'health', 'endurance', 'other'],
-        lowercase: true
+        // enum: ['weightLoss', 'muscleGain', 'health', 'endurance', 'other'],
     },
     experience: {
         type: String,

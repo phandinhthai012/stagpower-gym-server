@@ -59,18 +59,16 @@ scheduleSchema.index({ memberId: 1, dateTime: -1 });
 scheduleSchema.index({ trainerId: 1, dateTime: -1 });
 
 // Static methods
-scheduleSchema.statics.findByMember = function (memberId, limit = 10) {
+scheduleSchema.statics.findByMember = function (memberId) {
     return this.find({ memberId })
-        .populate('trainerId branchId subscriptionId')
+        // .populate('trainerId branchId subscriptionId')
         .sort({ dateTime: -1 })
-        .limit(limit);
 };
 
-scheduleSchema.statics.findByTrainer = function (trainerId, limit = 10) {
+scheduleSchema.statics.findByTrainer = function (trainerId) {
     return this.find({ trainerId })
-        .populate('memberId branchId subscriptionId')
+        // .populate('memberId branchId subscriptionId')
         .sort({ dateTime: -1 })
-        .limit(limit);
 
 };
 

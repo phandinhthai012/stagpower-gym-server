@@ -4,8 +4,6 @@ import RefreshToken from "../models/RefreshToken";
 import dotenv from "dotenv";
 
 
-dotenv.config();
-
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export const authenticateToken = async (req, res, next) => {
@@ -80,13 +78,7 @@ export const verifyRefreshToken = async (req, res, next) => {
         
         // kiểm tra refresh token có trong database không
         const storedRefreshToken = await RefreshToken.findOne({token: refreshToken});
-        if(!storedRefreshToken) {
-            const error = new Error("Refresh token is revoked");
-            error.statusCode = 401;
-            error.code = "UNAUTHORIZED";
-            return next(error);
-        }
-        if(storedRefreshToken.isRevoked) {
+        if(!storedRefreshToken || storedRefreshToken.isRevoked) {
             const error = new Error("Refresh token is revoked");
             error.statusCode = 401;
             error.code = "UNAUTHORIZED";
@@ -121,3 +113,59 @@ export const verifyRefreshToken = async (req, res, next) => {
 //     }
 //     return res;
 //   });
+
+// Role-based authorization middleware
+// Usage: authorize(["admin", "trainer"]) or authorize("admin")
+export const authorize = (allowedRoles) => {
+    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+    return (req, res, next) => {
+        try {
+            if (!req.user || !req.user.role) {
+                const error = new Error('You are not authorized to access this resource');
+                error.statusCode = 403;
+                error.code = 'FORBIDDEN';
+                return next(error);
+            }
+            if (roles.length > 0 && !roles.includes(req.user.role)) {
+                const error = new Error('Insufficient permissions');
+                error.statusCode = 403;
+                error.code = 'FORBIDDEN';
+                return next(error);
+            }
+            return next();
+        } catch (error) {
+            error.statusCode = error.statusCode || 403;
+            error.code = error.code || 'FORBIDDEN';
+            return next(error);
+        }
+    };
+}
+
+// Middleware to check if user can update another user
+// // Allows: 1. User updating themselves, 2. Admin updating any user
+// export const canUpdateUser = (req, res, next) => {
+//     try {
+//         const { userId } = req.params;
+//         const currentUser = req.user;
+        
+//         // Check if user is updating themselves
+//         if (currentUser._id.toString() === userId) {
+//             return next();
+//         }
+        
+//         // Check if current user is admin
+//         if (currentUser.role === 'admin') {
+//             return next();
+//         }
+        
+//         // If neither condition is met, deny access
+//         const error = new Error('You can only update your own profile or need admin privileges');
+//         error.statusCode = 403;
+//         error.code = 'FORBIDDEN';
+//         return next(error);
+//     } catch (error) {
+//         error.statusCode = error.statusCode || 403;
+//         error.code = error.code || 'FORBIDDEN';
+//         return next(error);
+//     }
+// }
