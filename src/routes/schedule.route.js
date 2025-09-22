@@ -6,7 +6,10 @@ import {
     updateScheduleByIdController,
     deleteScheduleByIdController,
     getSchedulesByMemberController,
-    getSchedulesByTrainerController
+    getSchedulesByTrainerController,
+    getAllSchedulesWithPaginationController,
+    getScheduleByMemberWithPaginationController,
+    getScheduleByTrainerWithPaginationController
 } from "../controllers/schedule.controller.js";
 import { authenticateToken, authorize } from "../middleware/auth.js";
 
@@ -14,24 +17,28 @@ import { authenticateToken, authorize } from "../middleware/auth.js";
 const router = express.Router();
 
 
-router.post("/", createScheduleController);
+router.get("/paginated", getAllSchedulesWithPaginationController);
 
-router.get("/", getAllSchedulesController);
+router.get("/member/:memberId/paginated", getScheduleByMemberWithPaginationController);
 
-router.get("/:id", getScheduleByIdController);
+router.get("/trainer/:trainerId/paginated", getScheduleByTrainerWithPaginationController);
 
-router.put("/:id", updateScheduleByIdController);
+router.post("/", authenticateToken,createScheduleController);
 
-router.delete("/:id", deleteScheduleByIdController);
+router.get("/",authenticateToken, authorize(["admin","staff"]), getAllSchedulesController);
 
-router.get("/member/:memberId", getSchedulesByMemberController);
+router.get("/:id", authenticateToken, getScheduleByIdController);
 
-router.get("/trainer/:trainerId", getSchedulesByTrainerController);
+router.put("/:id",authenticateToken, updateScheduleByIdController);
+
+router.delete("/:id",authenticateToken, authorize(["admin","staff"]), deleteScheduleByIdController);
+
+router.get("/member/:memberId", authenticateToken, getSchedulesByMemberController);
+
+router.get("/trainer/:trainerId", authenticateToken, getSchedulesByTrainerController);
+
+
 
 
 export default router;
 
-
-// GET /api/schedules/paginated
-// GET /api/schedules/member/:memberId/paginated
-// GET /api/schedules/trainer/:trainerId/paginated

@@ -137,17 +137,17 @@ export const updateScheduleStatus = async (id, status) => {
 
 // pagination
 
-// export const getAllSchedulesWithPagination = async (options) => {
-//     const schedules = await paginate(Schedule, {},options);
-//     return schedules;
-// }
+export const getAllSchedulesWithPagination = async (options) => {
+    const schedules = await paginate(Schedule, {},options);
+    return schedules;
+}
 
-// export const getScheduleByMemberWithPagination = async (memberId    , options) => {
-//     const schedules = await paginate(Schedule, { memberId }, options);
-//     return schedules;
-// }
+export const getScheduleByMemberWithPagination = async (memberId    , options) => {
+    const schedules = await paginate(Schedule, { memberId }, options);
+    return schedules;
+}
 
-// export const getScheduleByTrainerWithPagination = async (trainerId, options) => {
-//     const schedules = await paginate(Schedule, { trainerId }, options);
-//     return schedules;
-// }
+export const getScheduleByTrainerWithPagination = async (trainerId, options) => {
+    const schedules = await paginate(Schedule, { trainerId }, options);
+    return schedules;
+}

@@ -9,6 +9,7 @@ import {
     getBookingRequestsByTrainer,
     confirmBookingRequest,
     rejectBookingRequest,
+    getAllBookingRequestsWithPagination,
 } from "../services/bookingrequest.service.js";
 
 import response from "../utils/response.js";
@@ -188,6 +189,21 @@ export const getBookingRequestsByTrainerController = async (req, res, next) => {
     try {
         const { trainerId } = req.params;
         const bookingRequests = await getBookingRequestsByTrainer(trainerId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Booking requests fetched successfully",
+            data: bookingRequests
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getAllBookingRequestsWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit, sort, search } = req.query;
+        const bookingRequests = await getAllBookingRequestsWithPagination({ page, limit, sort, search });
         return response(res, {
             success: true,
             statusCode: 200,

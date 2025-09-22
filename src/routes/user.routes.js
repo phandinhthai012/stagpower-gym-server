@@ -15,7 +15,6 @@ const router = express.Router();
 //paginated
 router.get("/paginated", getAllUsersWithPaginationController);
 
-
 // Specific routes should come before parameterized routes
 router.get("/members", getAllMembersController);
 router.get("/staffs", getAllStaffsController);

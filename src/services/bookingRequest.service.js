@@ -1,6 +1,7 @@
 import BookingRequest from "../models/BookingRequest";
 import User from "../models/User";
 import Subscription from "../models/Subscription";
+import { paginate } from "../utils/pagination";
 
 // cần chỉnh sửa lại để hợp lí hơn,
 export const createBookingRequest = async (bookingRequestData) => {
@@ -208,3 +209,10 @@ export const rejectBookingRequest = async (id, rejectReason) => {
     }
     return bookingRequest;
 }
+
+
+export const getAllBookingRequestsWithPagination = async (options) => {
+    const bookingRequests = await paginate(BookingRequest, {}, options);
+    return bookingRequests;
+}
+

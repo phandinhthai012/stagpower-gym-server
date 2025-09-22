@@ -1,5 +1,5 @@
 import CheckIn from "../models/CheckIn.js";
-
+import { paginate } from "../utils/pagination";
 
 const createCheckIn = async (checkInData) => {
     const checkIn = await CheckIn.create(checkInData);
@@ -55,6 +55,11 @@ const checkOutCheckIn = async (id) => {
     return checkIn;
 };
 
+const getAllCheckInsWithPagination = async (options) => {
+    const checkIns = await paginate(CheckIn, {}, options);
+    return checkIns;
+}
+
 
 
 export {
@@ -64,6 +69,7 @@ export {
     getCheckInByMemberId,
     getCheckInByCheckInTime,
     getAllCheckIns,
-    checkOutCheckIn
+    checkOutCheckIn,
+    getAllCheckInsWithPagination
 
 };

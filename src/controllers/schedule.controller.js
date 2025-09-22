@@ -5,7 +5,11 @@ import {
     updateScheduleById,
     deleteScheduleById,
     getSchedulesByMember,
-    getSchedulesByTrainer
+    getSchedulesByTrainer,
+    getAllSchedulesWithPagination,
+    getScheduleByMemberWithPagination,
+    getScheduleByTrainerWithPagination
+
 
 } from "../services/schedule.service.js";
 import response from "../utils/response.js";
@@ -127,6 +131,54 @@ export const getSchedulesByTrainerController = async (req, res, next) => {
     try {
         const { trainerId } = req.params;
         const schedules = await getSchedulesByTrainer(trainerId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Schedules fetched successfully",
+            data: schedules
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+export const getAllSchedulesWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit, sort, search } = req.query;
+        const schedules = await getAllSchedulesWithPagination({ page, limit, sort, search });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Schedules fetched successfully",
+            data: schedules
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getScheduleByMemberWithPaginationController = async (req, res, next) => {
+    try {
+        const { memberId } = req.params;
+        const { page, limit, sort, search } = req.query;
+        const schedules = await getScheduleByMemberWithPagination(memberId, { page, limit, sort, search });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Schedules fetched successfully",
+            data: schedules
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getScheduleByTrainerWithPaginationController = async (req, res, next) => {
+    try {
+        const { trainerId } = req.params;
+        const { page, limit, sort, search } = req.query;
+        const schedules = await getScheduleByTrainerWithPagination(trainerId, { page, limit, sort, search });
         return response(res, {
             success: true,
             statusCode: 200,

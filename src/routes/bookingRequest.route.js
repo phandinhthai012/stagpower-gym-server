@@ -10,10 +10,15 @@ import {
     rejectBookingRequestController,
     getBookingRequestByStatusController,
     getBookingRequestsByMemberController,
-    getBookingRequestsByTrainerController
-} from "../controllers/bookingrequest.controller.js";
+    getBookingRequestsByTrainerController,
+    getAllBookingRequestsWithPaginationController
+
+} from "../controllers/bookingRequest.controller.js";
 
 const router = express.Router();
+
+
+router.get("/paginated", getAllBookingRequestsWithPaginationController);
 
 router.post("/", createBookingRequestController);
 
