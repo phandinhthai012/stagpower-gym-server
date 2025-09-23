@@ -12,6 +12,7 @@ import {
 } from '../controllers/payment.controller.js'
 
 import { authenticateToken, authorize } from '../middleware/auth.js';
+import { validPaymentCreate } from '../middleware/validations.js';
 
 const router = express.Router();
 

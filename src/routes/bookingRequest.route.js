@@ -14,6 +14,8 @@ import {
     getAllBookingRequestsWithPaginationController
 
 } from "../controllers/bookingRequest.controller.js";
+import { validBookingRequestCreate,validBookingRequestUpdate } from "../middleware/validations.js";
+
 
 const router = express.Router();
 

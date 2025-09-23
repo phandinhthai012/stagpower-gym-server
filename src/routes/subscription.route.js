@@ -9,12 +9,12 @@ import {
 } from "../controllers/subscription.controller";
 
 import { authenticateToken,authorize } from "../middleware/auth";
-
+import { validSubscriptionCreate,validSubscriptionUpdate } from "../middleware/validations";
 
 const router = express.Router();
 
 
-router.post("/",authenticateToken, authorize(["admin","staff","member"]), createSubscriptionController);
+router.post("/",validSubscriptionCreate,authenticateToken, authorize(["admin","staff","member"]), createSubscriptionController);
 
 router.get("/",authenticateToken, authorize(["admin","staff"]), getAllSubscriptionsController);
 
@@ -22,7 +22,7 @@ router.get("/member/:memberId",authenticateToken, getAllSubscriptionsByMemberCon
 
 router.get("/:id",authenticateToken, getSubscriptionByIdController);
 
-router.put("/:id",authenticateToken, authorize(["admin","staff"]), updateSubscriptionController);
+router.put("/:id",validSubscriptionUpdate,authenticateToken, authorize(["admin","staff","member"]), updateSubscriptionController);
 
 router.delete("/:id",authenticateToken, authorize(["admin","staff"]), deleteSubscriptionController);
 

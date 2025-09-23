@@ -219,18 +219,18 @@ export const validatePackageCreate = [
         .notEmpty().withMessage('Name is required')
         .trim()
         .isLength({ max: 100 }).withMessage('Name must not exceed 100 characters'),
-    
+
     body('type')
         .notEmpty().withMessage('Type is required')
         .trim(),
-    
+
     body('packageCategory')
         .notEmpty().withMessage('Package category is required')
         .trim(),
-    
+
     body('durationMonths')
         .notEmpty().withMessage('Duration months is required')
-        .isInt({ min: 1}).withMessage('Duration months must be at least 1 month'),
+        .isInt({ min: 1 }).withMessage('Duration months must be at least 1 month'),
 
     body('price')
         .notEmpty().withMessage('Price is required')
@@ -257,7 +257,7 @@ export const validatePackageUpdate = [
         .trim(),
     body('durationMonths')
         .optional()
-        .isInt({ min: 1}).withMessage('Duration months must be at least 1 month'),
+        .isInt({ min: 1 }).withMessage('Duration months must be at least 1 month'),
     body('price')
         .optional()
         .isFloat({ gte: 0 }).withMessage('Price must be greater than 0'),
@@ -271,6 +271,130 @@ export const validatePackageUpdate = [
 ]
 
 // Validation rules cho subscription
+export const validSubscriptionCreate = [
+    body('memberId')
+        .notEmpty().withMessage('Member id is required'),
+    body('packageId')
+        .notEmpty().withMessage('Package id is required')
+        .isMongoId().withMessage('Package id must be a valid MongoDB ObjectId'),
+    body('type')
+        .notEmpty().withMessage('Type is required')
+        .trim()
+        .isIn(['Membership', 'Combo', 'PT']).withMessage('Type must be Membership, Combo, or PT'),
+    body('membershipType')
+        .optional()
+        .trim()
+        .isIn(['Basic', 'VIP']).withMessage('Membership type must be Basic or VIP'),
+    body('startDate')
+        .notEmpty().withMessage('Start date is required'),
+    body('endDate')
+        .notEmpty().withMessage('End date is required')
+        .custom((endDate, { req }) => {
+            const { startDate } = req.body;
+            if (!startDate) return true; // startDate validator will catch empties
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return true; // defer invalid date format to other validators if any
+            return end > start;
+        }).withMessage('End date must be after start date'),
+    body('durationDays')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Duration days must be at least 1 day'),
+    body('status')
+        .optional()
+        .isIn(['Active', 'Expired', 'Suspended', 'PendingPayment']).withMessage('Status must be Active, Expired, Suspended, or PendingPayment'),
+    handleValidationErrors
+]
+export const validSubscriptionUpdate = [
+    body('packageId')
+        .optional()
+        .isMongoId().withMessage('Package id must be a valid MongoDB ObjectId'),
+    body('type')
+        .optional()
+        .trim()
+        .isIn(['Membership', 'Combo', 'PT']).withMessage('Type must be Membership, Combo, or PT'),
+    body('membershipType')
+        .optional()
+        .trim()
+        .isIn(['Basic', 'VIP']).withMessage('Membership type must be Basic or VIP'),
+    body('startDate')
+        .optional()
+        .isDate().withMessage('Start date must be a valid date'),
+    body('endDate')
+        .optional()
+        .isDate().withMessage('End date must be a valid date'),
+    body('durationDays')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Duration days must be at least 1 day'),
+    body('status')
+        .optional()
+        .isIn(['Active', 'Expired', 'Suspended', 'PendingPayment']).withMessage('Status must be Active, Expired, Suspended, or PendingPayment'),
+    handleValidationErrors
+]
+
+// valid rule for bookingrequest
+export const validBookingRequestCreate = [
+    body('memberId')
+        .notEmpty().withMessage('Member id is required'),
+    body('trainerId')
+        .notEmpty().withMessage('Trainer id is required'),
+    body('subscriptionId')
+        .notEmpty().withMessage('Subscription id is required'),
+    body('requestDateTime')
+        .notEmpty().withMessage('Request date time is required'),
+    body('duration')
+        .notEmpty().withMessage('Duration is required')
+        .isNumeric({ min: 0 }).withMessage('Duration must be at least 0'),
+    body('notes')
+        .optional()
+        .trim()
+        .isLength({ max: 500 }).withMessage('Notes must not exceed 500 characters'),
+    body('status')
+        .optional()
+        .isIn(['Pending', 'Confirmed', 'Rejected', 'Expired']).withMessage('Status must be Pending, Confirmed, Rejected, or Expired'),
+    handleValidationErrors
+]
+
+export const validBookingRequestUpdate = [
+    body('memberId')
+        .optional(),
+    body('trainerId')
+        .optional(),
+    body('subscriptionId')
+        .optional(),
+    body('requestDateTime')
+        .optional(),
+    body('duration')
+        .optional()
+        .isNumeric({ min: 0 }).withMessage('Duration must be at least 0'),
+    body('notes')
+        .optional()
+        .trim()
+        .isLength({ max: 500 }).withMessage('Notes must not exceed 500 characters'),
+    body('status')
+        .optional()
+        .isIn(['Pending', 'Confirmed', 'Rejected', 'Expired']).withMessage('Status must be Pending, Confirmed, Rejected, or Expired'),
+    handleValidationErrors
+]
 
 
 // validation rules cho payment
+export const validPaymentCreate = [
+    body('subscriptionId')
+        .notEmpty().withMessage('Subscription id is required'),
+    body('memberId')
+        .notEmpty().withMessage('Member id is required'),
+    body('originalAmount')
+        .notEmpty().withMessage('Original amount is required')
+        .isNumeric({min:0}).withMessage('Original amount must be at least 0'),
+    body('amount')
+        .notEmpty().withMessage('Amount is required')
+        .isNumeric({min:0}).withMessage('Amount must be at least 0'),
+    body('paymentMethod')
+        .optional()
+        .isIn(['Momo', 'ZaloPay', 'Cash', 'Card', 'BankTransfer', 'VNPay']).withMessage('Payment method must be Momo, ZaloPay, Cash, Card, BankTransfer, or VNPay'),
+    body('paymentStatus')
+        .optional()
+        .isIn(['Pending', 'Completed', 'Failed', 'Refunded', 'Cancelled']).withMessage('Payment status must be Pending, Completed, Failed, Refunded, or Cancelled'),
+    handleValidationErrors
+]
