@@ -299,7 +299,7 @@ export const validSubscriptionCreate = [
         }).withMessage('End date must be after start date'),
     body('durationDays')
         .optional()
-        .isInt({ min: 0 }).withMessage('Duration days must be at least 1 day'),
+        .isInt({ min: 0 }).withMessage('Duration days must be greater than 0'),
     body('status')
         .optional()
         .isIn(['Active', 'Expired', 'Suspended', 'PendingPayment']).withMessage('Status must be Active, Expired, Suspended, or PendingPayment'),
@@ -344,7 +344,7 @@ export const validBookingRequestCreate = [
         .notEmpty().withMessage('Request date time is required'),
     body('duration')
         .notEmpty().withMessage('Duration is required')
-        .isNumeric({ min: 0 }).withMessage('Duration must be at least 0'),
+        .isFloat({ min: 0 }).withMessage('Duration must be at least 0'),
     body('notes')
         .optional()
         .trim()
@@ -366,7 +366,7 @@ export const validBookingRequestUpdate = [
         .optional(),
     body('duration')
         .optional()
-        .isNumeric({ min: 0 }).withMessage('Duration must be at least 0'),
+        .isFloat({ min: 0 }).withMessage('Duration must be at least 0'),
     body('notes')
         .optional()
         .trim()
@@ -386,10 +386,10 @@ export const validPaymentCreate = [
         .notEmpty().withMessage('Member id is required'),
     body('originalAmount')
         .notEmpty().withMessage('Original amount is required')
-        .isNumeric({min:0}).withMessage('Original amount must be at least 0'),
+        .isFloat({min:0}).withMessage('Original amount must be at least 0'),
     body('amount')
         .notEmpty().withMessage('Amount is required')
-        .isNumeric({min:0}).withMessage('Amount must be at least 0'),
+        .isFloat({min:0}).withMessage('Amount must be at least 0'),
     body('paymentMethod')
         .optional()
         .isIn(['Momo', 'ZaloPay', 'Cash', 'Card', 'BankTransfer', 'VNPay']).withMessage('Payment method must be Momo, ZaloPay, Cash, Card, BankTransfer, or VNPay'),

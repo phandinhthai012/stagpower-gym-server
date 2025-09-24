@@ -11,6 +11,7 @@ import bookingRequestRoutes from "./bookingrequest.route.js";
 import scheduleRoutes from "./schedule.route.js";
 import checkInRoutes from "./checkIn.route.js";
 import exerciseRoutes from "./exercise.route.js";
+import aiSuggestionRoutes from "./aiSuggestion.route.js";
 
 const router = express.Router();
 
@@ -42,5 +43,7 @@ router.use("/schedules", scheduleRoutes);
 router.use("/check-ins", checkInRoutes);
 
 router.use("/exercises", exerciseRoutes);
+
+router.use("/ai-suggestions", aiSuggestionRoutes);
 
 export default router;

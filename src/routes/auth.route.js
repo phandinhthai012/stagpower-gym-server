@@ -9,6 +9,7 @@ import {
     logoutAllDevicesController,
 } from "../controllers/auth.controller";
 import { authenticateToken, verifyRefreshToken } from "../middleware/auth";
+import { loginRateLimiter, forgotPasswordRateLimiter } from "../middleware/rateLimit";
 
 
 const router = express.Router();
@@ -16,7 +17,7 @@ const router = express.Router();
 router.post("/register", validateRegister, registerController);
 
 
-router.post("/login", validateLogin, loginController);
+router.post("/login", validateLogin, loginRateLimiter, loginController);
 
 router.get("/me", authenticateToken, getMeController);
 
