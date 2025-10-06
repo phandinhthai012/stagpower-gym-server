@@ -41,14 +41,14 @@ export const login = async (data) => {
 
     if (!user) {
         const error = new Error("Invalid email or password");
-        error.statusCode = 401;
+        error.statusCode = 400;
         error.code = "INVALID_CREDENTIALS";
         throw error;
     }
     const isPasswordValid = await user.correctPassword(password);
     if (!isPasswordValid) {
         const error = new Error("Invalid email or password");
-        error.statusCode = 401;
+        error.statusCode = 400;
         error.code = "INVALID_CREDENTIALS";
         throw error;
     }

@@ -22,7 +22,11 @@ const port = process.env.PORT || 5000 ;
 
 // CORS configuration
 const corsOptions = {
-  origin: '*',
+  origin:[
+    'http://localhost:3000',
+    'http://localhost:5173',
+    '*'
+  ],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   preflightContinue: false,
   optionsSuccessStatus: 204,

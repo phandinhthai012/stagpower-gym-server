@@ -16,7 +16,6 @@ const router = express.Router();
 
 router.post("/register", validateRegister, registerController);
 
-
 router.post("/login", validateLogin, loginRateLimiter, loginController);
 
 router.get("/me", authenticateToken, getMeController);
@@ -31,7 +30,7 @@ router.put("/change-password", authenticateToken, validateChangePassword, change
 
 router.post("/forgot-password", forgotPasswordController);
 
-router.post("/reset-password", resetPasswordController);    
+router.post("/reset-password", resetPasswordController);
 
 // �� POST /api/auth/forgot-password - Quên mật khẩu
 // �� POST /api/auth/reset-password  - Reset mật khẩu
