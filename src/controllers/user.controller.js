@@ -3,7 +3,8 @@ import {
     updateUser,
     getAllMembers,
     getAllStaffs,
-    changeStatus
+    changeStatus,
+    getAllUsersWithPagination
 } from "../services/user.service";
 import response from "../utils/response";
 
@@ -80,6 +81,21 @@ export const changeStatusController = async (req, res, next) => {
             statusCode: 200,
             message: "User status updated successfully",    
             data: updated
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const getAllUsersWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit, sort, order, search, role, status } = req.query;
+        const users = await getAllUsersWithPagination({ page, limit, sort, order, search, role, status });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Users fetched successfully",
+            data: users
         });
     } catch (error) {
         return next(error);

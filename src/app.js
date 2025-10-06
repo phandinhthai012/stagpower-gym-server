@@ -8,6 +8,7 @@ import connectDB from './config/database.js';
 import errorHandler from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import router from './routes/index.js';
+import { initCronJobs } from './jobs/index.js';
 
 // Load environment variables 
 dotenv.config();
@@ -15,12 +16,17 @@ dotenv.config();
 
 
 const app = express();
+app.set('trust proxy', 1);
 const hostname = process.env.HOSTNAME || 'localhost';
 const port = process.env.PORT || 5000 ;
 
 // CORS configuration
 const corsOptions = {
-  origin: '*',
+  origin:[
+    'http://localhost:3000',
+    'http://localhost:5173',
+    '*'
+  ],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   preflightContinue: false,
   optionsSuccessStatus: 204,
@@ -47,6 +53,9 @@ const corsOptions = {
   app.use(express.static(path.join(__dirname, "public")));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // init cron jobs
+  initCronJobs();
 
 
   // routes

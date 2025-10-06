@@ -1,5 +1,5 @@
 import Schedule from "../models/Schedule";
-
+import { paginate } from "../utils/pagination";
 export const createSchedule = async (scheduleData) => {
     const {
         memberId,
@@ -67,10 +67,10 @@ export const deleteScheduleById = async (id) => {
 
 //xem lại các function dưới đây xem có ổn hay cần thiết hay không
 
-// export const getSchedulesByMember = async (memberId) => {
-//     const schedules = await Schedule.findByMember(memberId);
-//     return schedules;
-// };
+export const getSchedulesByMember = async (memberId) => {
+    const schedules = await Schedule.findByMember(memberId);
+    return schedules;
+};
 // export const getUpcomingSchedulesByMember = async (memberId) => {
 //     const today = new Date();
 //     const schedules = await Schedule.find({
@@ -82,10 +82,10 @@ export const deleteScheduleById = async (id) => {
 //   };
 
 
-// export const getSchedulesByTrainer = async (trainerId) => {
-//     const schedules = await Schedule.findByTrainer(trainerId);
-//     return schedules;
-// };
+export const getSchedulesByTrainer = async (trainerId) => {
+    const schedules = await Schedule.findByTrainer(trainerId);
+    return schedules;
+};
 
 // export const getUpcomingSchedulesByTrainer = async (trainerId) => {
 //     const today = new Date();
@@ -133,3 +133,21 @@ export const updateScheduleStatus = async (id, status) => {
     
 //     return schedule;
 // };
+
+
+// pagination
+
+export const getAllSchedulesWithPagination = async (options) => {
+    const schedules = await paginate(Schedule, {},options);
+    return schedules;
+}
+
+export const getScheduleByMemberWithPagination = async (memberId    , options) => {
+    const schedules = await paginate(Schedule, { memberId }, options);
+    return schedules;
+}
+
+export const getScheduleByTrainerWithPagination = async (trainerId, options) => {
+    const schedules = await paginate(Schedule, { trainerId }, options);
+    return schedules;
+}

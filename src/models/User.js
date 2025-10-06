@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const userSchema = new mongoose.Schema({
     uid: {
         type: String,
-        
+
     },
     role: {
         type: String,
@@ -61,7 +61,7 @@ const userSchema = new mongoose.Schema({
         type: Date,
         required: false,
         // match: [/^\d{2}-\d{2}-\d{4}$/, 'Please enter a valid date of birth in the format DD-MM-YYYY']
-        
+
     },
     photo: {
         type: String,
@@ -74,7 +74,7 @@ const userSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'inactive', 'pending','Banned'],
+        enum: ['active', 'inactive', 'pending', 'Banned'],
         default: 'active'
     },
     // memberInfo - if role is member
@@ -228,10 +228,18 @@ userSchema.pre('save', async function (next) {
         } catch (error) {
             next(error);
         }
-    } else if (this.role === 'trainer' || this.role === 'staff' || this.role === 'admin') {
+    } else if (this.role === 'trainer' || this.role === 'staff' ) {
         try {
-            const count = await mongoose.model('User').countDocuments({ role: this.role });
+            const count = await mongoose.model('User').countDocuments({ role: { $in: ['trainer', 'staff'] } });
             this.uid = `EMP${String(count + 1).padStart(6, '0')}`;
+            next();
+        } catch (error) {
+            next(error);
+        }
+    } else if (this.role === 'admin') {
+        try {
+            const count = await mongoose.model('User').countDocuments({ role: 'admin' });
+            this.uid = `ADM${String(count + 1).padStart(6, '0')}`;
             next();
         } catch (error) {
             next(error);

@@ -60,13 +60,13 @@ scheduleSchema.index({ trainerId: 1, dateTime: -1 });
 
 // Static methods
 scheduleSchema.statics.findByMember = function (memberId) {
-    return this.find({ memberId })
+    return this.find({ memberId: memberId })
         // .populate('trainerId branchId subscriptionId')
         .sort({ dateTime: -1 })
 };
 
 scheduleSchema.statics.findByTrainer = function (trainerId) {
-    return this.find({ trainerId })
+    return this.find({ trainerId: trainerId })
         // .populate('memberId branchId subscriptionId')
         .sort({ dateTime: -1 })
 

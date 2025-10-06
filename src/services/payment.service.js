@@ -4,6 +4,8 @@ import {
 
 } from "./subscription.service";
 
+import { paginate } from "../utils/pagination";
+
 
 export const createPayment = async (paymentData) => {
     const payment = await Payment.create(paymentData);
@@ -97,3 +99,8 @@ export const completePaymentMomo = async (id, transactionId, resultCode) => {
     return payment;
 }
 
+
+export const getAllPaymentsWithPagination = async (options) => {
+    const payments = await paginate(Payment, {}, options);
+    return payments;
+}

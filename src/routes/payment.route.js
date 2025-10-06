@@ -12,6 +12,7 @@ import {
 } from '../controllers/payment.controller.js'
 
 import { authenticateToken, authorize } from '../middleware/auth.js';
+import { validPaymentCreate } from '../middleware/validations.js';
 
 const router = express.Router();
 
@@ -37,3 +38,6 @@ router.post('/momo/ipn', momoIpnController);
 export default router;
 
 
+
+// GET /api/payments/paginated
+// GET /api/payments/member/:memberId/paginated

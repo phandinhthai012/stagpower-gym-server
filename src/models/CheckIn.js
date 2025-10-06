@@ -64,10 +64,9 @@ checkInSchema.pre('save', function(next) {
 
 
 // Static methods
-checkInSchema.statics.findByMember = function(memberId, limit = 10) {
-    return this.find({ memberId })
+checkInSchema.statics.findByMember = function(memberId) {
+    return this.find({ memberId: memberId })
         .sort({ checkInTime: -1 })
-        .limit(limit);
 };
 
 // Instance methods
