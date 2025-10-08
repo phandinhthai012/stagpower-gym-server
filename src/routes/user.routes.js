@@ -5,7 +5,12 @@ import {
     getAllMembersController,
     getAllStaffsController,
     changeStatusController,
-    getAllUsersWithPaginationController
+    getAllUsersWithPaginationController,
+    createMemberController,
+    createUserSystemController,
+    createTrainerController,
+    createStaffController,
+    createAdminController
 } from "../controllers/user.controller";
 
 import { authenticateToken, authorize } from "../middleware/auth";
@@ -17,6 +22,7 @@ router.get("/paginated", getAllUsersWithPaginationController);
 
 // Specific routes should come before parameterized routes
 router.get("/members", getAllMembersController);
+
 router.get("/staffs", getAllStaffsController);
 
 // Update user profile details like fullName, phone, gender, dateOfBirth, photo
@@ -27,6 +33,15 @@ router.put("/:userId/status", authenticateToken, authorize(["admin"]), changeSta
 
 // Parameterized route should come last to avoid conflicts
 router.get("/:userId", getUserByIdController);
+
+
+router.post("/createMember", authenticateToken, createMemberController);
+
+router.post("/createTrainer", authenticateToken, createTrainerController);
+
+router.post("/createStaff", authenticateToken, createStaffController);
+
+router.post("/createAdmin", authenticateToken, createAdminController);
 
 
 
