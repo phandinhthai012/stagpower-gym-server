@@ -36,6 +36,7 @@ const corsOptions = {
     'X-Requested-With',
     'Accept',
     'Origin',
+    'refreshtoken',
   ],
 };
 

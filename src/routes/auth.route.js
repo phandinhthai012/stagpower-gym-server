@@ -1,9 +1,12 @@
 import express from "express";
 import { validateRegister, validateLogin, validateChangePassword } from "../middleware/validations";
 import {
-    registerController, loginController,
-    getMeController, logoutController,
-    refreshTokenController, changePasswordController,
+    registerController, 
+    loginController,
+    getMeController, 
+    logoutController,
+    refreshTokenController, 
+    changePasswordController,
     forgotPasswordController,
     resetPasswordController,
     logoutAllDevicesController,
@@ -16,7 +19,8 @@ const router = express.Router();
 
 router.post("/register", validateRegister, registerController);
 
-router.post("/login", validateLogin, loginRateLimiter, loginController);
+// loginRateLimiter
+router.post("/login", validateLogin, loginController);
 
 router.get("/me", authenticateToken, getMeController);
 

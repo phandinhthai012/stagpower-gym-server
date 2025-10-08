@@ -211,3 +211,76 @@ export const getAllUsersWithPagination = async (options = {}) => {
         order: options.order || 'desc'
     });
 };
+
+export const createUser = async (payload) => {
+    const { fullName, email, phone, gender, dateOfBirth, photo, role, status, memberInfo, trainerInfo, staffInfo, adminInfo } = payload;
+    const user = await User.findOne({ email, role });
+    if (user) {
+        const error = new Error("User already exists");
+        error.statusCode = 400;
+        error.code = "USER_ALREADY_EXISTS";
+        throw error;
+    }
+    
+    // Prepare user data with role-specific information
+    const userData = {
+        fullName,
+        email,
+        phone,
+        gender,
+        dateOfBirth,
+        photo,
+        role,
+        status: status || "active"
+    };
+    
+    // Add role-specific information based on role
+    switch (role) {
+        case 'member':
+            if (memberInfo) {
+                userData.memberInfo = memberInfo;
+            }
+            break;
+        case 'trainer':
+            if (trainerInfo) {
+                userData.trainerInfo = trainerInfo;
+            }
+            break;
+        case 'staff':
+            if (staffInfo) {
+                userData.staffInfo = staffInfo;
+            }
+            break;
+        case 'admin':
+            if (adminInfo) {
+                userData.adminInfo = adminInfo;
+            }
+            break;
+        default:
+            break;
+    }
+    
+    const newUser = await User.create(userData);
+    return newUser;
+}
+
+// Helper functions for creating users with specific roles
+export const createMember = async (payload) => {
+    const { memberInfo, ...basicInfo } = payload;
+    return await createUser({ ...basicInfo, role: 'member', memberInfo });
+}
+
+export const createTrainer = async (payload) => {
+    const { trainerInfo, ...basicInfo } = payload;
+    return await createUser({ ...basicInfo, role: 'trainer', trainerInfo });
+}
+
+export const createStaff = async (payload) => {
+    const { staffInfo, ...basicInfo } = payload;
+    return await createUser({ ...basicInfo, role: 'staff', staffInfo });
+}
+
+export const createAdmin = async (payload) => {
+    const { adminInfo, ...basicInfo } = payload;
+    return await createUser({ ...basicInfo, role: 'admin', adminInfo });
+}

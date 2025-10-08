@@ -4,7 +4,12 @@ import {
     getAllMembers,
     getAllStaffs,
     changeStatus,
-    getAllUsersWithPagination
+    getAllUsersWithPagination,
+    createUser,
+    createMember,
+    createTrainer,
+    createStaff,
+    createAdmin,
 } from "../services/user.service";
 import response from "../utils/response";
 
@@ -96,6 +101,146 @@ export const getAllUsersWithPaginationController = async (req, res, next) => {
             statusCode: 200,
             message: "Users fetched successfully",
             data: users
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const createMemberController = async (req, res, next) => {
+    try {
+        const { 
+            fullName, 
+            email, 
+            phone, 
+            gender, 
+            dateOfBirth, 
+            photo, 
+            status,
+            memberInfo 
+        } = req.body;
+        
+        const payload = { 
+            fullName, 
+            email, 
+            phone, 
+            gender, 
+            dateOfBirth, 
+            photo, 
+            status: status || "active",
+            memberInfo 
+        };
+        const user = await createMember(payload);
+        return response(res, {
+            success: true,
+            statusCode: 201,
+            message: "Member created successfully",
+            data: user
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+// Controller riêng cho từng role
+export const createTrainerController = async (req, res, next) => {
+    try {
+        const { 
+            fullName, 
+            email, 
+            phone, 
+            gender, 
+            dateOfBirth, 
+            photo, 
+            status,
+            trainerInfo 
+        } = req.body;
+        
+        const payload = { 
+            fullName, 
+            email, 
+            phone, 
+            gender, 
+            dateOfBirth, 
+            photo, 
+            status: status || "active",
+            trainerInfo 
+        };
+        const user = await createTrainer(payload);
+        return response(res, {
+            success: true,
+            statusCode: 201,
+            message: "Trainer created successfully",
+            data: user
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const createStaffController = async (req, res, next) => {
+    try {
+        const { 
+            fullName, 
+            email, 
+            phone, 
+            gender, 
+            dateOfBirth, 
+            photo, 
+            status,
+            staffInfo 
+        } = req.body;
+        
+        const payload = { 
+            fullName, 
+            email, 
+            phone, 
+            gender, 
+            dateOfBirth, 
+            photo, 
+            status: status || "active",
+            staffInfo 
+        };
+        const user = await createStaff(payload);
+        return response(res, {
+            success: true,
+            statusCode: 201,
+            message: "Staff created successfully",
+            data: user
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const createAdminController = async (req, res, next) => {
+    try {
+        const { 
+            fullName, 
+            email, 
+            phone, 
+            gender, 
+            dateOfBirth, 
+            photo, 
+            status,
+            adminInfo 
+        } = req.body;
+        
+        const payload = { 
+            fullName, 
+            email, 
+            phone, 
+            gender, 
+            dateOfBirth, 
+            photo, 
+            status: status || "active",
+            adminInfo 
+        };
+        const user = await createAdmin(payload);
+        return response(res, {
+            success: true,
+            statusCode: 201,
+            message: "Admin created successfully",
+            data: user
         });
     } catch (error) {
         return next(error);
