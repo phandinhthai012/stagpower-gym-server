@@ -1,6 +1,7 @@
 import {
     getUserById,
     updateUser,
+    updateUserProfile,
     getAllMembers,
     getAllStaffs,
     changeStatus,
@@ -64,6 +65,22 @@ export const updateMyProfileController = async (req, res, next) => {
         const userId = req.user._id;
         const { fullName, phone, gender, dateOfBirth, photo } = req.body;
         const payload = { fullName, phone, gender, dateOfBirth, photo };
+        const user = await updateUserProfile(userId, payload);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "User updated successfully",
+            data: user
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+// bao gồm cả info của từng role
+export const updateUserController = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const payload = req.body;
         const user = await updateUser(userId, payload);
         return response(res, {
             success: true,
@@ -75,6 +92,7 @@ export const updateMyProfileController = async (req, res, next) => {
         return next(error);
     }
 }
+
 
 export const changeStatusController = async (req, res, next) => {
     try {

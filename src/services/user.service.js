@@ -25,7 +25,7 @@ export const getUserById = async (userId) => {
 }
 
 // Only allow updating profile fields: fullName, phone, gender, dateOfBirth, photo
-export const updateUser = async (userId, payload) => {
+export const updateUserProfile = async (userId, payload) => {
     const allowedFields = ["fullName", "phone", "gender", "dateOfBirth", "photo"];
     const setPayload = {};
     for (const key of allowedFields) {
@@ -52,6 +52,90 @@ export const updateUser = async (userId, payload) => {
         throw error;
     }
     return user;
+}
+
+export const updateUser = async (userId, payload) => {
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
+        error.code = "USER_NOT_FOUND";
+        throw error;
+    }
+    const userRole = currentUser.role;
+    const setPayload = {};
+    const allowedProfileFields = ["fullName", "phone", "gender", "dateOfBirth", "photo", "status"];
+    
+    // Update profile fields
+    for (const key of allowedProfileFields) {
+        if (Object.prototype.hasOwnProperty.call(payload || {}, key)) {
+            setPayload[key] = payload[key];
+        }
+    }
+    switch (userRole) {
+        case 'member':
+            // Các field của memberInfo
+            const memberFields = [
+                "membership_level", "qr_code", "health_info_id", "notes", 
+                "is_student", "total_spending", "membership_month", "current_brand_id"
+            ];
+            for (const key of memberFields) {
+                if (Object.prototype.hasOwnProperty.call(payload || {}, key)) {
+                    setPayload[`memberInfo.${key}`] = payload[key];
+                }
+            }
+            break;
+
+        case 'trainer':
+            // Các field của trainerInfo
+            const trainerFields = ["specialty", "experience_years", "certificate", "working_hour"];
+            for (const key of trainerFields) {
+                if (Object.prototype.hasOwnProperty.call(payload || {}, key)) {
+                    setPayload[`trainerInfo.${key}`] = payload[key];
+                }
+            }
+            break;
+
+        case 'staff':
+            // Các field của staffInfo
+            const staffFields = ["department", "position", "salary", "hire_date"];
+            for (const key of staffFields) {
+                if (Object.prototype.hasOwnProperty.call(payload || {}, key)) {
+                    setPayload[`staffInfo.${key}`] = payload[key];
+                }
+            }
+            break;
+
+        case 'admin':
+            // Các field của adminInfo
+            const adminFields = ["permissions", "access_level"];
+            for (const key of adminFields) {
+                if (Object.prototype.hasOwnProperty.call(payload || {}, key)) {
+                    setPayload[`adminInfo.${key}`] = payload[key];
+                }
+            }
+            break;
+
+        default:
+            // Không có field đặc biệt nào
+            break;
+    }
+
+    // Kiểm tra xem có field nào để update không
+    if (Object.keys(setPayload).length === 0) {
+        const error = new Error("No valid fields to update");
+        error.statusCode = 400;
+        error.code = "INVALID_UPDATE_FIELDS";
+        throw error;
+    }
+
+    // Thực hiện update
+    const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $set: setPayload },
+        { new: true, runValidators: true }
+    );
+    return updatedUser;
 }
 
 export const updateMemberInfo = async (userId, payload) => {
@@ -185,12 +269,12 @@ export const searchUsers = async (query) => {
 
 export const getAllUsersWithPagination = async (options = {}) => {
     const query = {};
-    
+
     // Add role filter if provided
     if (options.role) {
         query.role = options.role;
     }
-    
+
     // Add search if provided
     if (options.search) {
         query.$or = [
@@ -198,12 +282,12 @@ export const getAllUsersWithPagination = async (options = {}) => {
             { email: { $regex: options.search, $options: 'i' } }
         ];
     }
-    
+
     // Add status filter if provided
     if (options.status) {
         query.isActive = options.status === 'active';
     }
-    
+
     return await paginate(User, query, {
         ...options,
         select: '-password -otp', // Exclude sensitive fields
@@ -221,7 +305,7 @@ export const createUser = async (payload) => {
         error.code = "USER_ALREADY_EXISTS";
         throw error;
     }
-    
+
     // Prepare user data with role-specific information
     const userData = {
         fullName,
@@ -233,7 +317,7 @@ export const createUser = async (payload) => {
         role,
         status: status || "active"
     };
-    
+
     // Add role-specific information based on role
     switch (role) {
         case 'member':
@@ -259,7 +343,7 @@ export const createUser = async (payload) => {
         default:
             break;
     }
-    
+
     const newUser = await User.create(userData);
     return newUser;
 }

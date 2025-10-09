@@ -7,10 +7,10 @@ import {
     changeStatusController,
     getAllUsersWithPaginationController,
     createMemberController,
-    createUserSystemController,
     createTrainerController,
     createStaffController,
-    createAdminController
+    createAdminController,
+    updateUserController
 } from "../controllers/user.controller";
 
 import { authenticateToken, authorize } from "../middleware/auth";
@@ -33,7 +33,8 @@ router.put("/:userId/status", authenticateToken, authorize(["admin"]), changeSta
 
 // Parameterized route should come last to avoid conflicts
 router.get("/:userId", getUserByIdController);
-
+// them authenticateToken
+router.put("/:userId",authenticateToken, updateUserController);
 
 router.post("/createMember", authenticateToken, createMemberController);
 
