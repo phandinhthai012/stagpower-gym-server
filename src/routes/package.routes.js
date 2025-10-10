@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/",validatePackageCreate, createPackageController);
 
 // // Lấy danh sách tất cả gói tập
-router.get("/",authenticateToken, authorize(['admin', 'trainer','staff']), getAllPackagesController);
+router.get("/",authenticateToken, authorize(['admin', 'trainer','staff','member']), getAllPackagesController);
 
 // // Lấy thông tin chi tiết gói tập theo ID
 router.get("/:id", getPackageByIdController);

@@ -5,7 +5,8 @@ import {
     getPaymentByMemberId,
     updatePayment,
     deletePayment,
-    completePaymentMomo
+    completePaymentMomo,
+    completePayment
 } from '../services/payment.service.js';
 import {
     createMomoPayment,
@@ -200,6 +201,21 @@ export const momoIpnController = async (req, res, next) => {
         });
     } catch (error) {
         console.log(error);
+        next(error);
+    }
+}
+
+export const completePaymentController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const payment = await completePayment(id);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Payment completed successfully",
+            data: payment
+        });
+    } catch (error) {
         next(error);
     }
 }

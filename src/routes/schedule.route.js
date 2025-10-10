@@ -23,6 +23,10 @@ router.get("/member/:memberId/paginated", getScheduleByMemberWithPaginationContr
 
 router.get("/trainer/:trainerId/paginated", getScheduleByTrainerWithPaginationController);
 
+router.get("/member/:memberId", authenticateToken, getSchedulesByMemberController);
+
+router.get("/trainer/:trainerId", authenticateToken, getSchedulesByTrainerController);
+
 router.post("/", authenticateToken,createScheduleController);
 
 router.get("/",authenticateToken, authorize(["admin","staff"]), getAllSchedulesController);
@@ -33,9 +37,7 @@ router.put("/:id",authenticateToken, updateScheduleByIdController);
 
 router.delete("/:id",authenticateToken, authorize(["admin","staff"]), deleteScheduleByIdController);
 
-router.get("/member/:memberId", authenticateToken, getSchedulesByMemberController);
 
-router.get("/trainer/:trainerId", authenticateToken, getSchedulesByTrainerController);
 
 
 

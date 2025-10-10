@@ -5,6 +5,8 @@ import {
     getAllSubscriptionsByMember,
     updateSubscription,
     deleteSubscription,
+    suspendSubscription,
+    unsuspendSubscription,
 
 } from "../services/subscription.service";
 
@@ -124,3 +126,34 @@ export const deleteSubscriptionController = async (req, res, next) => {
         return next(error);
     }
 }
+
+export const suspendSubscriptionController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const suspendData = req.body;
+        const subscription = await suspendSubscription(id, suspendData);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Subscription suspended successfully",
+            data: subscription
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const unsuspendSubscriptionController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const subscription = await unsuspendSubscription(id);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Subscription unsuspended successfully",
+            data: subscription
+        });
+    } catch (error) {
+        return next(error);
+    }
+};

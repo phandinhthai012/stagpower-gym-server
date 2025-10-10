@@ -7,8 +7,8 @@ import {
     deletePaymentController,
     getPaymentByMemberIdController,
     momoIpnController,
-    momoPaymentController
-
+    momoPaymentController,
+    completePaymentController
 } from '../controllers/payment.controller.js'
 
 import { authenticateToken, authorize } from '../middleware/auth.js';
@@ -33,6 +33,8 @@ router.get('/member/:memberId', authenticateToken, getPaymentByMemberIdControlle
 router.post('/momo/create', momoPaymentController);
 // callback momo methods
 router.post('/momo/ipn', momoIpnController);
+// complete payment
+router.post('/:id/complete', authenticateToken, authorize(['admin', "staff"]), completePaymentController);
 
 
 export default router;
