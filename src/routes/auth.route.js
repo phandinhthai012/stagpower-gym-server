@@ -10,17 +10,18 @@ import {
     forgotPasswordController,
     resetPasswordController,
     logoutAllDevicesController,
+    verifyOtpController,
+    resendOtpController
 } from "../controllers/auth.controller";
 import { authenticateToken, verifyRefreshToken } from "../middleware/auth";
-import { loginRateLimiter, forgotPasswordRateLimiter } from "../middleware/rateLimit";
+import { loginRateLimiter, forgotPasswordRateLimiter, registrationRateLimiter, } from "../middleware/rateLimit";
 
 
 const router = express.Router();
 
-router.post("/register", validateRegister, registerController);
+router.post("/register", registrationRateLimiter, validateRegister, registerController);
 
-// loginRateLimiter
-router.post("/login", validateLogin, loginController);
+router.post("/login", loginRateLimiter, validateLogin, loginController);
 
 router.get("/me", authenticateToken, getMeController);
 
@@ -32,12 +33,13 @@ router.post("/refresh", verifyRefreshToken, refreshTokenController);
 
 router.put("/change-password", authenticateToken, validateChangePassword, changePasswordController);
 
-router.post("/forgot-password", forgotPasswordController);
+router.post("/forgot-password", forgotPasswordRateLimiter, forgotPasswordController);
+
+router.post("/verify-otp", verifyOtpController);
+
+router.post("/resend-otp", resendOtpController);
 
 router.post("/reset-password", resetPasswordController);
-
-// �� POST /api/auth/forgot-password - Quên mật khẩu
-// �� POST /api/auth/reset-password  - Reset mật khẩu
 
 
 

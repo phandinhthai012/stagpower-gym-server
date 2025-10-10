@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Chào Mừng - StagPower Gym</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 40px;
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      color: #333;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-size: 36px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(102, 126, 234, 0.3);
+    }
+    .tagline {
+      color: #666;
+      font-size: 16px;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+    .welcome-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-10px);
+      }
+      60% {
+        transform: translateY(-5px);
+      }
+    }
+    .content {
+      line-height: 1.8;
+      margin-bottom: 30px;
+    }
+    .highlight {
+      color: #667eea;
+      font-weight: 600;
+    }
+    .features {
+      background: linear-gradient(135deg, #f8f9ff, #e8f2ff);
+      border-radius: 15px;
+      padding: 25px;
+      margin: 25px 0;
+      border-left: 5px solid #667eea;
+    }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+    .feature-icon {
+      font-size: 20px;
+      margin-right: 12px;
+      width: 25px;
+    }
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 15px 30px;
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+      box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+      transition: transform 0.3s ease;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 2px solid #f0f0f0;
+    }
+    .footer-text {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 10px;
+    }
+    .contact-info {
+      font-size: 11px;
+      color: #aaa;
+      line-height: 1.5;
+    }
+    .social-links {
+      margin: 20px 0;
+    }
+    .social-link {
+      display: inline-block;
+      margin: 0 10px;
+      font-size: 24px;
+      text-decoration: none;
+      color: #667eea;
+    }
+    .welcome-badge {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="welcome-badge">🎉 CHÀO MỪNG THÀNH VIÊN MỚI</div>
+      <div class="welcome-icon">💪</div>
+      <div class="logo">StagPower Gym</div>
+      <div class="tagline">Nơi sức mạnh được khai phá - Nơi ước mơ trở thành hiện thực</div>
+    </div>
+
+    <div class="content">
+      <h2 style="color: #333; margin-bottom: 20px;">Chào mừng <span class="highlight">{{userName}}</span> đến với StagPower Gym!</h2>
+      
+      <p>Chúng tôi rất vui mừng được chào đón bạn trở thành thành viên của gia đình StagPower Gym! 🎊</p>
+      
+      <p>Với tư cách là thành viên mới, bạn sẽ được trải nghiệm những dịch vụ và tiện ích tuyệt vời nhất:</p>
+
+      <div class="features">
+        <h3 style="color: #667eea; margin-top: 0;">🏆 Những gì bạn sẽ nhận được:</h3>
+        
+        <div class="feature-item">
+          <span class="feature-icon">🏋️‍♂️</span>
+          <span>Phòng tập hiện đại với trang thiết bị cao cấp</span>
+        </div>
+        
+        <div class="feature-item">
+          <span class="feature-icon">👨‍🏫</span>
+          <span>Huấn luyện viên chuyên nghiệp và tận tâm</span>
+        </div>
+        
+        <div class="feature-item">
+          <span class="feature-icon">📱</span>
+          <span>Ứng dụng quản lý tập luyện thông minh</span>
+        </div>
+        
+        <div class="feature-item">
+          <span class="feature-icon">🎯</span>
+          <span>Lộ trình tập luyện cá nhân hóa</span>
+        </div>
+        
+        <div class="feature-item">
+          <span class="feature-icon">🤝</span>
+          <span>Cộng đồng thành viên thân thiện và hỗ trợ</span>
+        </div>
+        
+        <div class="feature-item">
+          <span class="feature-icon">🏆</span>
+          <span>Chương trình khuyến mãi đặc biệt cho thành viên mới</span>
+        </div>
+      </div>
+
+      <p><strong>Thông tin tài khoản của bạn:</strong></p>
+      <ul style="background: #f8f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+        <li><strong>Email:</strong> {{userEmail}}</li>
+        <li><strong>Mã thành viên:</strong> {{userUid}}</li>
+        <li><strong>Ngày đăng ký:</strong> {{joinDate}}</li>
+        <li><strong>Gói tập:</strong> {{packageName}}</li>
+      </ul>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{{loginUrl}}" class="cta-button">
+          🚀 Bắt Đầu Hành Trình Tập Luyện
+        </a>
+      </div>
+
+      <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0; color: #856404;">
+        <strong>💡 Lời khuyên cho thành viên mới:</strong><br>
+        • Hãy bắt đầu với cường độ nhẹ để cơ thể thích nghi<br>
+        • Đặt mục tiêu thực tế và kiên trì thực hiện<br>
+        • Đừng ngại hỏi huấn luyện viên khi cần hỗ trợ<br>
+        • Tham gia các hoạt động cộng đồng để có thêm động lực
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-text">
+        Đây là email tự động, vui lòng không trả lời.
+      </div>
+      <div class="social-links">
+        <a href="#" class="social-link">📘</a>
+        <a href="#" class="social-link">📷</a>
+        <a href="#" class="social-link">🐦</a>
+        <a href="#" class="social-link">📺</a>
+      </div>
+      
+      <div class="footer-text">
+        <strong>StagPower Gym Management System</strong>
+      </div>
+      
+      <div class="contact-info">
+        📧 Email: phandinhthai2k4@gmail.com<br>
+        📞 Hotline: 0366666666<br>
+        🌐 Website: www.stagpower.com<br>
+      </div>
+      
+      <div class="footer-text" style="margin-top: 20px;">
+        &copy; 2025 StagPower Gym. Tất cả quyền được bảo lưu.<br>
+        <em>"Sức mạnh không đến từ khả năng thể chất. Nó đến từ ý chí bất khuất."</em>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
