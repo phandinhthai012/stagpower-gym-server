@@ -5,7 +5,9 @@ import {
     getRefreshToken,
     logout, changePassword, forgotPassword,
     resetPassword,
-    logoutAllDevices
+    logoutAllDevices,
+    verifyOtp,
+    resendOtp
 } from "../services/auth.service";
 import response from "../utils/response";
 
@@ -153,6 +155,39 @@ export const forgotPasswordController = async (req, res, next) => {
             success: true,
             statusCode: 200,
             message: "OTP sent to email",
+            data: data
+        });
+    }
+    catch (error) {
+        return next(error);
+    }
+}
+
+
+export const verifyOtpController = async (req, res, next) => {
+    try {
+        const { email, otp } = req.body;
+        const data = await verifyOtp({ email, otp });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: data.message,
+            data: data
+        });
+    }
+    catch (error) {
+        return next(error);
+    }
+}
+
+export const resendOtpController = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const data = await resendOtp({ email });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: data.message,
             data: data
         });
     }

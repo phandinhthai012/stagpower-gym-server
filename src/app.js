@@ -9,6 +9,7 @@ import errorHandler from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import router from './routes/index.js';
 import { initCronJobs } from './jobs/index.js';
+import { verifyConnection } from './config/nodemailer.js';
 
 // Load environment variables 
 dotenv.config();
@@ -43,7 +44,7 @@ const corsOptions = {
 (async () => {
   await connectDB();
 
-  // await verifyConnection();
+  await verifyConnection();
 
   app.use(cors(corsOptions));
 
@@ -51,7 +52,7 @@ const corsOptions = {
   //Logging middleware
   app.use(morgan('combined'));
 
-  app.use(express.static(path.join(__dirname, "public")));
+  app.use(express.static(path.join(__dirname, "templates")));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 

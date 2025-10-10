@@ -12,7 +12,6 @@ export const getAllStaffs = async () => {
     return employees;
 }
 
-
 export const getUserById = async (userId) => {
     const user = await User.findById(userId);
     if (!user) {
@@ -24,121 +23,93 @@ export const getUserById = async (userId) => {
     return user;
 }
 
-// Only allow updating profile fields: fullName, phone, gender, dateOfBirth, photo
-export const updateUser = async (userId, payload) => {
-    const allowedFields = ["fullName", "phone", "gender", "dateOfBirth", "photo"];
-    const setPayload = {};
-    for (const key of allowedFields) {
-        if (Object.prototype.hasOwnProperty.call(payload || {}, key)) {
-            setPayload[key] = payload[key];
+export const updateUserProfile = async (userId, updateData) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
+        error.code = "USER_NOT_FOUND";
+        throw error;
+    }
+    if (updateData.email) {
+        const existingUser = await User.findOne({ email: updateData.email });
+        if (existingUser && existingUser._id.toString() !== userId) {
+            const error = new Error("Email already exists");
+            error.statusCode = 400;
+            error.code = "EMAIL_ALREADY_EXISTS";
+            throw error;
         }
     }
-    if (Object.keys(setPayload).length === 0) {
+    // Filter fields theo role của user
+    const baseFields = ["fullName", "phone", "gender", "dateOfBirth", "photo", "email", "cccd"];
+    let roleSpecificFields = [];
+
+    switch (user.role) {
+        case 'member':
+            roleSpecificFields = [
+                "memberInfo.membership_level",
+                "memberInfo.qr_code",
+                "memberInfo.health_info_id",
+                "memberInfo.notes",
+                "memberInfo.is_student",
+                "memberInfo.total_spending",
+                "memberInfo.membership_month",
+                "memberInfo.current_brand_id"
+            ];
+            break;
+        case 'trainer':
+            roleSpecificFields = [
+                "trainerInfo.specialty",
+                "trainerInfo.experience_years",
+                "trainerInfo.certificate",
+                "trainerInfo.working_hour"
+            ];
+            break;
+        case 'staff':
+            roleSpecificFields = [
+                "staffInfo.brand_id",
+                "staffInfo.position"
+            ];
+            break;
+        case 'admin':
+            roleSpecificFields = [
+                "adminInfo.permissions",
+                "adminInfo.managed_branches"
+            ];
+            break;
+    }
+
+    const allowedFields = [...baseFields, ...roleSpecificFields];
+
+    // Filter chỉ những fields được phép update
+    const filteredData = {};
+    for (const key of allowedFields) {
+        if (Object.prototype.hasOwnProperty.call(updateData || {}, key)) {
+            filteredData[key] = updateData[key];
+        }
+    }
+
+    if (Object.keys(filteredData).length === 0) {
         const error = new Error("No valid fields to update");
         error.statusCode = 400;
         error.code = "INVALID_UPDATE_FIELDS";
         throw error;
     }
 
-    const user = await User.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
         userId,
-        { $set: setPayload },
-        { new: true, runValidators: true }
-    );
-    if (!user) {
-        const error = new Error("User not found");
-        error.statusCode = 404;
-        error.code = "USER_NOT_FOUND";
-        throw error;
-    }
-    return user;
-}
-
-export const updateMemberInfo = async (userId, payload) => {
-    const user = await User.findById(userId);
-    if (!user) {
-        const error = new Error("User not found");
-        error.statusCode = 404;
-        error.code = "USER_NOT_FOUND";
-        throw error;
-    }
-    if (user.role !== "member") {
-        const error = new Error("Only member can update memberInfo");
-        error.statusCode = 400;
-        error.code = "ROLE_MISMATCH";
-        throw error;
-    }
-
-    const allowed = [
-        "membership_level",
-        "qr_code",
-        "health_info_id",
-        "notes",
-        "is_student",
-        "total_spending",
-        "membership_month",
-        "current_brand_id"
-    ];
-    const setPayload = {};
-    for (const key of allowed) {
-        if (Object.prototype.hasOwnProperty.call(payload || {}, key)) {
-            setPayload[`memberInfo.${key}`] = payload[key];
+        { $set: filteredData },
+        {
+            new: true,
+            runValidators: true,
+            context: 'query'
         }
-    }
-    if (Object.keys(setPayload).length === 0) {
-        const error = new Error("No valid memberInfo fields to update");
-        error.statusCode = 400;
-        error.code = "INVALID_UPDATE_FIELDS";
-        throw error;
-    }
-
-    const updated = await User.findByIdAndUpdate(
-        userId,
-        { $set: setPayload },
-        { new: true, runValidators: true }
     );
-    return updated;
-}
-
-export const updateTrainerInfo = async (userId, payload) => {
-    const user = await User.findById(userId);
-    if (!user) {
-        const error = new Error("User not found");
-        error.statusCode = 404;
-        error.code = "USER_NOT_FOUND";
-        throw error;
-    }
-    if (user.role !== "trainer") {
-        const error = new Error("Only trainer can update trainerInfo");
-        error.statusCode = 400;
-        error.code = "ROLE_MISMATCH";
-        throw error;
-    }
-
-    const allowed = ["specialty", "experience_years", "certificate", "working_hour"];
-    const setPayload = {};
-    for (const key of allowed) {
-        if (Object.prototype.hasOwnProperty.call(payload || {}, key)) {
-            setPayload[`trainerInfo.${key}`] = payload[key];
-        }
-    }
-    if (Object.keys(setPayload).length === 0) {
-        const error = new Error("No valid trainerInfo fields to update");
-        error.statusCode = 400;
-        error.code = "INVALID_UPDATE_FIELDS";
-        throw error;
-    }
-
-    const updated = await User.findByIdAndUpdate(
-        userId,
-        { $set: setPayload },
-        { new: true, runValidators: true }
-    );
-    return updated;
+    return updatedUser;
 }
 
 export const changeStatus = async ({ userId, status }) => {
-    const allowed = ["active", "inactive", "pending", "Banned"];
+    const allowed = ["active", "inactive", "pending", "banned"];
     if (!allowed.includes(status)) {
         const error = new Error("Invalid status value");
         error.statusCode = 400;
@@ -185,12 +156,12 @@ export const searchUsers = async (query) => {
 
 export const getAllUsersWithPagination = async (options = {}) => {
     const query = {};
-    
+
     // Add role filter if provided
     if (options.role) {
         query.role = options.role;
     }
-    
+
     // Add search if provided
     if (options.search) {
         query.$or = [
@@ -198,12 +169,12 @@ export const getAllUsersWithPagination = async (options = {}) => {
             { email: { $regex: options.search, $options: 'i' } }
         ];
     }
-    
+
     // Add status filter if provided
     if (options.status) {
         query.isActive = options.status === 'active';
     }
-    
+
     return await paginate(User, query, {
         ...options,
         select: '-password -otp', // Exclude sensitive fields
@@ -213,74 +184,118 @@ export const getAllUsersWithPagination = async (options = {}) => {
 };
 
 export const createUser = async (payload) => {
-    const { fullName, email, phone, gender, dateOfBirth, photo, role, status, memberInfo, trainerInfo, staffInfo, adminInfo } = payload;
-    const user = await User.findOne({ email, role });
-    if (user) {
-        const error = new Error("User already exists");
-        error.statusCode = 400;
-        error.code = "USER_ALREADY_EXISTS";
-        throw error;
-    }
-    
-    // Prepare user data with role-specific information
-    const userData = {
+    const {
         fullName,
         email,
         phone,
         gender,
         dateOfBirth,
         photo,
+        password,
+        cccd,
+        role,
+        status = "active",
+        memberInfo,
+        trainerInfo,
+        staffInfo,
+        adminInfo
+    } = payload;
+    if (!fullName || !email || !phone || !password || !role || !cccd) {
+        const error = new Error("Missing required fields");
+        error.statusCode = 400;
+        error.code = "MISSING_REQUIRED_FIELDS";
+        throw error;
+    }
+    const existingUser = await User.findOne({ $or: [{ email }, { cccd }] });
+    if (existingUser) {
+        if (existingUser.email === email) {
+            const error = new Error("Email already exists");
+            error.statusCode = 400;
+            error.code = "EMAIL_ALREADY_EXISTS";
+            throw error;
+        }
+        if (existingUser.cccd === cccd) {
+            const error = new Error("CCCD already exists");
+            error.statusCode = 400;
+            error.code = "CCCD_ALREADY_EXISTS";
+            throw error;
+        }
+    }
+    const newUserData = {
+        fullName,
+        email,
+        phone,
+        gender,
+        dateOfBirth,
+        photo,
+        password,
+        cccd,
         role,
         status: status || "active"
     };
-    
-    // Add role-specific information based on role
     switch (role) {
         case 'member':
-            if (memberInfo) {
-                userData.memberInfo = memberInfo;
-            }
+            newUserData.memberInfo = {
+                membership_level: memberInfo?.membership_level || 'basic',
+                qr_code: memberInfo?.qr_code || null,
+                health_info_id: memberInfo?.health_info_id || null,
+                notes: memberInfo?.notes || '',
+                is_student: memberInfo?.is_student || false,
+                total_spending: memberInfo?.total_spending || 0,
+                membership_month: memberInfo?.membership_month || 0,
+                current_brand_id: memberInfo?.current_brand_id || null
+            };
             break;
+
         case 'trainer':
-            if (trainerInfo) {
-                userData.trainerInfo = trainerInfo;
-            }
+            newUserData.trainerInfo = {
+                specialty: trainerInfo?.specialty || '',
+                experience_years: trainerInfo?.experience_years || 0,
+                certificate: trainerInfo?.certificate || [],
+                working_hour: trainerInfo?.working_hour || []
+            };
             break;
+
         case 'staff':
-            if (staffInfo) {
-                userData.staffInfo = staffInfo;
-            }
+            newUserData.staffInfo = {
+                brand_id: staffInfo?.brand_id || null,
+                position: staffInfo?.position || 'staff'
+            };
             break;
+
         case 'admin':
-            if (adminInfo) {
-                userData.adminInfo = adminInfo;
-            }
+            newUserData.adminInfo = {
+                permissions: adminInfo?.permissions || [],
+                managed_branches: adminInfo?.managed_branches || []
+            };
             break;
+
         default:
-            break;
+            const error = new Error("Invalid role");
+            error.statusCode = 400;
+            error.code = "INVALID_ROLE";
+            throw error;
     }
-    
-    const newUser = await User.create(userData);
+    const newUser = await User.create(newUserData);
     return newUser;
 }
 
-// Helper functions for creating users with specific roles
-export const createMember = async (payload) => {
-    const { memberInfo, ...basicInfo } = payload;
-    return await createUser({ ...basicInfo, role: 'member', memberInfo });
-}
-
-export const createTrainer = async (payload) => {
-    const { trainerInfo, ...basicInfo } = payload;
-    return await createUser({ ...basicInfo, role: 'trainer', trainerInfo });
-}
-
-export const createStaff = async (payload) => {
-    const { staffInfo, ...basicInfo } = payload;
-    return await createUser({ ...basicInfo, role: 'staff', staffInfo });
-}
-
-export const createAdmin = async (payload) => {
-    const { adminInfo, ...basicInfo } = payload;
-    return await createUser({ ...basicInfo, role: 'admin', adminInfo });
-}
+// export const deleteUser = async (userId) => {
+//     const user = await User.findById(userId);
+//     if (!user) {
+//         const error = new Error("User not found");
+//         error.statusCode = 404;
+//         error.code = "USER_NOT_FOUND";
+//         throw error;
+//     }
+//     await User.findByIdAndDelete(userId);
+//     return {
+//         success: true,
+//         userId: userId,
+//         role: user.role,
+//         status: user.status,
+//         createdAt: user.createdAt,
+//         updatedAt: user.updatedAt,
+//         message: "User deleted successfully"
+//     };
+// }
