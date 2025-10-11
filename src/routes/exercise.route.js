@@ -18,15 +18,15 @@ router.get("/search", searchExercisesController);
 // api example: /api/exercises/level?level=beginner
 router.get("/level", getExercisesByLevelController);
 
-router.post("/", createExerciseController);
+router.post("/",authenticateToken, authorize(['admin','staff',"trainer"]), createExerciseController);
 
 router.get("/", getAllExercisesController);
 
 router.get("/:id", getExerciseByIdController);
 
-router.put("/:id", updateExerciseByIdController);
+router.put("/:id",authenticateToken, authorize(['admin','staff',"trainer"]), updateExerciseByIdController);
 
-router.delete("/:id", deleteExerciseByIdController);
+router.delete("/:id",authenticateToken, authorize(['admin','staff']), deleteExerciseByIdController);
 
 
 
