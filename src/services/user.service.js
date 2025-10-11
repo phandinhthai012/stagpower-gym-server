@@ -1,6 +1,11 @@
 import User from "../models/User";
 import { paginate } from "../utils/pagination";
 
+export const getAllUsers = async () => {
+    const users = await User.find();
+    return users;
+}
+
 export const getAllMembers = async () => {
     const members = await User.find({ role: "member" });
     return members;
@@ -166,13 +171,14 @@ export const getAllUsersWithPagination = async (options = {}) => {
     if (options.search) {
         query.$or = [
             { fullName: { $regex: options.search, $options: 'i' } },
-            { email: { $regex: options.search, $options: 'i' } }
+            { email: { $regex: options.search, $options: 'i' } },
+            { phone: { $regex: options.search, $options: 'i' } },
         ];
     }
 
     // Add status filter if provided
     if (options.status) {
-        query.isActive = options.status === 'active';
+        query.status = options.status;
     }
 
     return await paginate(User, query, {
@@ -182,6 +188,62 @@ export const getAllUsersWithPagination = async (options = {}) => {
         order: options.order || 'desc'
     });
 };
+
+export const getAllMembersWithPagination = async (options = {}) => {
+    const query = { role: 'member' };
+
+    if (options.search) {
+        query.$or = [
+            { fullName: { $regex: options.search, $options: 'i' } },
+            { email: { $regex: options.search, $options: 'i' } },
+            { phone: { $regex: options.search, $options: 'i' } },
+        ];
+    }
+
+    if (options.status) {
+        query.status = options.status;
+    }
+
+    if (options.membership_level) {
+        query.memberInfo.membership_level = options.membership_level;
+    }
+
+    return await paginate(User, query, {
+        ...options,
+        select: '-password -otp',
+        sort: options.sort || 'createdAt',
+        order: options.order || 'desc'
+    });
+};
+
+export const getallStaffsWithPagination = async (options = {}) => {
+    const query = {};
+
+    if(options.role) {
+        query.role = options.role;
+    }else{
+        query.role = { $in: ['staff', 'trainer', 'admin'] };
+    }
+        
+    if (options.search) {
+        query.$or = [
+            { fullName: { $regex: options.search, $options: 'i' } },
+            { email: { $regex: options.search, $options: 'i' } },
+            { phone: { $regex: options.search, $options: 'i' } },
+        ];
+    }
+    if (options.status) {
+        query.status = options.status;
+    }
+    return await paginate(User, query, {
+        ...options,
+        select: '-password -otp',
+        sort: options.sort || 'createdAt',
+        order: options.order || 'desc'
+    });
+};
+
+
 
 export const createUser = async (payload) => {
     const {

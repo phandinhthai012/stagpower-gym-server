@@ -16,7 +16,7 @@ import { validPaymentCreate } from '../middleware/validations.js';
 
 const router = express.Router();
 
-router.post('/', createPaymentController);
+router.post('/', authenticateToken, createPaymentController);
 
 router.get('/', authenticateToken, authorize(['admin', "staff"]), getAllPaymentsController);
 

@@ -1,13 +1,30 @@
 import {
+    getAllUsers,
     getUserById,
     updateUserProfile,
     getAllMembers,
     getAllStaffs,
     changeStatus,
     getAllUsersWithPagination,
+    getAllMembersWithPagination,
+    getallStaffsWithPagination,
     createUser,
 } from "../services/user.service";
 import response from "../utils/response";
+
+export const getAllUsersController = async (req, res, next) => {
+    try {
+        const users = await getAllUsers();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Users fetched successfully",
+            data: users
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
 
 
 export const getAllMembersController = async (req, res, next) => {
@@ -107,6 +124,7 @@ export const changeStatusController = async (req, res, next) => {
 export const getAllUsersWithPaginationController = async (req, res, next) => {
     try {
         const { page, limit, sort, order, search, role, status } = req.query;
+        
         const users = await getAllUsersWithPagination({ page, limit, sort, order, search, role, status });
         return response(res, {
             success: true,
@@ -118,6 +136,37 @@ export const getAllUsersWithPaginationController = async (req, res, next) => {
         return next(error);
     }
 }
+
+export const getAllMembersWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit, sort, order, search, status, membership_level } = req.query;
+        const members = await getAllMembersWithPagination({ page, limit, sort, order, search, status, membership_level });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Members fetched successfully",
+            data: members
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const getallStaffsWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit, sort, order, search, status, role } = req.query;
+        const staffs = await getallStaffsWithPagination({ page, limit, sort, order, search, status, role });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Staffs fetched successfully",
+            data: staffs
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
 
 export const createUserController = async (req, res, next) => {
     try {

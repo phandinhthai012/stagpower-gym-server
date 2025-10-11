@@ -30,6 +30,9 @@ const updateCheckInById = async (id, checkInData) => {
         error.code = "CHECKIN_NOT_FOUND";
         throw error;
     }
+    if(checkIn.checkOutTime) {
+        await checkIn.save();
+    }
     return checkIn;
 };
 
@@ -51,7 +54,7 @@ const checkOutCheckIn = async (id) => {
         error.code = "CHECKIN_NOT_FOUND";
         throw error;
     }
-    checkIn.checkOut();
+    await checkIn.checkOut();
     return checkIn;
 };
 

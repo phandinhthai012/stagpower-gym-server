@@ -3,7 +3,9 @@ import {
     getAllPackages,
     getPackageById,
     updatePackageById,
-    deletePackageById
+    deletePackageById,
+    changePackageStatus,
+    getAllPackagesWithPagination
 } from "../services/package.service";
 import response from "../utils/response";
 
@@ -103,6 +105,37 @@ export const deletePackageByIdController = async (req, res, next) => {
             data: {message: "Package deleted successfully",
                 id: deletedPackage._id
             }
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const changePackageStatusController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const updatedPackage = await changePackageStatus(id, status);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Package status updated successfully",
+            data: updatedPackage
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const getAllPackagesWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit,search, status,type,packageCategory,membershipType } = req.query;
+        const packages = await getAllPackagesWithPagination({ page, limit, search, status,type,packageCategory,membershipType });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Packages fetched successfully",
+            data: packages
         });
     } catch (error) {
         return next(error);
