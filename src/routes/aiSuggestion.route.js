@@ -4,11 +4,18 @@ import {
     getAISuggestionByIdController,
     getAISuggestionByMemberIdController,
     deleteAISuggestionByIdController,
+    generateAISuggestionController
 } from "../controllers/aiSuggestion.controller";
 import { authenticateToken } from "../middleware/auth";
 
 const router = express.Router();
 
+router.get("/test",(req,res,next)=>{
+    res.status(200).json({
+        statusCode: 200,
+        message: "AISuggestion generated successfully",
+    });
+});
 
 router.post("/", authenticateToken, createAISuggestionController);
 
@@ -17,5 +24,7 @@ router.get("/member/:memberId", authenticateToken, getAISuggestionByMemberIdCont
 router.get("/:id", authenticateToken, getAISuggestionByIdController);
 
 router.delete("/:id", authenticateToken, deleteAISuggestionByIdController);
+
+router.post("/suggestion/generate", generateAISuggestionController);
 
 export default router;

@@ -10,6 +10,7 @@ import { notFoundHandler } from './middleware/notFoundHandler.js';
 import router from './routes/index.js';
 import { initCronJobs } from './jobs/index.js';
 import { verifyConnection } from './config/nodemailer.js';
+import { generalApiRateLimiter } from './middleware/rateLimit.js';
 
 // Load environment variables 
 dotenv.config();
@@ -65,7 +66,7 @@ const corsOptions = {
     res.send('server is running..');
   });
   const API_PREFIX = '/api';
-  app.use(API_PREFIX, router);
+  app.use(API_PREFIX, generalApiRateLimiter, router);
 
 
 

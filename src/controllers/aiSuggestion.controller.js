@@ -3,6 +3,7 @@ import {
     getAISuggestionById,
     getAISuggestionByMemberId,
     deleteAISuggestionById,
+    generateAISuggestion
 } from "../services/AISuggestion.service";
 
 import response from "../utils/response";
@@ -10,7 +11,17 @@ import response from "../utils/response";
 export const createAISuggestionController = async (req, res, next) => {
     try {
         const { memberId, recommendationDate, goal, exercises, difficulty, notes } = req.body;
-        const aiSuggestion = await createAISuggestion(memberId, recommendationDate, goal, exercises, difficulty, notes);
+        const aiSuggestion = await createAISuggestion({
+            memberId, 
+            recommendationDate, 
+            goal,
+            exercises, 
+            workoutDuration,
+            difficultyLevel,
+            nutrition,
+            notes,
+            status
+        });
         response(res, {
             statusCode: 201,
             message: "AISuggestion created successfully",
@@ -67,4 +78,19 @@ export const deleteAISuggestionByIdController = async (req, res, next) => {
         next(error);
     }
 
+}
+
+
+export const generateAISuggestionController = async (req, res, next) => {
+    try {
+        const { memberId, message } = req.body;
+        const aiSuggestion = await generateAISuggestion({ memberId, message });
+        response(res, {
+            statusCode: 200,
+            message: "AISuggestion generated successfully",
+            data: aiSuggestion,
+        });
+    } catch (error) {
+        next(error);
+    }
 }

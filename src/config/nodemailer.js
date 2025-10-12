@@ -22,6 +22,10 @@ const emailTemplates = {
     welcome: {
         subject: 'Chào Mừng - StagPower Gym',
         html: fs.readFileSync(path.join(__dirname, '../templates/welcome.html'), 'utf8')
+    },
+    subscriptionExpiryWarning: {
+        subject: 'Thông Báo - StagPower Gym',
+        html: fs.readFileSync(path.join(__dirname, '../templates/subscription-expiry-warning.html'), 'utf8')
     }
 };
 

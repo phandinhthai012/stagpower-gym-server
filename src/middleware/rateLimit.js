@@ -56,7 +56,7 @@ export const otpVerificationRateLimiter = rateLimit({
 // General API rate limiter - Bảo vệ tổng thể
 export const generalApiRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 phút
-    max: 100, // Tối đa 100 requests trong 15 phút
+    max: 1000, // Tối đa 1000 requests trong 15 phút
     standardHeaders: true,
     legacyHeaders: false,
     message: { 
