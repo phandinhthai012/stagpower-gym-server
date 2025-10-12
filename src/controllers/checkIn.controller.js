@@ -5,7 +5,10 @@ import{
     updateCheckInById,
     getCheckInByMemberId,
     getCheckInByCheckInTime,
-    checkOutCheckIn
+    checkOutCheckIn,
+    getAllCheckInsWithPagination,
+    generateQRCodeCheckIn,
+    processQRCodeCheckIn
 } from "../services/checkIn.service.js";
 
 
@@ -14,7 +17,17 @@ import response from "../utils/response.js";
 
 export const createCheckInController = async (req, res, next) => {
     try {
-        const checkIn = await createCheckIn(req.body);
+        const {
+            memberId,
+            branchId,
+            method,
+        } = req.body;
+        const checkIn = await createCheckIn({
+            memberId,
+            branchId,
+            method: method || 'Manual',
+            checkInTime: new Date()
+        });
         return response(res, {
             success: true,
             statusCode: 201,
@@ -119,6 +132,51 @@ export const checkOutCheckInController = async (req, res, next) => {
             success: true,
             statusCode: 200,
             message: "CheckIn checked out successfully",
+            data: checkIn
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getAllCheckInsWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit, order } = req.query;
+        const checkIns = await getAllCheckInsWithPagination({ page, limit, order });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "CheckIns fetched successfully",
+            data: checkIns
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const generateQRCodeCheckInController = async (req, res, next) => {
+    try {
+        const { memberId } = req.params;
+        const qrCode = await generateQRCodeCheckIn({ memberId });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "QR Code generated successfully",
+            data: qrCode
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const processQRCodeCheckInController = async (req, res, next) => {
+    try {
+        const { token, branchId } = req.body;
+        const checkIn = await processQRCodeCheckIn({ token, branchId });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "CheckIn processed successfully",
             data: checkIn
         });
     } catch (error) {

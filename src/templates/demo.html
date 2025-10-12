@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym QR Code Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .qr-section {
+            margin: 30px 0;
+        }
+
+        .qr-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 2px dashed #dee2e6;
+        }
+
+        .qr-code {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            border-radius: 10px;
+            border: 3px solid #333;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .qr-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .qr-info h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .qr-info p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .controls {
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .demo-qr {
+            background: #f0f0f0;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .demo-qr h4 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .demo-qr img {
+            max-width: 200px;
+            height: auto;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏋️ Gym QR Code</h1>
+            <p>Hệ thống check-in thông minh</p>
+        </div>
+
+        <div class="qr-section">
+            <div id="qrContainer" class="qr-container" style="display: block;">
+                <div id="qrCode" class="qr-code">
+                    QR Code sẽ hiển thị ở đây
+                </div>
+                <div id="qrInfo" class="qr-info">
+                    <h3>📋 Thông tin QR Code</h3>
+                    <p><strong>Member ID:</strong> <span id="infoMemberId">-</span></p>
+                    <p><strong>Hết hạn:</strong> <span id="infoExpiresAt">-</span></p>
+                    <p><strong>Thời gian còn lại:</strong> <span id="infoTimeRemaining">-</span></p>
+                </div>
+            </div>
+
+            <div id="demoQR" class="demo-qr" style="display: block;">
+                <h4>🎨 Demo QR Code (Base64)</h4>
+                <img id="demoQRImage" src="data:image/png;base64,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" alt="Demo QR Code">
+                <p style="margin-top: 10px; color: #666; font-size: 0.9rem;">
+                    Đây là QR Code mẫu được tạo từ Base64 Data URL
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+    </script>
+</body>
+</html>

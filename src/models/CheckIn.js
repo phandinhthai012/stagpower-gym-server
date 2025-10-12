@@ -22,7 +22,7 @@ const checkInSchema = new mongoose.Schema({
     checkInMethod: {
         type: String,
         required: [true, 'Check-in method is required'],
-        enum: ['QR Code', 'Manual', 'Webcam', 'Card', 'Biometric'],
+        enum: ['QR_Code', 'Manual', 'Webcam', 'Card', 'Biometric'],
         default: 'Manual'
     },
     validationError: {
