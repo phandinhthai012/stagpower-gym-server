@@ -17,7 +17,6 @@ const aiSuggestionSchema = new mongoose.Schema({
     // mục tiêu của member: tăng 
     goal: {
         type: String,
-
         required: [true, 'Goal is required'],
     },
     exercises: [{

@@ -3,7 +3,8 @@ import {
     getAISuggestionById,
     getAISuggestionByMemberId,
     deleteAISuggestionById,
-    generateAISuggestion
+    generateAISuggestion,
+    generateNutritionSuggestion
 } from "../services/AISuggestion.service";
 
 import response from "../utils/response";
@@ -89,6 +90,20 @@ export const generateAISuggestionController = async (req, res, next) => {
             statusCode: 200,
             message: "AISuggestion generated successfully",
             data: aiSuggestion,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const generateNutritionSuggestionController = async (req, res, next) => {
+    try {
+        const { memberId, message } = req.body;
+        const nutritionSuggestion = await generateNutritionSuggestion({ memberId, message });
+        response(res, {
+            statusCode: 200,
+            message: "NutritionSuggestion generated successfully",
+            data: nutritionSuggestion,
         });
     } catch (error) {
         next(error);

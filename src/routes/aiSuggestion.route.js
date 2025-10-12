@@ -4,7 +4,8 @@ import {
     getAISuggestionByIdController,
     getAISuggestionByMemberIdController,
     deleteAISuggestionByIdController,
-    generateAISuggestionController
+    generateAISuggestionController,
+    generateNutritionSuggestionController
 } from "../controllers/aiSuggestion.controller";
 import { authenticateToken } from "../middleware/auth";
 
@@ -26,5 +27,7 @@ router.get("/:id", authenticateToken, getAISuggestionByIdController);
 router.delete("/:id", authenticateToken, deleteAISuggestionByIdController);
 
 router.post("/suggestion/generate", generateAISuggestionController);
+
+router.post("/suggestion/nutrition", generateNutritionSuggestionController);
 
 export default router;

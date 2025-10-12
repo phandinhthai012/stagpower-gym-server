@@ -120,13 +120,13 @@ export const createWorkoutSuggestionPrompt = (healthInfo, userInfo, message) => 
   
     [RÀNG BUỘC THỜI GIAN]
     - Ngày hôm nay: ${today}
-    - Lập kế hoạch cho tôi vào ngày tới (có thể bắt đầu từ hôm nay hoặc ngày mai).
+    - Lập kế hoạch cho tôi vào 7 ngày tới (có thể bắt đầu từ hôm nay hoặc ngày mai miễn là trong 7 ngày tới).
     - Mỗi ngày tập tối đa 1–2 giờ.
   
     [ĐỊNH DẠNG JSON — PHẢI TUÂN THỦ CHÍNH XÁC]
     {
       "recommendationDate": "YYYY-MM-DD",
-      "goal": "string",
+      "goal": "string(tiếng việt)",
       "exercises": [
         {
           "name": "string",
@@ -152,12 +152,13 @@ export const createWorkoutSuggestionPrompt = (healthInfo, userInfo, message) => 
   };
   
 
-export const createNutritionSuggestionPrompt = (healthInfo, userInfo) => {
+export const createNutritionSuggestionPrompt = (healthInfo, userInfo, message) => {
     return `
     Bạn là chuyên gia dinh dưỡng thể thao. Dựa trên hồ sơ sức khỏe, 
     tạo kế hoạch dinh dưỡng phù hợp cho mục tiêu ${healthInfo.goal}.
 
     [THÔNG TIN HỘI VIÊN]
+    - Họ tên: ${userInfo.fullName}
     - Giới tính: ${healthInfo.gender}
     - Tuổi: ${healthInfo.age}
     - Chiều cao: ${healthInfo.height} cm
@@ -167,6 +168,12 @@ export const createNutritionSuggestionPrompt = (healthInfo, userInfo) => {
     - Dị ứng: ${healthInfo.allergies}
     - Thời gian ưu tiên: ${healthInfo.preferredTime}
 
+    ${message ? `
+    [MESSAGE CỦA HỘI VIÊN]
+    "${message}"
+    Hãy phân tích message này và tạo kế hoạch phù hợp với yêu cầu cụ thể của hội viên.
+    ` : ''}
+
     [YÊU CẦU]
     1. Tính toán calo cần thiết hàng ngày
     2. Phân chia macro (protein/carb/fat) phù hợp
@@ -174,9 +181,11 @@ export const createNutritionSuggestionPrompt = (healthInfo, userInfo) => {
     4. Lưu ý về dị ứng và sở thích
     5. Gợi ý thời gian ăn uống
     6. Bổ sung vitamin/mineral nếu cần
+    ${message ? '7. Đáp ứng yêu cầu cụ thể trong message của hội viên nếu phân tích message của hội viên có yêu cầu cụ thể.' : ''}
 
     Trả về JSON với cấu trúc:
     {
+        "goal": "string(tiếng việt)",
         "dailyCalories": 2000,
         "macros": {
             "protein": "150g",
