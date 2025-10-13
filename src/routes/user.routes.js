@@ -9,7 +9,6 @@ import {
     getAllUsersWithPaginationController,
     getAllMembersWithPaginationController,
     getallStaffsWithPaginationController,
-    updateUserController,
     createUserController
 } from "../controllers/user.controller";
 
@@ -38,14 +37,10 @@ router.post("/create",authenticateToken,authorize(["admin","staff"]), createUser
 router.put("/:userId/profile",authenticateToken, updateUserProfileController);
 
 // Change user status (admin only)
-router.put("/:userId/status", changeStatusController);
+router.put("/:userId/status",authenticateToken,authorize(["admin","staff"]), changeStatusController);
 
 // Parameterized route should come last to avoid conflicts
 router.get("/:userId", getUserByIdController);
-// them authenticateToken
-router.put("/:userId",authenticateToken, updateUserController);
-
-
 
 
 

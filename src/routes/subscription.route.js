@@ -7,7 +7,8 @@ import {
     updateSubscriptionController,
     deleteSubscriptionController,
     suspendSubscriptionController,
-    unsuspendSubscriptionController
+    unsuspendSubscriptionController,
+    changeSubscriptionStatusController
 } from "../controllers/subscription.controller";
 
 import { authenticateToken,authorize } from "../middleware/auth";
@@ -32,5 +33,6 @@ router.post("/:id/suspend",authenticateToken, authorize(["admin","staff"]), susp
 
 router.post("/:id/unsuspend",authenticateToken, authorize(["admin","staff"]), unsuspendSubscriptionController);
 
+router.put("/:id/status",authenticateToken, authorize(["admin","staff"]), changeSubscriptionStatusController);
 
 export default router;

@@ -31,7 +31,7 @@ router.get('/member/:memberId', authenticateToken, getPaymentByMemberIdControlle
 
 // payment momo method
 router.post('/momo/create', momoPaymentController);
-// callback momo methods
+// callback momo methods không cần tạo service trên frontend
 router.post('/momo/ipn', momoIpnController);
 // complete payment
 router.post('/:id/complete', authenticateToken, authorize(['admin', "staff"]), completePaymentController);

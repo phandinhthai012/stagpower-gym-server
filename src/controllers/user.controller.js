@@ -88,21 +88,21 @@ export const updateUserProfileController = async (req, res, next) => {
     }
 }
 // bao gồm cả info của từng role
-export const updateUserController = async (req, res, next) => {
-    try {
-        const { userId } = req.params;
-        const payload = req.body;
-        const user = await updateUser(userId, payload);
-        return response(res, {
-            success: true,
-            statusCode: 200,
-            message: "User updated successfully",
-            data: user
-        });
-    } catch (error) {
-        return next(error);
-    }
-}
+// export const updateUserController = async (req, res, next) => {
+//     try {
+//         const { userId } = req.params;
+//         const payload = req.body;
+//         const user = await updateUser(userId, payload);
+//         return response(res, {
+//             success: true,
+//             statusCode: 200,
+//             message: "User updated successfully",
+//             data: user
+//         });
+//     } catch (error) {
+//         return next(error);
+//     }
+// }
 
 
 export const changeStatusController = async (req, res, next) => {

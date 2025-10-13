@@ -7,6 +7,7 @@ import {
     deleteSubscription,
     suspendSubscription,
     unsuspendSubscription,
+    changeSubscriptionStatus
 
 } from "../services/subscription.service";
 
@@ -103,6 +104,23 @@ export const updateSubscriptionController = async (req, res, next) => {
             success: true,
             statusCode: 200,
             message: "Subscription updated successfully",
+            data: subscription
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+
+export const changeSubscriptionStatusController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const status = req.body;
+        const subscription = await changeSubscriptionStatus(id, status);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Subscription status changed successfully",
             data: subscription
         });
     } catch (error) {
