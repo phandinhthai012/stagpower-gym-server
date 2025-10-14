@@ -241,6 +241,32 @@ export const validatePackageCreate = [
     body('ptSessionDuration')
         .optional()
         .isInt({ min: 30, max: 150 }).withMessage('PT session duration must be between 30 and 150 minutes'),
+    
+    body('membershipType')
+        .optional()
+        .isIn(['Basic', 'VIP']).withMessage('Membership type must be Basic or VIP'),
+    
+    body('branchAccess')
+        .notEmpty().withMessage('Branch access is required')
+        .isIn(['Single', 'All']).withMessage('Branch access must be Single or All'),
+    
+    body('description')
+        .notEmpty().withMessage('Description is required')
+        .trim()
+        .isLength({ max: 500 }).withMessage('Description must not exceed 500 characters'),
+    
+    body('isTrial')
+        .optional()
+        .isBoolean().withMessage('IsTrial must be a boolean'),
+    
+    body('maxTrialDays')
+        .optional()
+        .isInt({ min: 1, max: 7 }).withMessage('Max trial days must be between 1 and 7'),
+    
+    body('status')
+        .optional()
+        .isIn(['Active', 'Inactive', 'Draft']).withMessage('Status must be Active, Inactive, or Draft'),
+    
     handleValidationErrors
 ]
 
@@ -267,6 +293,32 @@ export const validatePackageUpdate = [
     body('ptSessionDuration')
         .optional()
         .isInt({ min: 30, max: 150 }).withMessage('PT session duration must be between 30 and 150 minutes'),
+    
+    body('membershipType')
+        .optional()
+        .isIn(['Basic', 'VIP']).withMessage('Membership type must be Basic or VIP'),
+    
+    body('branchAccess')
+        .notEmpty().withMessage('Branch access is required')
+        .isIn(['Single', 'All']).withMessage('Branch access must be Single or All'),
+    
+    body('description')
+        .notEmpty().withMessage('Description is required')
+        .trim()
+        .isLength({ max: 500 }).withMessage('Description must not exceed 500 characters'),
+    
+    body('isTrial')
+        .optional()
+        .isBoolean().withMessage('IsTrial must be a boolean'),
+    
+    body('maxTrialDays')
+        .optional()
+        .isInt({ min: 1, max: 7 }).withMessage('Max trial days must be between 1 and 7'),
+    
+    body('status')
+        .optional()
+        .isIn(['Active', 'Inactive', 'Draft']).withMessage('Status must be Active, Inactive, or Draft'),
+    
     handleValidationErrors
 ]
 
