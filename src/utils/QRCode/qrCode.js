@@ -17,17 +17,18 @@ export const generateQRCode = async (data) => {
         if(!member){
             throw new Error('Member not found');
         }
-        const activeSubscription = await Subscription.findOne({
+        console.log(member);
+        const subscriptions = await Subscription.find({
             memberId: member._id,
-            type: { $in: ['Membership', 'Combo'] },
-            status: 'Active',
-            endDate: { $gte: new Date() },
-            isSuspended: false
+            type: { $in: ['Membership', 'Combo'] }
         });
+        console.log(subscriptions);
+        const activeSubscription = subscriptions.find(sub => sub.isActive());
         if (!activeSubscription) {
-            throw new Error('Member does not have an active subscription Membership or Combo');
+            throw new Error('Member does not have an active subscription Membership or Combo, maybe suspended or expired');
         }
 
+        console.log(activeSubscription);
         const timestamp = Date.now();
         const expiresAt = timestamp + 1000 * 60 * 30; // hết hạn trong 30p
         const qrCodeData = {
