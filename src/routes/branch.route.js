@@ -2,6 +2,7 @@ import express from "express";
 import {
     createBranchController,
     getAllBranchesController,
+    getPublicBranchesController,
     getBranchByIdController,
     updateBranchByIdController,
     deleteBranchByIdController,
@@ -16,6 +17,9 @@ const router = express.Router();
 router.post("/", authenticateToken, authorize(["admin"]), createBranchController);
 
 router.get("/", authenticateToken, authorize(["admin","staff"]),getAllBranchesController);
+
+// Public endpoint for members to get active branches
+router.get("/public", getPublicBranchesController);
 
 router.get("/:id",authenticateToken, authorize(["admin","staff"]), getBranchByIdController);
 
