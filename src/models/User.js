@@ -74,7 +74,7 @@ const userSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'inactive', 'pending', 'Banned'],
+        enum: ['active', 'inactive', 'pending', 'banned'],
         default: 'active'
     },
     // memberInfo - if role is member
@@ -165,7 +165,8 @@ const userSchema = new mongoose.Schema({
     otp: {
         code: { type: String, default: null },
         expiresAt: { type: Date, default: null },
-        isUsed: { type: Boolean, default: false }
+        isUsed: { type: Boolean, default: false },
+        isVerified: { type: Boolean, default: false }
     }
 }, {
     timestamps: true,
@@ -217,6 +218,17 @@ userSchema.set('toJSON', {
 userSchema.index({ uid: 1 }, { unique: true, sparse: true });
 userSchema.index({ email: 1 }, { unique: true, sparse: true });
 userSchema.index({ role: 1 });
+
+// TTL Index để tự động xóa OTP sau 1 ngày
+userSchema.index({ 'otp.createdAt': 1 }, { 
+    expireAfterSeconds: 86400, // 24 giờ = 86400 giây
+    partialFilterExpression: { 
+        'otp.code': { $ne: null },
+        'otp.expiresAt': { $ne: null },
+        'otp.isVerified': { $ne: true },
+        'otp.isUsed': { $ne: true }
+    }
+});
 
 // pre-save middleware
 userSchema.pre('save', async function (next) {

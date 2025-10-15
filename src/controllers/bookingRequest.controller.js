@@ -127,12 +127,15 @@ export const deleteBookingRequestByIdController = async (req, res, next) => {
 export const confirmBookingRequestController = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const bookingRequest = await confirmBookingRequest(id);
+        const result = await confirmBookingRequest(id);
         return response(res, {
             success: true,
             statusCode: 200,
-            message: "Booking request confirmed successfully",
-            data: bookingRequest
+            message: "Booking request confirmed and schedule created successfully",
+            data: {
+                bookingRequest: result.bookingRequest,
+                schedule: result.schedule
+            }
         });
     } catch (error) {
         next(error);

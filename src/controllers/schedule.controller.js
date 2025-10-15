@@ -145,7 +145,7 @@ export const getSchedulesByTrainerController = async (req, res, next) => {
 
 export const getAllSchedulesWithPaginationController = async (req, res, next) => {
     try {
-        const { page, limit, sort, search } = req.query;
+        const { page, limit, sort, search,status } = req.query;
         const schedules = await getAllSchedulesWithPagination({ page, limit, sort, search });
         return response(res, {
             success: true,
@@ -161,8 +161,8 @@ export const getAllSchedulesWithPaginationController = async (req, res, next) =>
 export const getScheduleByMemberWithPaginationController = async (req, res, next) => {
     try {
         const { memberId } = req.params;
-        const { page, limit, sort, search } = req.query;
-        const schedules = await getScheduleByMemberWithPagination(memberId, { page, limit, sort, search });
+        const { page, limit, sort, search,status } = req.query;
+        const schedules = await getScheduleByMemberWithPagination(memberId, { page, limit, sort, search,status });
         return response(res, {
             success: true,
             statusCode: 200,
@@ -177,8 +177,8 @@ export const getScheduleByMemberWithPaginationController = async (req, res, next
 export const getScheduleByTrainerWithPaginationController = async (req, res, next) => {
     try {
         const { trainerId } = req.params;
-        const { page, limit, sort, search } = req.query;
-        const schedules = await getScheduleByTrainerWithPagination(trainerId, { page, limit, sort, search });
+        const { page, limit, sort, search,status } = req.query;
+        const schedules = await getScheduleByTrainerWithPagination(trainerId, { page, limit, sort, search,status });
         return response(res, {
             success: true,
             statusCode: 200,

@@ -1,0 +1,50 @@
+import { transporter, emailTemplates, } from "../config/nodemailer";
+
+export const sendOtpEmail = async ({ to, data }) => {
+    try {
+        const { subject, html } = emailTemplates.otp;
+        
+        // Replace multiple placeholders manually
+        let htmlContent = html;
+        htmlContent = htmlContent.replace(/{{userEmail}}/g, data.userEmail || '');
+        htmlContent = htmlContent.replace(/{{otpCode}}/g, data.otpCode || '');
+        
+        const mailOptions = {
+            from: 'StagPower Gym <thaiphan09242002@gmail.com>',
+            to,
+            subject,
+            html: htmlContent 
+        };
+        
+        await transporter.sendMail(mailOptions);
+        console.log('✅ OTP email sent successfully to:', to);
+    } catch (error) {
+        console.error('❌ Failed to send OTP email:', error.message);
+        throw error;
+    }
+}
+
+export const sendWelcomeEmail = async ({ to, data }) => {
+    try {
+        const {userEmail,userName, uid, joinDate, packageName} = data;
+        const { subject, html } = emailTemplates.welcome;
+        let htmlContent = html;
+        const date = new Date(joinDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        htmlContent = htmlContent.replace(/{{userEmail}}/g, userEmail || '');
+        htmlContent = htmlContent.replace(/{{userName}}/g, userName || '');
+        htmlContent = htmlContent.replace(/{{userUid}}/g, uid || '');
+        htmlContent = htmlContent.replace(/{{joinDate}}/g, date || '');
+        htmlContent = htmlContent.replace(/{{packageName}}/g, packageName || '');
+        const mailOptions = {
+            from: 'StagPower Gym <thaiphan09242002@gmail.com>',
+            to,
+            subject,
+            html: htmlContent 
+        };
+        await transporter.sendMail(mailOptions);
+        console.log('✅ Welcome email sent successfully to:', to);
+    } catch (error) {
+        console.error('❌ Failed to send Welcome email:', error.message);
+        throw error;
+    }
+}

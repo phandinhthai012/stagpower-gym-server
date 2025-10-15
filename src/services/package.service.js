@@ -1,5 +1,6 @@
 // CRUD gói tập, quyền lợi, điều kiện; tìm gói phù hợp.
 import Package from "../models/Package";
+import { paginate } from "../utils/pagination";
 
 export const createPackage = async (packageData) => {
     const newPackage = await Package.create(packageData);
@@ -49,6 +50,18 @@ export const searchPackages = async (query) => {
 }
 
 export const changePackageStatus = async (id, status) => {
+    if(!status) {
+        const error = new Error("Status is required");
+        error.statusCode = 400;
+        error.code = "STATUS_REQUIRED";
+        throw error;
+    }
+    if(status !== 'Active' && status !== 'Inactive' && status !== 'Draft') {
+        const error = new Error("Status is invalid, must be Active, Inactive or Draft");
+        error.statusCode = 400;
+        error.code = "STATUS_INVALID";
+        throw error;
+    }
     const pkg = await Package.findByIdAndUpdate(id, { status }, { new: true, runValidators: true });
     if (!pkg) {
         const error = new Error("Package not found");
@@ -57,4 +70,30 @@ export const changePackageStatus = async (id, status) => {
         throw error;
     }
     return pkg;
+}
+
+export const getAllPackagesWithPagination = async (options) => {
+    const query = {};
+    if (options.status) {
+        query.status = options.status;
+    }
+    if (options.search) {
+        query.$or = [
+            { name: { $regex: options.search, $options: 'i' } },
+            {description: { $regex: options.search, $options: 'i' } },
+        ];
+    }
+    if (options.type) {
+        query.type = options.type;
+    }
+
+    if (options.packageCategory) {
+        query.packageCategory = options.packageCategory;
+    }
+
+    if (options.membershipType) {
+        query.membershipType = options.membershipType;
+    }
+    const packages = await paginate(Package, query, options);
+    return packages;
 }

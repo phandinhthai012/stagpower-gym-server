@@ -22,7 +22,7 @@ const checkInSchema = new mongoose.Schema({
     checkInMethod: {
         type: String,
         required: [true, 'Check-in method is required'],
-        enum: ['QR Code', 'Manual', 'Webcam', 'Card', 'Biometric'],
+        enum: ['QR_Code', 'Manual', 'Webcam', 'Card', 'Biometric'],
         default: 'Manual'
     },
     validationError: {
@@ -70,16 +70,18 @@ checkInSchema.statics.findByMember = function(memberId) {
 };
 
 // Instance methods
-checkInSchema.methods.checkOut = function() {
+checkInSchema.methods.checkOut = async function() {
     if (this.status !== 'Active') {
-        throw new Error('Cannot check out inactive check-in');
+        const error = new Error('Cannot check out inactive check-in');
+        error.statusCode = 400;
+        error.code = 'CANNOT_CHECK_OUT_INACTIVE_CHECK_IN';
+        throw error;
     }
-    
     this.checkOutTime = new Date();
     this.status = 'Completed';
-    
+    await this.save();
     // Duration sẽ được tính tự động trong pre-save
-    return this.save();
+    return this;
 };
 
 

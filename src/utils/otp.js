@@ -9,7 +9,8 @@ export const createOtp = () => {
     return {
         code: code,
         expiresAt: expiresAt,
-        isUsed: false
+        isUsed: false,
+        isVerified: false
     }
 }
 

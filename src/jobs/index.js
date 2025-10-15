@@ -1,8 +1,8 @@
-import { initSubscriptionJobs } from './subscription.jobs.js';
+import { expireSubscriptionJobs } from './subscription.jobs.js';
 
 export function initCronJobs() {
 
-    initSubscriptionJobs();
+    expireSubscriptionJobs();
 }
 
 

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Thông Báo Gói Tập Sắp Hết Hạn - StagPower Gym</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 40px;
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      color: #333;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-size: 36px;
+      font-weight: bold;
+      color: #ff6b6b;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(255, 107, 107, 0.3);
+    }
+    .tagline {
+      color: #666;
+      font-size: 16px;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+    .warning-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .content {
+      line-height: 1.8;
+      margin-bottom: 30px;
+    }
+    .highlight {
+      color: #ff6b6b;
+      font-weight: 600;
+    }
+    .warning-box {
+      background: linear-gradient(135deg, #ffe8e8, #ffd6d6);
+      border-radius: 15px;
+      padding: 25px;
+      margin: 25px 0;
+      border-left: 5px solid #ff6b6b;
+      border: 2px solid #ff6b6b;
+    }
+    .expiry-info {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      color: #856404;
+    }
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 15px 30px;
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+      box-shadow: 0 8px 16px rgba(255, 107, 107, 0.3);
+      transition: transform 0.3s ease;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+    }
+    .secondary-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 20px;
+      font-weight: bold;
+      text-align: center;
+      margin: 10px 5px;
+      box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+      transition: transform 0.3s ease;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 2px solid #f0f0f0;
+    }
+    .footer-text {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 10px;
+    }
+    .contact-info {
+      font-size: 11px;
+      color: #aaa;
+      line-height: 1.5;
+    }
+    .warning-badge {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .countdown {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+    .package-details {
+      background: #f8f9ff;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #ff6b6b;
+      margin: 15px 0;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+    .status-active {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status-expired {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .status-suspended {
+      background: #fff3cd;
+      color: #856404;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="warning-badge">⚠️ THÔNG BÁO QUAN TRỌNG</div>
+      <div class="warning-icon">⏰</div>
+      <div class="logo">StagPower Gym</div>
+      <div class="tagline">Gói tập của bạn sắp hết hạn!</div>
+    </div>
+
+    <div class="content">
+      <h2 style="color: #333; margin-bottom: 20px;">Xin chào <span class="highlight">{{user.fullName}}</span>!</h2>
+      
+      <div class="warning-box">
+        <h3 style="color: #ff6b6b; margin-top: 0;">🚨 Thông báo quan trọng</h3>
+        <p><strong>Gói tập của bạn sẽ hết hạn trong vòng 7 ngày tới!</strong></p>
+        <p>Để không gián đoạn quá trình tập luyện, vui lòng gia hạn gói tập ngay hôm nay.</p>
+      </div>
+
+      <div class="countdown">
+        ⏳ Còn lại: {{daysRemaining}} ngày
+      </div>
+
+      <div class="package-details">
+        <h4 style="color: #ff6b6b; margin-top: 0;">📋 Thông tin gói tập hiện tại:</h4>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li><strong>Mã thành viên:</strong> {{user.uid}}</li>
+          <li><strong>Tên gói:</strong> {{package.name}}</li>
+          <li><strong>Loại gói:</strong> {{subscription.type}}</li>
+          <li><strong>Hạng thành viên:</strong> {{subscription.membershipType}}</li>
+          <li><strong>Danh mục gói:</strong> {{package.packageCategory}}</li>
+          <li><strong>Thời gian gói:</strong> {{package.durationMonths}} tháng</li>
+          <li><strong>Ngày bắt đầu:</strong> {{subscription.startDate}}</li>
+          <li><strong>Ngày hết hạn:</strong> {{subscription.endDate}}</li>
+          <li><strong>Trạng thái:</strong> 
+            <span class="status-badge status-{{subscription.status.toLowerCase}}">{{subscription.status}}</span>
+          </li>
+          {{#if subscription.ptsessionsRemaining}}
+          <li><strong>Buổi PT còn lại:</strong> {{subscription.ptsessionsRemaining}} buổi</li>
+          {{/if}}
+          {{#if subscription.ptsessionsUsed}}
+          <li><strong>Buổi PT đã sử dụng:</strong> {{subscription.ptsessionsUsed}} buổi</li>
+          {{/if}}
+        </ul>
+      </div>
+
+      <div class="expiry-info">
+        <strong>💡 Lưu ý quan trọng:</strong><br>
+        • Sau khi gói tập hết hạn, bạn sẽ không thể sử dụng các dịch vụ của phòng gym<br>
+        • Việc gia hạn sớm sẽ giúp bạn tránh được tình trạng gián đoạn tập luyện<br>
+        • Chúng tôi có nhiều gói tập ưu đãi đặc biệt dành cho việc gia hạn<br>
+        {{#if subscription.isSuspended}}
+        • <strong>⚠️ Gói tập của bạn đang bị tạm ngưng!</strong> Vui lòng liên hệ để được hỗ trợ.
+        {{/if}}
+      </div>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{{renewalUrl}}" class="cta-button">
+          🔄 Gia Hạn Ngay
+        </a>
+        <br>
+        <a href="{{packageUrl}}" class="secondary-button">
+          📦 Xem Gói Tập Khác
+        </a>
+        <a href="{{contactUrl}}" class="secondary-button">
+          📞 Liên Hệ Tư Vấn
+        </a>
+      </div>
+
+      <div style="background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 20px; margin: 20px 0; color: #2e7d32;">
+        <strong>🎁 Ưu đãi đặc biệt cho việc gia hạn:</strong><br>
+        • Giảm 10% cho việc gia hạn trước 3 ngày<br>
+        • Tặng thêm 1 tuần tập miễn phí khi gia hạn gói 3 tháng<br>
+        • Ưu tiên đặt lịch với huấn luyện viên cá nhân<br>
+        • Tham gia các lớp học nhóm miễn phí<br>
+        {{#if subscription.type 'Combo'}}
+        • Gói Combo: Ưu đãi đặc biệt cho buổi PT cá nhân<br>
+        {{/if}}
+        {{#if subscription.type 'PT'}}
+        • Gói PT: Giảm giá cho gói PT tiếp theo<br>
+        {{/if}}
+      </div>
+
+      <div style="background: #f0f8ff; border: 1px solid #2196f3; border-radius: 8px; padding: 20px; margin: 20px 0; color: #1565c0;">
+        <strong>📞 Cần hỗ trợ?</strong><br>
+        Nếu bạn có bất kỳ thắc mắc nào về việc gia hạn gói tập, đừng ngần ngại liên hệ với chúng tôi:<br>
+        • Hotline: 0366666666<br>
+        • Email: phandinhthai2k4@gmail.com<br>
+        • Chat trực tiếp trên website<br>
+        • Liên hệ qua ứng dụng di động
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-text">
+        Đây là email tự động, vui lòng không trả lời.
+      </div>
+      
+      <div class="footer-text">
+        <strong>StagPower Gym Management System</strong>
+      </div>
+      
+      <div class="contact-info">
+        📧 Email: phandinhthai2k4@gmail.com<br>
+        📞 Hotline: 0366666666<br>
+        🌐 Website: www.stagpower.com<br>
+      </div>
+      
+      <div class="footer-text" style="margin-top: 20px;">
+        &copy; 2025 StagPower Gym. Tất cả quyền được bảo lưu.<br>
+        <em>"Sự kiên trì là chìa khóa của thành công trong tập luyện."</em>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

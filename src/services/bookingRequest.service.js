@@ -1,6 +1,8 @@
 import BookingRequest from "../models/BookingRequest";
 import User from "../models/User";
 import Subscription from "../models/Subscription";
+import Schedule from "../models/Schedule";
+import { createSchedule } from "./schedule.service.js";
 import { paginate } from "../utils/pagination";
 
 // cần chỉnh sửa lại để hợp lí hơn,
@@ -186,14 +188,68 @@ export const updateBookingRequestById = async (id, bookingRequestData) => {
 }
 
 export const confirmBookingRequest = async (id) => {
-    const bookingRequest = await BookingRequest.findByIdAndUpdate(id, { status: 'Confirmed' }, { new: true });
+    const bookingRequest = await BookingRequest.findById(id);
     if (!bookingRequest) {
         const error = new Error("Booking request not found");
         error.statusCode = 404;
         error.code = "BOOKING_REQUEST_NOT_FOUND";
         throw error;
     }
-    return bookingRequest;
+
+    // Kiểm tra booking request chưa được confirm
+    if (bookingRequest.status === 'Confirmed') {
+        const error = new Error("Booking request already confirmed");
+        error.statusCode = 400;
+        error.code = "BOOKING_REQUEST_ALREADY_CONFIRMED";
+        throw error;
+    }
+
+    // Cập nhật status thành Confirmed
+    bookingRequest.status = 'Confirmed';
+    await bookingRequest.save();
+
+    // Kiểm tra xem đã có schedule cho booking request này chưa
+    const existingSchedule = await Schedule.findOne({
+        memberId: bookingRequest.memberId,
+        trainerId: bookingRequest.trainerId,
+        dateTime: bookingRequest.requestDateTime,
+        status: { $in: ['Confirmed', 'Completed'] }
+    });
+
+    if (existingSchedule) {
+        const error = new Error("Schedule already exists for this booking request");
+        error.statusCode = 400;
+        error.code = "SCHEDULE_ALREADY_EXISTS";
+        throw error;
+    }
+
+    // Lấy thông tin subscription để xác định branch
+    const subscription = await Subscription.findById(bookingRequest.subscriptionId);
+    if (!subscription) {
+        const error = new Error("Subscription not found");
+        error.statusCode = 404;
+        error.code = "SUBSCRIPTION_NOT_FOUND";
+        throw error;
+    }
+
+    // Tự động tạo schedule từ booking request
+    const scheduleData = {
+        memberId: bookingRequest.memberId,
+        trainerId: bookingRequest.trainerId,
+        subscriptionId: bookingRequest.subscriptionId,
+        branchId: subscription.branchId, // Sử dụng branchId từ subscription
+        dateTime: bookingRequest.requestDateTime,
+        durationMinutes: bookingRequest.duration,
+        notes: bookingRequest.notes,
+        assignedExercises: []
+    };
+
+    const schedule = await createSchedule(scheduleData);
+
+    return {
+        bookingRequest,
+        schedule
+    };
 }
 
 export const rejectBookingRequest = async (id, rejectReason) => {

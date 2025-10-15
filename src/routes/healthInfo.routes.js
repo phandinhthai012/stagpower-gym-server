@@ -22,7 +22,7 @@ router.get("/me",authenticateToken, getMyHealthInfoController);
 // get health info by member id ==> admin and trainer and staff
 router.get("/member/:memberId", getHealthInfoByMemberIdController);
 // get health info by id
-router.get("/:id", getHealthInfoByIdController);
+router.get("/:id",authenticateToken, getHealthInfoByIdController);
 // create health info
 router.post("/:memberId", validateHealthProfileCreate, createHealthInfoController);
 // update health info by id

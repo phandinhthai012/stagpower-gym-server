@@ -177,34 +177,33 @@ subscriptionSchema.methods.usePTSession = function() {
     return false;
 };
 
-subscriptionSchema.methods.suspend = function(reason, endDate) {
+subscriptionSchema.methods.suspend = function(reason, startDate, endDate) {
     this.isSuspended = true;
-    this.suspensionStartDate = new Date();
-    this.suspensionEndDate = endDate;
-    this.suspensionReason = reason;
+    this.suspensionStartDate = startDate? new Date(startDate) : new Date();
+    this.suspensionEndDate = new Date(endDate);
+    this.suspensionReason = reason || 'No reason';
     this.status = 'Suspended';
-    
-    // Thêm vào lịch sử
-    this.suspensionHistory.push({
-        startDate: this.suspensionStartDate,
-        endDate: this.suspensionEndDate,
-        reason: reason,
-        status: 'Active'
-    });
 };
 
 subscriptionSchema.methods.unsuspend = function() {
+    // Lưu thông tin tạm ngưng trước khi xóa
+    const suspensionInfo = {
+        startDate: this.suspensionStartDate,
+        endDate: this.suspensionEndDate,
+        reason: this.suspensionReason,
+        status: 'Completed',
+        completedAt: new Date()
+    };
+    
+    // Thêm vào lịch sử
+    this.suspensionHistory.push(suspensionInfo);
+    
+    // Reset thông tin tạm ngưng
     this.isSuspended = false;
     this.suspensionStartDate = undefined;
     this.suspensionEndDate = undefined;
     this.suspensionReason = undefined;
     this.status = 'Active';
-    
-    // Cập nhật lịch sử
-    const activeSuspension = this.suspensionHistory.find(s => s.status === 'Active');
-    if (activeSuspension) {
-        activeSuspension.status = 'Completed';
-    }
 };
 
 subscriptionSchema.methods.extend = function(days) {

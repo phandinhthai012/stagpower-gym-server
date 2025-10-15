@@ -7,8 +7,8 @@ import {
     deletePaymentController,
     getPaymentByMemberIdController,
     momoIpnController,
-    momoPaymentController
-
+    momoPaymentController,
+    completePaymentController
 } from '../controllers/payment.controller.js'
 
 import { authenticateToken, authorize } from '../middleware/auth.js';
@@ -16,7 +16,7 @@ import { validPaymentCreate } from '../middleware/validations.js';
 
 const router = express.Router();
 
-router.post('/', createPaymentController);
+router.post('/', authenticateToken, createPaymentController);
 
 router.get('/', authenticateToken, authorize(['admin', "staff"]), getAllPaymentsController);
 
@@ -31,8 +31,10 @@ router.get('/member/:memberId', authenticateToken, getPaymentByMemberIdControlle
 
 // payment momo method
 router.post('/momo/create', momoPaymentController);
-// callback momo methods
+// callback momo methods không cần tạo service trên frontend
 router.post('/momo/ipn', momoIpnController);
+// complete payment
+router.post('/:id/complete', authenticateToken, authorize(['admin', "staff"]), completePaymentController);
 
 
 export default router;

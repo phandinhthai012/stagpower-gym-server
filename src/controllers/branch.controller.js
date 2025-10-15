@@ -49,6 +49,22 @@ export const getAllBranchesController = async (req, res, next) => {
     }
 }
 
+export const getPublicBranchesController = async (req, res, next) => {
+    try {
+        // Only return active branches for public access
+        const branches = await Branch.find({ status: 'Active' }).select('name address phone email');
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Active branches retrieved successfully",
+            data: branches
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
 export const getBranchByIdController = async (req, res, next) => {
     try {
         const { id } = req.params;

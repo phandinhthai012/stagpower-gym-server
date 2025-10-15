@@ -3,6 +3,7 @@ import User from "../models/User";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { createRefreshToken, revokeRefreshToken, revokeAllRefreshTokens } from "./refreshToken.service.js";
 import { createOtp, isExpired, compareOtp } from "../utils/otp.js";
+import { sendOtpEmail,sendWelcomeEmail } from "../utils/emailHelper.js";
 
 
 export const register = async (data) => {
@@ -32,6 +33,10 @@ export const register = async (data) => {
         dateOfBirth,
         gender
     });
+    if (newUser) {
+        await sendWelcomeEmail({ to: email, data: { userEmail: email, userName: fullName, uid: newUser.uid, joinDate: newUser.joinDate, packageName: 'None' } });
+    }
+
     return newUser;
 }
 
@@ -142,11 +147,16 @@ export const forgotPassword = async ({ email }) => {
     user.otp = {
         code: OTP.code,
         expiresAt: OTP.expiresAt,
-        isUsed: OTP.isUsed
+        isUsed: OTP.isUsed,
+        isVerified: OTP.isVerified
     };
     await user.save();
+    // send email
+    await sendOtpEmail({ to: email, data: { userEmail: email, otpCode: OTP.code } });
     return {
-        OTP: OTP.code, // sau sẽ remove OTP.code
+        email: email,
+        userUid: user._id,
+        userName: user.fullName,
         message: "OTP sent to and expires in 10 minutes"
     };
 }
@@ -154,7 +164,7 @@ export const forgotPassword = async ({ email }) => {
 export const verifyOtp = async ({ email, otp }) => {
     const user = await User.findOne({ email });
     if (!user || !user.otp) {
-        const error = new Error("Invalid or expired OTP");
+        const error = new Error("Email is not found");
         error.statusCode = 404;
         error.code = "NOT_FOUND";
         throw error;
@@ -173,39 +183,77 @@ export const verifyOtp = async ({ email, otp }) => {
         error.code = "INVALID_OTP";
         throw error;
     }
-    return { verified: true };
+    
+    // Đánh dấu OTP đã được verify (nhưng chưa sử dụng)
+    user.otp.isVerified = true;
+    await user.save();
+    
+    return { 
+        email: email,
+        userUid: user._id,
+        userName: user.fullName,
+        message: "OTP verified successfully"
+    };
 }
 
-export const resetPassword = async ({email,otp, newPassword}) => {
+
+export const resendOtp = async ({email}) => {
     const user = await User.findOne({email});
+    if (!user) {
+        const error = new Error("Email is not found");
+        error.statusCode = 404;
+        error.code = "NOT_FOUND";
+        throw error;
+    }
+    const OTP = createOtp();
+    user.otp = {
+        code: OTP.code,
+        expiresAt: OTP.expiresAt,
+        isUsed: OTP.isUsed,
+        isVerified: OTP.isVerified
+    };
+    await user.save();
+    await sendOtpEmail({ to: email, data: { userEmail: email, otpCode: OTP.code } });
+    return {
+        email: email,
+        message: "OTP resent successfully"
+    };
+}
+
+
+export const resetPassword = async ({email, newPassword}) => {
+    // 1. Tìm user và kiểm tra OTP đã được verify
+    const user = await User.findOne({ email });
     if (!user || !user.otp) {
-        const error = new Error('Invalid or expired OTP');
-        error.statusCode = 400; error.code = 'INVALID_OTP';
-        throw error;
-      }
-    const { code, expiresAt, isUsed } = user.otp;
-    if (isUsed || !code ) {
-        const error = new Error('Invalid or expired OTP');
-        error.statusCode = 400; error.code = 'INVALID_OTP';
+        const error = new Error('User not found or OTP not found');
+        error.statusCode = 404;
+        error.code = 'NOT_FOUND';
         throw error;
     }
-    if (isExpired(expiresAt)) {
-        const error = new Error('Expired OTP');
-        error.statusCode = 400; error.code = 'INVALID_OTP';
-        throw error;
-    }
-    const isOtpValid = compareOtp(otp, code);
-    if (!isOtpValid) {
-        const error = new Error("Invalid OTP");
+    
+    // 2. Kiểm tra OTP đã được verify chưa
+    if (!user.otp.isVerified) {
+        const error = new Error('OTP must be verified first');
         error.statusCode = 400;
-        error.code = "INVALID_OTP";
+        error.code = 'OTP_NOT_VERIFIED';
         throw error;
     }
+    
+    // 3. Kiểm tra OTP chưa được sử dụng
+    if (user.otp.isUsed) {
+        const error = new Error('OTP already used');
+        error.statusCode = 400;
+        error.code = 'OTP_ALREADY_USED';
+        throw error;
+    }
+    
+    // 4. Cập nhật password và đánh dấu OTP đã sử dụng
     user.otp.isUsed = true;
     user.otp.expiresAt = null;
     user.password = newPassword;
     user.tokenVersion = user.tokenVersion + 1;
     await user.save();
+    
     return { message: "Password reset successfully" };
 }
 

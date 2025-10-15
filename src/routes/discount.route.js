@@ -11,7 +11,7 @@ import {authenticateToken, authorize} from "../middleware/auth.js"
 
 const router = express.Router();
 
-router.get("/",authenticateToken,getAllDiscountsController);
+router.get("/",getAllDiscountsController);
 
 router.post("/",authenticateToken,authorize(["admin","staff"]),createDiscountController);
 

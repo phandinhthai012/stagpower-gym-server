@@ -5,7 +5,10 @@ import {
     getSubscriptionByIdController,
     getAllSubscriptionsByMemberController,
     updateSubscriptionController,
-    deleteSubscriptionController
+    deleteSubscriptionController,
+    suspendSubscriptionController,
+    unsuspendSubscriptionController,
+    changeSubscriptionStatusController
 } from "../controllers/subscription.controller";
 
 import { authenticateToken,authorize } from "../middleware/auth";
@@ -25,5 +28,11 @@ router.get("/:id",authenticateToken, getSubscriptionByIdController);
 router.put("/:id",validSubscriptionUpdate,authenticateToken, authorize(["admin","staff","member"]), updateSubscriptionController);
 
 router.delete("/:id",authenticateToken, authorize(["admin","staff"]), deleteSubscriptionController);
+
+router.post("/:id/suspend",authenticateToken, authorize(["admin","staff"]), suspendSubscriptionController);
+
+router.post("/:id/unsuspend",authenticateToken, authorize(["admin","staff"]), unsuspendSubscriptionController);
+
+router.put("/:id/status",authenticateToken, authorize(["admin","staff"]), changeSubscriptionStatusController);
 
 export default router;

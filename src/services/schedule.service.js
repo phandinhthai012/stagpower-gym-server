@@ -23,7 +23,7 @@ export const createSchedule = async (scheduleData) => {
         assignedExercises,
         status: 'Confirmed'
     });
-    
+
     return schedule;
 };
 
@@ -100,37 +100,37 @@ export const getSchedulesByTrainer = async (trainerId) => {
 
 export const updateScheduleStatus = async (id, status) => {
     const schedule = await Schedule.findByIdAndUpdate(
-        id, 
-        { status }, 
+        id,
+        { status },
         { new: true, runValidators: true }
     );
-    
+
     if (!schedule) {
         const error = new Error("Schedule not found");
         error.statusCode = 404;
         error.code = "SCHEDULE_NOT_FOUND";
         throw error;
     }
-    
+
     return schedule;
 };
 
 // export const assignExercisesToSchedule = async (id, exerciseIds) => {
 //     const assignedExercises = exerciseIds.map(exerciseId => ({ exerciseId }));
-    
+
 //     const schedule = await Schedule.findByIdAndUpdate(
 //         id,
 //         { assignedExercises },
 //         { new: true, runValidators: true }
 //     );
-    
+
 //     if (!schedule) {
 //         const error = new Error("Schedule not found");
 //         error.statusCode = 404;
 //         error.code = "SCHEDULE_NOT_FOUND";
 //         throw error;
 //     }
-    
+
 //     return schedule;
 // };
 
@@ -138,16 +138,28 @@ export const updateScheduleStatus = async (id, status) => {
 // pagination
 
 export const getAllSchedulesWithPagination = async (options) => {
-    const schedules = await paginate(Schedule, {},options);
+    const query = {};
+    if (options.status) {
+        query.status = options.status;
+    }
+    const schedules = await paginate(Schedule, query, options);
     return schedules;
 }
 
-export const getScheduleByMemberWithPagination = async (memberId    , options) => {
-    const schedules = await paginate(Schedule, { memberId }, options);
+export const getScheduleByMemberWithPagination = async (memberId, options) => {
+    const query = { memberId };
+    if (options.status) {
+        query.status = options.status;
+    }
+    const schedules = await paginate(Schedule, query, options);
     return schedules;
 }
 
 export const getScheduleByTrainerWithPagination = async (trainerId, options) => {
-    const schedules = await paginate(Schedule, { trainerId }, options);
+    const query = { trainerId };
+    if (options.status) {
+        query.status = options.status;
+    }
+    const schedules = await paginate(Schedule, query, options);
     return schedules;
 }

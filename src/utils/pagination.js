@@ -7,21 +7,23 @@ export const paginate = async (model, query = {}, options = {}) => {
     
     const skip = (page - 1) * limit;
     
-    const [data, total] = await Promise.all([
+    const [data, filteredTotal, totalRecords] = await Promise.all([
         model.find(query)
             .sort({ [sort]: order === 'desc' ? -1 : 1 })
             .skip(skip)
             .limit(limit),
-        model.countDocuments(query)
+        model.countDocuments(query), // Số records thỏa mãn điều kiện
+        model.countDocuments({})  // Tổng số records trong database
     ]);
     
     return {
         data,
         pagination: {
             currentPage: page,
-            totalPages: Math.ceil(total / limit),
-            totalRecords: total,
-            hasNext: page < Math.ceil(total / limit),
+            totalPages: Math.ceil(filteredTotal / limit),
+            totalRecords: totalRecords, // Luôn là tổng số records trong database
+            filteredRecords: filteredTotal, // Số records thỏa mãn điều kiện
+            hasNext: page < Math.ceil(filteredTotal / limit),
             hasPrev: page > 1,
             limit
         }
@@ -33,7 +35,8 @@ export const searchUsers = (keyword) => {
     return {
         $or: [
             { fullName: { $regex: keyword, $options: 'i' } },
-            { email: { $regex: keyword, $options: 'i' } }
+            { email: { $regex: keyword, $options: 'i' } },
+            { phone: { $regex: keyword, $options: 'i' } },
         ]
     };
 };

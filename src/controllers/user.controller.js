@@ -1,12 +1,30 @@
 import {
+    getAllUsers,
     getUserById,
-    updateUser,
+    updateUserProfile,
     getAllMembers,
     getAllStaffs,
     changeStatus,
-    getAllUsersWithPagination
+    getAllUsersWithPagination,
+    getAllMembersWithPagination,
+    getallStaffsWithPagination,
+    createUser,
 } from "../services/user.service";
 import response from "../utils/response";
+
+export const getAllUsersController = async (req, res, next) => {
+    try {
+        const users = await getAllUsers();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Users fetched successfully",
+            data: users
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
 
 
 export const getAllMembersController = async (req, res, next) => {
@@ -54,12 +72,11 @@ export const getUserByIdController = async (req, res, next) => {
 
 }
 
-export const updateMyProfileController = async (req, res, next) => {
+export const updateUserProfileController = async (req, res, next) => {
     try {
-        const userId = req.user._id;
-        const { fullName, phone, gender, dateOfBirth, photo } = req.body;
-        const payload = { fullName, phone, gender, dateOfBirth, photo };
-        const user = await updateUser(userId, payload);
+        const userId = req.params.userId;
+        const payload = req.body;
+        const user = await updateUserProfile(userId, payload);
         return response(res, {
             success: true,
             statusCode: 200,
@@ -70,6 +87,23 @@ export const updateMyProfileController = async (req, res, next) => {
         return next(error);
     }
 }
+// bao gồm cả info của từng role
+// export const updateUserController = async (req, res, next) => {
+//     try {
+//         const { userId } = req.params;
+//         const payload = req.body;
+//         const user = await updateUser(userId, payload);
+//         return response(res, {
+//             success: true,
+//             statusCode: 200,
+//             message: "User updated successfully",
+//             data: user
+//         });
+//     } catch (error) {
+//         return next(error);
+//     }
+// }
+
 
 export const changeStatusController = async (req, res, next) => {
     try {
@@ -79,7 +113,7 @@ export const changeStatusController = async (req, res, next) => {
         return response(res, {
             success: true,
             statusCode: 200,
-            message: "User status updated successfully",    
+            message: "User status updated successfully",
             data: updated
         });
     } catch (error) {
@@ -90,12 +124,59 @@ export const changeStatusController = async (req, res, next) => {
 export const getAllUsersWithPaginationController = async (req, res, next) => {
     try {
         const { page, limit, sort, order, search, role, status } = req.query;
+        
         const users = await getAllUsersWithPagination({ page, limit, sort, order, search, role, status });
         return response(res, {
             success: true,
             statusCode: 200,
             message: "Users fetched successfully",
             data: users
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const getAllMembersWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit, sort, order, search, status, membership_level } = req.query;
+        const members = await getAllMembersWithPagination({ page, limit, sort, order, search, status, membership_level });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Members fetched successfully",
+            data: members
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const getallStaffsWithPaginationController = async (req, res, next) => {
+    try {
+        const { page, limit, sort, order, search, status, role } = req.query;
+        const staffs = await getallStaffsWithPagination({ page, limit, sort, order, search, status, role });
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Staffs fetched successfully",
+            data: staffs
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+
+export const createUserController = async (req, res, next) => {
+    try {
+        const payload = req.body;
+        const user = await createUser(payload);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "User created successfully",
+            data: user
         });
     } catch (error) {
         return next(error);

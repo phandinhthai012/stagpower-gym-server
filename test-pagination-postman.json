@@ -1,0 +1,245 @@
+{
+  "info": {
+    "name": "Test Pagination API",
+    "description": "Test API để kiểm tra pagination với totalRecords luôn trả về",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Lấy tất cả users (không điều kiện)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/paginated",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "paginated"]
+        }
+      }
+    },
+    {
+      "name": "2. Lấy users với phân trang",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/paginated?page=1&limit=5",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "paginated"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Search users theo tên/email",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/paginated?search=john&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "paginated"],
+          "query": [
+            {
+              "key": "search",
+              "value": "john"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Lấy users theo role",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/paginated?role=member&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "paginated"],
+          "query": [
+            {
+              "key": "role",
+              "value": "member"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Lấy users theo status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/paginated?status=active&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "paginated"],
+          "query": [
+            {
+              "key": "status",
+              "value": "active"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. Kết hợp nhiều điều kiện",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/paginated?role=member&status=active&search=john&page=1&limit=5",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "paginated"],
+          "query": [
+            {
+              "key": "role",
+              "value": "member"
+            },
+            {
+              "key": "status",
+              "value": "active"
+            },
+            {
+              "key": "search",
+              "value": "john"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "7. Sắp xếp theo tên",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/paginated?sort=fullName&order=asc&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "paginated"],
+          "query": [
+            {
+              "key": "sort",
+              "value": "fullName"
+            },
+            {
+              "key": "order",
+              "value": "asc"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ]
+}
+
