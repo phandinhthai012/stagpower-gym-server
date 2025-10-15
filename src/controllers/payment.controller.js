@@ -12,7 +12,9 @@ import {
     createMomoPayment,
     verifyIpnSignature
 } from "../config/momo";
-
+import socketService from '../services/socket.service.js';
+import { roleRoomMap } from '../utils/socketUtils.js';
+import { createNotification } from '../services/notification.service.js';
 import response from "../utils/response";
 
 
@@ -192,7 +194,15 @@ export const momoIpnController = async (req, res, next) => {
             });
         }
         let payment = await completePaymentMomo(orderId,transId,resultCode);
-        
+        await createNotification({
+            userId: payment.memberId,
+            title: "Payment completed successfully",
+            message: "Payment completed successfully",
+        });
+        socketService.emitToUser(payment.memberId, "payment_completed", payment);
+        socketService.emitToRoom(roleRoomMap.admin, "payment_completed", payment);
+
+
         return response(res, {
             success: true,
             statusCode: 200,
@@ -209,6 +219,14 @@ export const completePaymentController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const payment = await completePayment(id);
+
+        await createNotification({
+            userId: payment.memberId,
+            title: "Payment completed successfully",
+            message: "Payment completed successfully",
+        });
+        socketService.emitToUser(payment.memberId, "payment_completed", payment);
+        socketService.emitToRoom(roleRoomMap.admin, "payment_completed", payment);
         return response(res, {
             success: true,
             statusCode: 200,

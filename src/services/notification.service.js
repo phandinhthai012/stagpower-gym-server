@@ -80,3 +80,14 @@ export const getUserNotificationsWithPagination = async (userId, options) => {
     const notifications = await paginate(Notification, { userId: userId }, options);
     return notifications;
 }
+
+
+export default {
+    createNotification,
+    getAllNotifications,
+    getUserNotifications,
+    getNotificationById,
+    markNotificationAsRead,
+    markNotificationAsUnread,
+    deleteNotificationById,
+}

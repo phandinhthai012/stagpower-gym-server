@@ -11,11 +11,16 @@ import {
 } from "../services/notification.service.js";
 
 import response from "../utils/response";
+import socketService from "../services/socket.service";
+import { roleRoomMap } from "../utils/socketUtils";
 
 export const createNotificationController = async (req, res, next) => {
     try {
         const { userId, title, message, type, status } = req.body;
         const notification = await createNotification({ userId, title, message, type, status });
+        
+        socketService.emitToUser(userId, "notification_created", notification);
+       
         return response(res, {
             success: true,
             statusCode: 201,
@@ -103,6 +108,8 @@ export const deleteNotificationByIdController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const notification = await deleteNotificationById(id);
+
+        socketService.emitToUser(notification.userId, "notification_deleted", notification);
         return response(res, {
             success: true,
             statusCode: 200,

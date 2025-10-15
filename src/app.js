@@ -11,6 +11,12 @@ import router from './routes/index.js';
 import { initCronJobs } from './jobs/index.js';
 import { verifyConnection } from './config/nodemailer.js';
 import { generalApiRateLimiter } from './middleware/rateLimit.js';
+import socketHandler from './socket/index.js';
+import { SOCKET_CONFIG } from './config/socket.js';
+
+// socket.io
+import {createServer} from 'http';
+import {Server} from 'socket.io';
 
 // Load environment variables 
 dotenv.config();
@@ -21,6 +27,12 @@ const app = express();
 app.set('trust proxy', 1);
 const hostname = process.env.HOSTNAME || 'localhost';
 const port = process.env.PORT || 5000 ;
+
+// create server
+const server = createServer(app);
+
+const io = new Server(server, SOCKET_CONFIG);
+
 
 // CORS configuration
 const corsOptions = {
@@ -48,18 +60,18 @@ const corsOptions = {
   await verifyConnection();
 
   app.use(cors(corsOptions));
-
-
   //Logging middleware
   app.use(morgan('combined'));
-
   app.use(express.static(path.join(__dirname, "templates")));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+
+  // socket.io
+  socketHandler(io);
+
   // init cron jobs
   initCronJobs();
-
 
   // routes
   app.get('/', (req, res) => {
@@ -74,8 +86,12 @@ const corsOptions = {
   app.use(notFoundHandler);
   app.use(errorHandler);
   
-  app.listen(port, hostname, () => {
+  // app.listen(port, hostname, () => {
+  //   console.log(`Server is running on http://${hostname}:${port}`);
+  // });
+  server.listen(port, hostname, () => {
     console.log(`Server is running on http://${hostname}:${port}`);
+    console.log(`🔌 Socket.IO server is running`);
   });
 })();
 

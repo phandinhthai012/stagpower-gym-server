@@ -331,3 +331,86 @@ export const autoUnsuspend = async (id) => {
 //     cancelSubscription,
 //     getSuspensionHistory
 // }
+
+
+
+// src/services/subscription.service.js - UNCOMMENT VÀ SỬA
+// export const extendSubscription = async (id, extendData) => {
+//     try {
+//         const { days, bonusDays = 0, reason, extendPTSessions = 0 } = extendData;
+        
+//         if (!days || days <= 0) {
+//             const error = new Error("Valid days are required");
+//             error.statusCode = 400;
+//             error.code = "INVALID_DAYS";
+//             throw error;
+//         }
+
+//         const subscription = await Subscription.findById(id);
+//         if (!subscription) {
+//             const error = new Error("Subscription not found");
+//             error.statusCode = 404;
+//             error.code = "SUBSCRIPTION_NOT_FOUND";
+//             throw error;
+//         }
+
+//         if (subscription.status !== 'Active') {
+//             const error = new Error("Only active subscriptions can be extended");
+//             error.statusCode = 400;
+//             error.code = "SUBSCRIPTION_NOT_ACTIVE";
+//             throw error;
+//         }
+
+//         // Tính tổng ngày gia hạn (ngày chính + ngày bonus)
+//         const totalDays = days + bonusDays;
+        
+//         // Lưu thông tin cũ
+//         const oldEndDate = new Date(subscription.endDate);
+//         const oldDurationDays = subscription.durationDays;
+//         const oldPTSessions = subscription.ptsessionsRemaining;
+
+//         // Gia hạn subscription
+//         subscription.extend(totalDays);
+        
+//         // Gia hạn PT sessions nếu có
+//         if (extendPTSessions > 0) {
+//             subscription.extendPTSessions(extendPTSessions);
+//         }
+
+//         // Thêm vào lịch sử gia hạn (nếu có field này)
+//         if (!subscription.extensionHistory) {
+//             subscription.extensionHistory = [];
+//         }
+        
+//         subscription.extensionHistory.push({
+//             days: totalDays,
+//             bonusDays: bonusDays,
+//             reason: reason || "Extension",
+//             extendedAt: new Date(),
+//             oldEndDate: oldEndDate,
+//             newEndDate: subscription.endDate,
+//             oldPTSessions: oldPTSessions,
+//             newPTSessions: subscription.ptsessionsRemaining
+//         });
+
+//         await subscription.save();
+
+//         return {
+//             subscription,
+//             extensionInfo: {
+//                 days: totalDays,
+//                 bonusDays: bonusDays,
+//                 oldEndDate: oldEndDate,
+//                 newEndDate: subscription.endDate,
+//                 oldDurationDays: oldDurationDays,
+//                 newDurationDays: subscription.durationDays,
+//                 oldPTSessions: oldPTSessions,
+//                 newPTSessions: subscription.ptsessionsRemaining,
+//                 reason: reason || "Extension"
+//             }
+//         };
+
+//     } catch (error) {
+//         throw error;
+//     }
+// }

@@ -11,6 +11,8 @@ import {
     createUser,
 } from "../services/user.service";
 import response from "../utils/response";
+import socketService from "../services/socket.service";
+import { roleRoomMap } from "../utils/socketUtils";
 
 export const getAllUsersController = async (req, res, next) => {
     try {
@@ -172,12 +174,15 @@ export const createUserController = async (req, res, next) => {
     try {
         const payload = req.body;
         const user = await createUser(payload);
+        socketService.emitToRoom(roleRoomMap.admin, "user_created", user);
+
         return response(res, {
             success: true,
             statusCode: 200,
             message: "User created successfully",
             data: user
         });
+
     } catch (error) {
         return next(error);
     }
