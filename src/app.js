@@ -15,8 +15,8 @@ import socketHandler from './socket/index.js';
 import { SOCKET_CONFIG } from './config/socket.js';
 
 // socket.io
-import {createServer} from 'http';
-import {Server} from 'socket.io';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 // Load environment variables 
 dotenv.config();
@@ -26,7 +26,7 @@ dotenv.config();
 const app = express();
 app.set('trust proxy', 1);
 const hostname = process.env.HOSTNAME || 'localhost';
-const port = process.env.PORT || 5000 ;
+const port = process.env.PORT || 5000;
 
 // create server
 const server = createServer(app);
@@ -36,16 +36,18 @@ const io = new Server(server, SOCKET_CONFIG);
 
 // CORS configuration
 const corsOptions = {
-  origin:[
+  origin: [
     'http://localhost:3000',
     'http://localhost:5173',
+    'http://localhost:3001',
+    'http://localhost:8080',
     '*'
   ],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   preflightContinue: false,
   optionsSuccessStatus: 204,
   allowedHeaders: [
-    'Content-Type', 
+    'Content-Type',
     'Authorization',
     'X-Requested-With',
     'Accept',
@@ -85,7 +87,7 @@ const corsOptions = {
   // error handler
   app.use(notFoundHandler);
   app.use(errorHandler);
-  
+
   // app.listen(port, hostname, () => {
   //   console.log(`Server is running on http://${hostname}:${port}`);
   // });

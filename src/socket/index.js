@@ -87,6 +87,10 @@ const socketHandler = (io) => {
           users: Array.from(onlineUsers.values()),
         });
       }
+      if(socket.rateLimit) {
+        socket.rateLimit.requests = [];
+        socket.rateLimit.blocked = false;
+      }
     });
   });
 

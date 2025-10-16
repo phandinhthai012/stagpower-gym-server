@@ -26,7 +26,10 @@ const socketAuth = async (socket, next) => {
     next();
   } catch (error) {
     console.error('Socket auth error:', error);
-    next(new Error('Invalid authentication token'));
+    const err = new Error('Invalid authentication token');
+    err.statusCode = 401;
+    err.code = 'INVALID_AUTHENTICATION_TOKEN';
+    next(err);
   }
 };
 

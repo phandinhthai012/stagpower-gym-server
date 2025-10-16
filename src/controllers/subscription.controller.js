@@ -7,8 +7,8 @@ import {
     deleteSubscription,
     suspendSubscription,
     unsuspendSubscription,
-    changeSubscriptionStatus
-
+    changeSubscriptionStatus,
+    renewSubscription
 } from "../services/subscription.service";
 
 import response from "../utils/response";
@@ -234,3 +234,19 @@ export const unsuspendSubscriptionController = async (req, res, next) => {
         return next(error);
     }
 };
+
+export const renewSubscriptionController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const renewData = req.body;
+        const result = await renewSubscription(id, renewData.newPackageId, renewData);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Subscription renewed successfully",
+            data: result
+        });
+    } catch (error) {
+        return next(error);
+    }
+}

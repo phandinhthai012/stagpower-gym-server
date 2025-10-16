@@ -8,11 +8,12 @@ import {
     deleteSubscriptionController,
     suspendSubscriptionController,
     unsuspendSubscriptionController,
-    changeSubscriptionStatusController
+    changeSubscriptionStatusController,
+    renewSubscriptionController
 } from "../controllers/subscription.controller";
 
 import { authenticateToken,authorize } from "../middleware/auth";
-import { validSubscriptionCreate,validSubscriptionUpdate } from "../middleware/validations";
+import { validSubscriptionCreate,validSubscriptionUpdate, validRenewSubscription } from "../middleware/validations";
 
 const router = express.Router();
 
@@ -34,5 +35,7 @@ router.post("/:id/suspend",authenticateToken, authorize(["admin","staff"]), susp
 router.post("/:id/unsuspend",authenticateToken, authorize(["admin","staff"]), unsuspendSubscriptionController);
 
 router.put("/:id/status",authenticateToken, authorize(["admin","staff"]), changeSubscriptionStatusController);
+
+router.put("/:id/renew",authenticateToken,validRenewSubscription, renewSubscriptionController);
 
 export default router;

@@ -16,6 +16,7 @@ const subscriptionSchema = new mongoose.Schema({
     branchId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',
+        default: null, // nếu null thì subscription có thể sử dụng ở tất cả các chi nhánh
     },
     type: {
         type: String,
@@ -107,6 +108,11 @@ const subscriptionSchema = new mongoose.Schema({
             return this.isSuspended === true;
         }
     },
+    renewedFrom: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+        default: null,
+    }
 }, {
     timestamps: true,
     collection: 'subscriptions',

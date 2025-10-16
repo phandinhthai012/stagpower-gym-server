@@ -53,7 +53,7 @@ export const authenticateToken = async (req, res, next) => {
 
 export const verifyRefreshToken = async (req, res, next) => {
     try {
-        const refreshToken = req.body.refreshToken || req.headers.Refreshtoken;
+        const refreshToken = req.body.refreshToken || req.headers['refreshtoken'];
         // console.log(refreshToken);
         if(!refreshToken) {
             const error = new Error("Refresh token is required");
