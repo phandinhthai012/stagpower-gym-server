@@ -54,6 +54,12 @@ export const getPaymentByStatus = async (status) => {
 
 export const updatePayment = async (id, paymentData) => {
     const payment = await Payment.findByIdAndUpdate(id, paymentData, { new: true, runValidators: true });
+    
+    // If payment is completed, update subscription status to Active
+    if (payment && paymentData.paymentStatus === "Completed" && payment.subscriptionId) {
+        await changeSubscriptionStatus(payment.subscriptionId, "Active");
+    }
+    
     return payment;
 }
 
