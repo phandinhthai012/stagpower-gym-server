@@ -14,7 +14,7 @@ export const createPayment = async (paymentData) => {
 
 export const getAllPayments = async () => {
     const payments = await Payment.find()
-        .populate('memberId', 'name email phone')
+        .populate('memberId', 'fullName email phone')
         .populate('subscriptionId', 'type membershipType')
         .populate({
             path: 'subscriptionId',
