@@ -10,7 +10,7 @@ import {
     confirmBookingRequest,
     rejectBookingRequest,
     getAllBookingRequestsWithPagination,
-} from "../services/bookingrequest.service.js";
+} from "../services/bookingRequest.service.js";
 import socketService from "../services/socket.service.js";
 import { createNotification } from "../services/notification.service.js";
 import { roleRoomMap } from "../utils/socketUtils.js";
@@ -24,7 +24,6 @@ export const createBookingRequestController = async (req, res, next) => {
         const {
             memberId,
             trainerId,
-            subscriptionId,
             requestDateTime,
             duration,
             notes,
@@ -33,7 +32,6 @@ export const createBookingRequestController = async (req, res, next) => {
         const bookingRequest = await createBookingRequest({
             memberId,
             trainerId,
-            subscriptionId,
             requestDateTime,
             duration,
             notes,

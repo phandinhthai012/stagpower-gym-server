@@ -113,7 +113,12 @@ const subscriptionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: false,
         default: null,
-    }
+    },
+    bonusDays: {
+        type: Number,
+        min: [0, 'Bonus days cannot be negative'],
+        default: 0,
+    },
 }, {
     timestamps: true,
     collection: 'subscriptions',
