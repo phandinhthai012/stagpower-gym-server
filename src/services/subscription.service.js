@@ -1,7 +1,12 @@
 import Subscription from "../models/Subscription";
 import Package from "../models/Package";
 import User from "../models/User";
+import Payment from "../models/Payment";
+import mongoose from "mongoose";
 import { config } from "dotenv";
+import { addMonths, addDays, format } from 'date-fns';
+import { withTransaction,createWithSession,findByIdWithSession,saveWithSession } from "../utils/transactionHelper";
+import { createMomoPayment } from "../config/momo";
 
 
 export const createSubscription = async (subscriptionData) => {
@@ -20,18 +25,18 @@ export const createSubscription = async (subscriptionData) => {
         error.code = "MEMBER_NOT_FOUND";
         throw error;
     }
-    // cần xem lại logic này
-    const existSubscription = await Subscription.findOne({ 
-        memberId: subscriptionData.memberId, 
-        type: subscriptionData.type,
-        status: 'Active' });
+    // // cần xem lại logic này
+    // const existSubscription = await Subscription.findOne({ 
+    //     memberId: subscriptionData.memberId, 
+    //     type: subscriptionData.type,
+    //     status: 'Active' });
 
-    if (existSubscription) {
-        const error = new Error("Subscription already exists");
-        error.statusCode = 400;
-        error.code = "SUBSCRIPTION_ALREADY_EXISTS";
-        throw error;
-    }
+    // if (existSubscription) {
+    //     const error = new Error("Subscription already exists");
+    //     error.statusCode = 400;
+    //     error.code = "SUBSCRIPTION_ALREADY_EXISTS";
+    //     throw error;
+    // }
 
     const newSubscription = await Subscription.create(subscriptionData);
     return newSubscription;
@@ -203,19 +208,96 @@ export const autoUnsuspend = async (id) => {
        return null;
     }
 };
+// gia hạn hói tập
 
-// // Gia hạn gói
-// const extendSubscription = async (id, extendData) => {
-//     try {
-//         const { days, reason } = extendData;
-        
-//         if (!days || days <= 0) {
-//             const error = new Error("Valid days are required");
-//             error.statusCode = 400;
-//             error.code = "INVALID_DAYS";
-//             throw error;
-//         }
-
+export const renewSubscription = async (currentSubscriptionId, newPackageId, data) => {
+    const { branchId, paymentDetails, bonusDays = 0, extendPTSessions = 0 } = data;
+    const result = await withTransaction(async (session) => {
+        const currentSubscription = await findByIdWithSession(Subscription, currentSubscriptionId, session);
+        if(!currentSubscription){
+            const error = new Error("Subscription not found");
+            error.statusCode = 404;
+            error.code = "SUBSCRIPTION_NOT_FOUND";
+            throw error;
+        }
+        if (!['Active', 'Expired'].includes(currentSubscription.status)) {
+            const error = new Error("Only active or expired subscriptions can be renewed");
+            error.statusCode = 400;
+            error.code = "SUBSCRIPTION_NOT_ACTIVE_OR_EXPIRED";
+            throw error;
+        }
+        const newPackage = await findByIdWithSession(Package, newPackageId, session);
+        if(!newPackage || newPackage.status !== 'Active') {
+            const error = new Error("Package not found or not active");
+            error.statusCode = 404;
+            error.code = "PACKAGE_NOT_FOUND_OR_NOT_ACTIVE";
+            throw error;
+        }
+                // sao lưu thông tin cũ
+        const oldState = {
+            endDate: currentSubscription.endDate,
+            durationDays: currentSubscription.durationDays,
+            status: currentSubscription.status,
+            packageId: currentSubscription.packageId,
+            ptsessionsRemaining: currentSubscription.ptsessionsRemaining
+        };
+                // Tính toán ngày bắt đầu và kết thúc mới
+        const now = new Date();
+        const currentEndDate = new Date(currentSubscription.endDate);
+        const renewalStartDate = currentEndDate < now ? now : currentEndDate;
+        const renewalEndDate = addMonths(renewalStartDate, newPackage.durationMonths);
+        const finalEndDate = addDays(renewalEndDate, bonusDays);
+        let ptSessions = 0;
+        if (newPackage.type === 'PT' || newPackage.type === 'Combo') {
+            ptSessions = (newPackage.ptSessions || 0) + extendPTSessions;
+        }
+                // Cập nhật thông tin gói đăng ký hiện tại
+                // tạo subscription mới
+        const newSubscription = await createWithSession(Subscription, {
+            memberId: currentSubscription.memberId,
+            packageId: newPackageId,
+            branchId: branchId,
+            type: newPackage.type,
+            membershipType: newPackage.membershipType,
+            startDate: renewalStartDate,
+            endDate: finalEndDate,
+            durationDays: Math.ceil((finalEndDate - renewalStartDate) / (1000 * 60 * 60 * 24)),
+            ptsessionsRemaining: ptSessions,
+            ptsessionsUsed: 0,
+            status: 'PendingPayment',// Chờ thanh toán
+            renewedFrom: currentSubscription._id,
+        }, session);
+                // tạo payment record
+         const payment = await createWithSession(Payment, {
+            subscriptionId: newSubscription._id,
+            memberId: currentSubscription.memberId,
+            originalAmount: newPackage.price,
+            amount: paymentDetails?.amount || newPackage.price,
+            discountDetails: paymentDetails?.discountDetails?.map(discount => ({
+                discountId: discount.discountId,
+                type: discount.type,
+                discountPercentage: discount.discountPercentage,
+                discountAmount: discount.discountAmount,
+                description: discount.description,
+                appliedAt: new Date()
+            })) || [],
+            paymentMethod: paymentDetails?.paymentMethod || 'Cash',
+            paymentStatus: 'Pending',
+            notes: `Renewal for subscription ${currentSubscriptionId} - Additional ${Math.ceil((finalEndDate - renewalStartDate) / (1000 * 60 * 60 * 24))} days`
+        }, session);
+        const response = {
+            subscription: newSubscription,
+            payment: payment,
+            oldState: oldState
+        };
+        if(paymentDetails?.paymentMethod === 'Momo'){
+            const momoPayment = await createMomoPayment(payment.amount, payment._id, payment.invoiceNumber);
+            response.momoPayment = momoPayment;
+        }
+        return response;
+    });
+    return result;
+}
 //         const subscription = await Subscription.findById(id);
 //         if (!subscription) {
 //             const error = new Error("Subscription not found");
@@ -330,4 +412,87 @@ export const autoUnsuspend = async (id) => {
 //     extendSubscription,
 //     cancelSubscription,
 //     getSuspensionHistory
+// }
+
+
+
+// src/services/subscription.service.js - UNCOMMENT VÀ SỬA
+// export const extendSubscription = async (id, extendData) => {
+//     try {
+//         const { days, bonusDays = 0, reason, extendPTSessions = 0 } = extendData;
+        
+//         if (!days || days <= 0) {
+//             const error = new Error("Valid days are required");
+//             error.statusCode = 400;
+//             error.code = "INVALID_DAYS";
+//             throw error;
+//         }
+
+//         const subscription = await Subscription.findById(id);
+//         if (!subscription) {
+//             const error = new Error("Subscription not found");
+//             error.statusCode = 404;
+//             error.code = "SUBSCRIPTION_NOT_FOUND";
+//             throw error;
+//         }
+
+//         if (subscription.status !== 'Active') {
+//             const error = new Error("Only active subscriptions can be extended");
+//             error.statusCode = 400;
+//             error.code = "SUBSCRIPTION_NOT_ACTIVE";
+//             throw error;
+//         }
+
+//         // Tính tổng ngày gia hạn (ngày chính + ngày bonus)
+//         const totalDays = days + bonusDays;
+        
+//         // Lưu thông tin cũ
+//         const oldEndDate = new Date(subscription.endDate);
+//         const oldDurationDays = subscription.durationDays;
+//         const oldPTSessions = subscription.ptsessionsRemaining;
+
+//         // Gia hạn subscription
+//         subscription.extend(totalDays);
+        
+//         // Gia hạn PT sessions nếu có
+//         if (extendPTSessions > 0) {
+//             subscription.extendPTSessions(extendPTSessions);
+//         }
+
+//         // Thêm vào lịch sử gia hạn (nếu có field này)
+//         if (!subscription.extensionHistory) {
+//             subscription.extensionHistory = [];
+//         }
+        
+//         subscription.extensionHistory.push({
+//             days: totalDays,
+//             bonusDays: bonusDays,
+//             reason: reason || "Extension",
+//             extendedAt: new Date(),
+//             oldEndDate: oldEndDate,
+//             newEndDate: subscription.endDate,
+//             oldPTSessions: oldPTSessions,
+//             newPTSessions: subscription.ptsessionsRemaining
+//         });
+
+//         await subscription.save();
+
+//         return {
+//             subscription,
+//             extensionInfo: {
+//                 days: totalDays,
+//                 bonusDays: bonusDays,
+//                 oldEndDate: oldEndDate,
+//                 newEndDate: subscription.endDate,
+//                 oldDurationDays: oldDurationDays,
+//                 newDurationDays: subscription.durationDays,
+//                 oldPTSessions: oldPTSessions,
+//                 newPTSessions: subscription.ptsessionsRemaining,
+//                 reason: reason || "Extension"
+//             }
+//         };
+
+//     } catch (error) {
+//         throw error;
+//     }
 // }

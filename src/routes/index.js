@@ -47,6 +47,6 @@ router.use("/exercises", exerciseRoutes);
 
 router.use("/ai-suggestions", aiSuggestionRoutes);
 
-// router.use("/notifications", notificationRoutes);//  not test yet
+router.use("/notifications", notificationRoutes);//  not test yet
 
 export default router;

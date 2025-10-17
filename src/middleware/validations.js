@@ -450,3 +450,41 @@ export const validPaymentCreate = [
         .isIn(['Pending', 'Completed', 'Failed', 'Refunded', 'Cancelled']).withMessage('Payment status must be Pending, Completed, Failed, Refunded, or Cancelled'),
     handleValidationErrors
 ]
+
+
+
+
+// Thêm vào validations.js
+export const validRenewSubscription = [
+    body('newPackageId')
+        .isMongoId()
+        .withMessage('New package ID must be a valid MongoDB ObjectId'),
+    
+    body('branchId')
+        .optional()
+        .isMongoId()
+        .withMessage('Branch ID must be a valid MongoDB ObjectId'),
+    
+    body('bonusDays')
+        .optional()
+        .isInt({ min: 0, max: 30 })
+        .withMessage('Bonus days must be between 0 and 30'),
+    
+    body('extendPTSessions')
+        .optional()
+        .isInt({ min: 0, max: 50 })
+        .withMessage('Extended PT sessions must be between 0 and 50'),
+    
+    body('paymentDetails.amount')
+        .isNumeric()
+        .withMessage('Payment amount must be a number'),
+    
+    body('paymentDetails.paymentMethod')
+        .isIn(['Momo', 'ZaloPay', 'Cash', 'Card', 'BankTransfer', 'VNPay'])
+        .withMessage('Invalid payment method'),
+    
+    body('paymentDetails.discountDetails')
+        .optional()
+        .isArray()
+        .withMessage('Discount details must be an array')
+];

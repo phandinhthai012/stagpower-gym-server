@@ -7,11 +7,14 @@ import {
     deleteSubscription,
     suspendSubscription,
     unsuspendSubscription,
-    changeSubscriptionStatus
-
+    changeSubscriptionStatus,
+    renewSubscription
 } from "../services/subscription.service";
 
 import response from "../utils/response";
+import socketService from "../services/socket.service";
+import { roleRoomMap } from "../utils/socketUtils";
+import { createNotification } from "../services/notification.service";
 
 
 export const createSubscriptionController = async (req, res, next) => {
@@ -40,6 +43,15 @@ export const createSubscriptionController = async (req, res, next) => {
             ptsessionsUsed
         }
         const newSubscription = await createSubscription(subscriptionData);
+
+        await createNotification({
+            userId: newSubscription.memberId,
+            title: "Subscription created successfully",
+            message: "Gói đã được tạo",
+        });
+        socketService.emitToUser(newSubscription.memberId, "subscription_created", newSubscription);
+        socketService.emitToRoom(roleRoomMap.admin, "subscription_created", newSubscription);
+
         return response(res, {
             success: true,
             statusCode: 201,
@@ -100,6 +112,16 @@ export const updateSubscriptionController = async (req, res, next) => {
         const { id } = req.params;
         const subscriptionNewData = req.body;
         const subscription = await updateSubscription(id, subscriptionNewData);
+        
+        await createNotification({
+            userId: subscription.memberId,
+            title: "Subscription updated successfully",
+            message: "Gói đã được cập nhật",
+        });
+        socketService.emitToUser(subscription.memberId, "subscription_updated", subscription);
+        socketService.emitToRoom(roleRoomMap.admin, "subscription_updated", subscription);
+
+
         return response(res, {
             success: true,
             statusCode: 200,
@@ -117,6 +139,15 @@ export const changeSubscriptionStatusController = async (req, res, next) => {
         const { id } = req.params;
         const status = req.body;
         const subscription = await changeSubscriptionStatus(id, status);
+        
+        await createNotification({
+            userId: subscription.memberId,
+            title: "Subscription status changed successfully",
+            message: "Trạng thái gói đã được thay đổi",
+        });
+        socketService.emitToUser(subscription.memberId, "subscription_status_changed", subscription);
+        socketService.emitToRoom(roleRoomMap.admin, "subscription_status_changed", subscription);
+        
         return response(res, {
             success: true,
             statusCode: 200,
@@ -132,6 +163,16 @@ export const deleteSubscriptionController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const subscription = await deleteSubscription(id);
+        
+        await createNotification({
+            userId: subscription.memberId,
+            title: "Subscription deleted successfully",
+            message: "Gói đã bị xóa",
+        });
+        socketService.emitToUser(subscription.memberId, "subscription_deleted", subscription);
+        socketService.emitToRoom(roleRoomMap.admin, "subscription_deleted", subscription);
+        
+        
         return response(res, {
             success: true,
             statusCode: 200,
@@ -150,6 +191,15 @@ export const suspendSubscriptionController = async (req, res, next) => {
         const { id } = req.params;
         const suspendData = req.body;
         const subscription = await suspendSubscription(id, suspendData);
+        
+        await createNotification({
+            userId: subscription.memberId,
+            title: "Subscription Suspended",
+            message: `Gói đã bị tạm dừng. Lý do: ${suspendData.reason || 'Không có lý do'}`,
+        });
+        socketService.emitToUser(subscription.memberId, "subscription_suspended", subscription);
+        socketService.emitToRoom(roleRoomMap.admin, "subscription_suspended", subscription);
+        
         return response(res, {
             success: true,
             statusCode: 200,
@@ -165,6 +215,15 @@ export const unsuspendSubscriptionController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const subscription = await unsuspendSubscription(id);
+        await createNotification({
+            userId: subscription.memberId,
+            title: "Subscription Unsuspended",
+            message: "Gói đã được kích hoạt lại",
+        });
+        socketService.emitToUser(subscription.memberId, "subscription_unsuspended", subscription);
+        socketService.emitToRoom(roleRoomMap.admin, "subscription_unsuspended", subscription);
+
+
         return response(res, {
             success: true,
             statusCode: 200,
@@ -175,3 +234,19 @@ export const unsuspendSubscriptionController = async (req, res, next) => {
         return next(error);
     }
 };
+
+export const renewSubscriptionController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const renewData = req.body;
+        const result = await renewSubscription(id, renewData.newPackageId, renewData);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Subscription renewed successfully",
+            data: result
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
