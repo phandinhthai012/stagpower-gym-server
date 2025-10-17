@@ -48,3 +48,25 @@ export const sendWelcomeEmail = async ({ to, data }) => {
         throw error;
     }
 }
+
+export const sendSubscriptionExpiringSoonEmail = async ({ to, data }) => {
+    try {
+        const { subject, html } = emailTemplates.subscriptionExpiryWarning;
+        let htmlContent = html;
+        htmlContent = htmlContent.replace(/{{user.fullName}}/g, data.fullName || '');
+        htmlContent = htmlContent.replace(/{{daysRemaining}}/g, data.daysRemaining || '');
+        htmlContent = htmlContent.replace(/{{user._id}}/g, data._id || '');
+        htmlContent = htmlContent.replace(/{{packageName}}/g, data.packageName || '');
+        const mailOptions = {
+            from: 'StagPower Gym <thaiphan09242002@gmail.com>',
+            to,
+            subject,
+            html: htmlContent 
+        };
+        await transporter.sendMail(mailOptions);
+        console.log('✅ Subscription Expiring Soon email sent successfully to:', to);
+    } catch (error) {
+        console.error('❌ Failed to send Subscription Expiring Soon email:', error.message);
+        throw error;
+    }
+}

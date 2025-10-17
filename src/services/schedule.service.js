@@ -1,5 +1,8 @@
 import Schedule from "../models/Schedule";
+import User from "../models/User";
+import Subscription from "../models/Subscription";
 import { paginate } from "../utils/pagination";
+import { withTransaction, findByIdWithSession, saveWithSession } from "../utils/transactionHelper";
 export const createSchedule = async (scheduleData) => {
     const {
         memberId,
@@ -44,14 +47,26 @@ export const getScheduleById = async (id) => {
 };
 
 export const updateScheduleById = async (id, scheduleNewData) => {
-    const schedule = await Schedule.findByIdAndUpdate(id, scheduleNewData, { new: true, runValidators: true });
+    const schedule = await Schedule.findById(id);
     if (!schedule) {
         const error = new Error("Schedule not found");
         error.statusCode = 404;
         error.code = "SCHEDULE_NOT_FOUND";
         throw error;
     }
-    return schedule;
+    const oldStatus = schedule?.status;
+    const newStatus = scheduleNewData?.status;
+    const updatedSchedule = await Schedule.findByIdAndUpdate(
+        id,
+        scheduleNewData,
+        { new: true, runValidators: true }
+    );
+    if (newStatus &&
+        (newStatus === 'Completed' || newStatus === 'NoShow') &&
+        oldStatus !== 'Completed' && oldStatus !== 'NoShow') {
+        await updatePointsSession(id);
+    }
+    return updatedSchedule;
 };
 
 export const deleteScheduleById = async (id) => {
@@ -99,19 +114,20 @@ export const getSchedulesByTrainer = async (trainerId) => {
 
 
 export const updateScheduleStatus = async (id, status) => {
-    const schedule = await Schedule.findByIdAndUpdate(
-        id,
-        { status },
-        { new: true, runValidators: true }
-    );
-
+    const schedule = await Schedule.findById(id);
     if (!schedule) {
         const error = new Error("Schedule not found");
         error.statusCode = 404;
         error.code = "SCHEDULE_NOT_FOUND";
         throw error;
     }
-
+    const oldStatus = schedule.status;
+    schedule.status = status;
+    await schedule.save();
+    if ((status === 'Completed' || status === 'NoShow') && 
+        oldStatus !== 'Completed' && oldStatus !== 'NoShow') {
+        await updatePointsSession(id);
+    }
     return schedule;
 };
 
@@ -162,4 +178,50 @@ export const getScheduleByTrainerWithPagination = async (trainerId, options) => 
     }
     const schedules = await paginate(Schedule, query, options);
     return schedules;
+}
+
+// helper function khi mà schedule update liên quan đến status completed thì sẽ trừ đi 1 ptsessionsRemaining của member và tăng 1 ptsessionsUsed
+export const updatePointsSession = async (scheduleId) => {
+
+    const result = await withTransaction(async (session) => {
+
+        const schedule = await findByIdWithSession(Schedule, scheduleId, session);
+        if (!schedule) {
+            const error = new Error("Schedule not found");
+            error.statusCode = 404;
+            error.code = "SCHEDULE_NOT_FOUND";
+            throw error;
+        }
+        if (schedule.status !== 'Completed' && schedule.status !== 'NoShow') {
+            return schedule; // Không làm gì cả
+        }
+        const subscription = await findByIdWithSession(Subscription, schedule.subscriptionId, session);
+        if (!subscription) {
+            const error = new Error("Subscription not found");
+            error.statusCode = 404;
+            error.code = "SUBSCRIPTION_NOT_FOUND";
+            throw error;
+        }
+
+        // ✅ Kiểm tra còn PT sessions không
+        if (subscription.ptsessionsRemaining <= 0) {
+            const error = new Error("No PT sessions remaining");
+            error.statusCode = 400;
+            error.code = "NO_PT_SESSIONS_REMAINING";
+            throw error;
+        }
+
+        // ✅ Trừ PT sessions
+        subscription.ptsessionsRemaining -= 1;
+        subscription.ptsessionsUsed += 1;
+        await saveWithSession(subscription, session);
+
+        return {
+            schedule,
+            subscription,
+            message: 'PT session deducted successfully'
+        };
+    })
+
+    return result;
 }
