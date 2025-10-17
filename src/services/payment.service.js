@@ -13,7 +13,16 @@ export const createPayment = async (paymentData) => {
 }
 
 export const getAllPayments = async () => {
-    const payments = await Payment.find();
+    const payments = await Payment.find()
+        .populate('memberId', 'name email phone')
+        .populate('subscriptionId', 'type membershipType')
+        .populate({
+            path: 'subscriptionId',
+            populate: {
+                path: 'packageId',
+                select: 'name type durationMonths price'
+            }
+        });
     return payments;
 }
 
@@ -103,4 +112,44 @@ export const completePaymentMomo = async (id, transactionId, resultCode) => {
 export const getAllPaymentsWithPagination = async (options) => {
     const payments = await paginate(Payment, {}, options);
     return payments;
+}
+
+export const getPaymentStats = async () => {
+    const totalPayments = await Payment.countDocuments();
+    const completedPayments = await Payment.countDocuments({ paymentStatus: 'Completed' });
+    const pendingPayments = await Payment.countDocuments({ paymentStatus: 'Pending' });
+    const failedPayments = await Payment.countDocuments({ paymentStatus: 'Failed' });
+    
+    const totalAmount = await Payment.aggregate([
+        { $match: { paymentStatus: 'Completed' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    
+    const monthlyStats = await Payment.aggregate([
+        {
+            $match: {
+                paymentStatus: 'Completed',
+                createdAt: {
+                    $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+                }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: '$amount' },
+                count: { $sum: 1 }
+            }
+        }
+    ]);
+    
+    return {
+        totalPayments,
+        completedPayments,
+        pendingPayments,
+        failedPayments,
+        totalAmount: totalAmount[0]?.total || 0,
+        monthlyAmount: monthlyStats[0]?.total || 0,
+        monthlyCount: monthlyStats[0]?.count || 0
+    };
 }

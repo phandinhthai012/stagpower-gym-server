@@ -6,7 +6,8 @@ import {
     updatePayment,
     deletePayment,
     completePaymentMomo,
-    completePayment
+    completePayment,
+    getPaymentStats
 } from '../services/payment.service.js';
 import {
     createMomoPayment,
@@ -218,4 +219,18 @@ export const completePaymentController = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+};
+
+export const getPaymentStatsController = async (req, res, next) => {
+    try {
+        const stats = await getPaymentStats();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Payment stats retrieved successfully",
+            data: stats
+        });
+    } catch (error) {
+        next(error);
+    }
+};

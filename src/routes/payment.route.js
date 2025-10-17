@@ -8,7 +8,8 @@ import {
     getPaymentByMemberIdController,
     momoIpnController,
     momoPaymentController,
-    completePaymentController
+    completePaymentController,
+    getPaymentStatsController
 } from '../controllers/payment.controller.js'
 
 import { authenticateToken, authorize } from '../middleware/auth.js';
@@ -19,6 +20,8 @@ const router = express.Router();
 router.post('/', authenticateToken, createPaymentController);
 
 router.get('/', authenticateToken, authorize(['admin', "staff"]), getAllPaymentsController);
+
+router.get('/stats', authenticateToken, authorize(['admin', "staff"]), getPaymentStatsController);
 
 router.get('/:id',authenticateToken, getPaymentByIdController);
 
