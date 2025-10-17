@@ -13,6 +13,9 @@ import{
 
 
 import response from "../utils/response.js";
+import socketService from "../services/socket.service";
+import { roleRoomMap } from "../utils/socketUtils";
+import { createNotification } from "../services/notification.service";
 
 
 export const createCheckInController = async (req, res, next) => {
@@ -22,12 +25,17 @@ export const createCheckInController = async (req, res, next) => {
             branchId,
             method,
         } = req.body;
+        
         const checkIn = await createCheckIn({
             memberId,
             branchId,
             method: method || 'Manual',
             checkInTime: new Date()
         });
+        socketService.emitToUser(checkIn.memberId, "checkIn_created", checkIn);
+        socketService.emitToRoom(roleRoomMap.admin, "checkIn_created", checkIn);
+        socketService.emitToBranch(branchId, "checkIn_created", checkIn);
+
         return response(res, {
             success: true,
             statusCode: 201,
@@ -128,6 +136,11 @@ export const checkOutCheckInController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const checkIn = await checkOutCheckIn(id);
+
+        socketService.emitToUser(checkIn.memberId, "checkIn_checked_out", checkIn);
+        socketService.emitToRoom(roleRoomMap.admin, "checkIn_checked_out", checkIn);
+        socketService.emitToBranch(checkIn.branchId, "checkIn_checked_out", checkIn);
+
         return response(res, {
             success: true,
             statusCode: 200,
@@ -173,6 +186,11 @@ export const processQRCodeCheckInController = async (req, res, next) => {
     try {
         const { token, branchId } = req.body;
         const checkIn = await processQRCodeCheckIn({ token, branchId });
+
+        socketService.emitToUser(checkIn.memberId, "checkIn_processed", checkIn);
+        socketService.emitToRoom(roleRoomMap.admin, "checkIn_processed", checkIn);
+        socketService.emitToBranch(branchId, "checkIn_processed", checkIn);
+
         return response(res, {
             success: true,
             statusCode: 200,

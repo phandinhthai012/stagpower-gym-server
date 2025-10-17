@@ -33,6 +33,7 @@ const createCheckIn = async (checkInData) => {
         memberId: member._id,
         type: { $in: ['Membership', 'Combo'] },
         status: 'Active',
+        startDate: { $lte: new Date() },
         endDate: { $gte: new Date() },
         isSuspended: false
     });

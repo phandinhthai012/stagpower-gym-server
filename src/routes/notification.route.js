@@ -39,7 +39,7 @@ router.patch("/:id/read", markNotificationAsReadController);
 router.patch("/:id/unread", markNotificationAsUnreadController);
 
 // Delete notification
-router.delete("/:id", deleteNotificationByIdController);
+router.delete("/:id",authenticateToken, deleteNotificationByIdController);
 
 export default router;
 
