@@ -28,6 +28,7 @@ const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
             subscription.startDate = paymentDate || new Date();
             const newEndDate = new Date(subscription.startDate);
             newEndDate.setMonth(newEndDate.getMonth() + packageInfo.durationMonths);
+            newEndDate.setDate(newEndDate.getDate() + (subscription.bonusDays || 0)); // thêm cái này nếu có ưu dãi gì đó
             subscription.endDate = newEndDate;
             subscription.status = 'Active';
         } else {
@@ -41,6 +42,7 @@ const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
             // Tính endDate
             const newEndDate = new Date(subscription.startDate);
             newEndDate.setMonth(newEndDate.getMonth() + packageInfo.durationMonths);
+            newEndDate.setDate(newEndDate.getDate() + (subscription.bonusDays || 0)); // thêm cái này nếu có ưu dãi gì đó
             subscription.endDate = newEndDate;
             
             subscription.status = 'NotStarted';

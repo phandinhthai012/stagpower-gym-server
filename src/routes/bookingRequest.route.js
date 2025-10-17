@@ -22,7 +22,7 @@ const router = express.Router();
 
 router.get("/paginated", getAllBookingRequestsWithPaginationController);
 
-router.post("/", createBookingRequestController);
+router.post("/",authenticateToken, validBookingRequestCreate, createBookingRequestController);
 
 
 router.get("/",authenticateToken, authorize(["admin", "staff", "trainer"]), getAllBookingRequestsController);
