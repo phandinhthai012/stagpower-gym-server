@@ -1,10 +1,54 @@
 import Payment from "../models/Payment";
+import Subscription from "../models/Subscription";
+import Package from "../models/Package";
 import {
     changeSubscriptionStatus
 
 } from "./subscription.service";
 
 import { paginate } from "../utils/pagination";
+
+// Helper function để xử lý subscription khi payment completed
+const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
+    const subscription = await Subscription.findById(subscriptionId);
+    
+    if (subscription) {
+        const packageInfo = await Package.findById(subscription.packageId);
+        if (!packageInfo) return;
+        
+        // Tìm tất cả gói đã thanh toán (Active hoặc NotStarted) của member này
+        const paidSubscriptions = await Subscription.find({
+            memberId: subscription.memberId,
+            status: { $in: ['Active', 'NotStarted'] },
+            _id: { $ne: subscription._id }
+        }).sort({ endDate: -1 }); // Sắp xếp theo endDate giảm dần
+        
+        if (paidSubscriptions.length === 0) {
+            // Không có gói nào đã thanh toán: Bắt đầu ngay
+            subscription.startDate = paymentDate || new Date();
+            const newEndDate = new Date(subscription.startDate);
+            newEndDate.setMonth(newEndDate.getMonth() + packageInfo.durationMonths);
+            subscription.endDate = newEndDate;
+            subscription.status = 'Active';
+        } else {
+            // Có gói đã thanh toán: Tìm latestEndDate
+            const latestEndDate = new Date(Math.max(...paidSubscriptions.map(sub => new Date(sub.endDate))));
+            
+            // Bắt đầu sau gói cuối cùng + 1 ngày
+            subscription.startDate = new Date(latestEndDate);
+            subscription.startDate.setDate(subscription.startDate.getDate() + 1);
+            
+            // Tính endDate
+            const newEndDate = new Date(subscription.startDate);
+            newEndDate.setMonth(newEndDate.getMonth() + packageInfo.durationMonths);
+            subscription.endDate = newEndDate;
+            
+            subscription.status = 'NotStarted';
+        }
+        
+        await subscription.save();
+    }
+};
 
 
 export const createPayment = async (paymentData) => {
@@ -53,11 +97,16 @@ export const getPaymentByStatus = async (status) => {
 }
 
 export const updatePayment = async (id, paymentData) => {
+    // If updating to Completed status, set paymentDate
+    if (paymentData.paymentStatus === "Completed") {
+        paymentData.paymentDate = new Date();
+    }
+    
     const payment = await Payment.findByIdAndUpdate(id, paymentData, { new: true, runValidators: true });
     
     // If payment is completed, update subscription status to Active
     if (payment && paymentData.paymentStatus === "Completed" && payment.subscriptionId) {
-        await changeSubscriptionStatus(payment.subscriptionId, "Active");
+        await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
     }
     
     return payment;
@@ -82,8 +131,12 @@ export const completePayment = async (id) => {
         throw error;
     }
     payment.paymentStatus = "Completed";
-    await changeSubscriptionStatus(payment.subscriptionId, "Active");
+    payment.paymentDate = new Date(); // Set payment date
     await payment.save();
+    
+    // Handle subscription activation
+    await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
+    
     return payment;
 }
 
@@ -105,12 +158,15 @@ export const completePaymentMomo = async (id, transactionId, resultCode) => {
         return payment;
     }
     payment.paymentStatus = "Completed";
+    payment.paymentDate = new Date(); // Set payment date
     if (transactionId) {
         payment.transactionId = transactionId;
     }
     await payment.save();
-    // kiểm tra để kích hoạt subscription
-    await changeSubscriptionStatus(payment.subscriptionId, "Active");
+    
+    // Handle subscription activation
+    await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
+    
     return payment;
 }
 

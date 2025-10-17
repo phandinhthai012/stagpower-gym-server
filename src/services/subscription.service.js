@@ -25,18 +25,19 @@ export const createSubscription = async (subscriptionData) => {
         error.code = "MEMBER_NOT_FOUND";
         throw error;
     }
-    // // cần xem lại logic này
-    // const existSubscription = await Subscription.findOne({ 
-    //     memberId: subscriptionData.memberId, 
-    //     type: subscriptionData.type,
-    //     status: 'Active' });
+    // Kiểm tra xem member có subscription Active không
+    const activeSubscription = await Subscription.findOne({ 
+        memberId: subscriptionData.memberId, 
+        status: 'Active' 
+    });
 
-    // if (existSubscription) {
-    //     const error = new Error("Subscription already exists");
-    //     error.statusCode = 400;
-    //     error.code = "SUBSCRIPTION_ALREADY_EXISTS";
-    //     throw error;
-    // }
+    // Nếu có subscription Active và đang tạo subscription mới với status Active
+    if (activeSubscription && subscriptionData.status === 'Active') {
+        const error = new Error("Member already has an active subscription. New subscription must be PendingPayment.");
+        error.statusCode = 400;
+        error.code = "ACTIVE_SUBSCRIPTION_EXISTS";
+        throw error;
+    }
 
     const newSubscription = await Subscription.create(subscriptionData);
     return newSubscription;

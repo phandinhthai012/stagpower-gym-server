@@ -30,12 +30,13 @@ const subscriptionSchema = new mongoose.Schema({
     },
     startDate: {
         type: Date,
-        required: [true, 'Start date is required'],
-        default: Date.now,
+        required: false, // Không bắt buộc, sẽ được set khi thanh toán
+        default: null,
     },
     endDate: {
         type: Date,
-        required: [true, 'End date is required'],
+        required: false, // Không bắt buộc, sẽ được set khi thanh toán
+        default: null,
     },
     durationDays: {
         type: Number,
@@ -58,7 +59,7 @@ const subscriptionSchema = new mongoose.Schema({
     status: {
         type: String,
         required: [true, 'Status is required'],
-        enum: ['Active', 'Expired', 'Suspended', 'PendingPayment'],
+        enum: ['Active', 'Expired', 'Suspended', 'PendingPayment', 'NotStarted'],
         default: 'PendingPayment',
     },
     suspensionHistory: [{

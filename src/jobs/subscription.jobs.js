@@ -7,19 +7,31 @@ export function expireSubscriptionJobs() {
     const schedule = '0 0 * * *'; // 00:00 hàng ngày
     const timezone = 'Asia/Ho_Chi_Minh';
 
-    // Chạy mỗi giờ: cập nhật các subscription đã hết hạn thành Expired
+    // Chạy mỗi ngày: cập nhật các subscription đã hết hạn thành Expired
     cron.schedule(schedule, async () => {
         try {
             const now = new Date();
-            const result = await Subscription.updateMany(
+            
+            // 1. Expire các subscription Active đã hết hạn
+            const expiredResult = await Subscription.updateMany(
                 { status: 'Active', endDate: { $lte: now } },
                 { $set: { status: 'Expired' } }
             );
-            if (result.modifiedCount > 0) {
-                console.log(`[cron] Expired subscriptions updated: ${result.modifiedCount}`);
+            if (expiredResult.modifiedCount > 0) {
+                console.log(`[cron] Expired subscriptions updated: ${expiredResult.modifiedCount}`);
             }
+            
+            // 2. Kích hoạt các subscription NotStarted đến thời gian bắt đầu
+            const activatedResult = await Subscription.updateMany(
+                { status: 'NotStarted', startDate: { $lte: now } },
+                { $set: { status: 'Active' } }
+            );
+            if (activatedResult.modifiedCount > 0) {
+                console.log(`[cron] Activated subscriptions updated: ${activatedResult.modifiedCount}`);
+            }
+            
         } catch (err) {
-            console.error('[cron] Error expiring subscriptions:', err);
+            console.error('[cron] Error updating subscriptions:', err);
         }
     }, { timezone: timezone });
 }

@@ -338,12 +338,12 @@ export const validSubscriptionCreate = [
         .trim()
         .isIn(['Basic', 'VIP']).withMessage('Membership type must be Basic or VIP'),
     body('startDate')
-        .notEmpty().withMessage('Start date is required'),
+        .optional(),
     body('endDate')
-        .notEmpty().withMessage('End date is required')
+        .optional()
         .custom((endDate, { req }) => {
             const { startDate } = req.body;
-            if (!startDate) return true; // startDate validator will catch empties
+            if (!startDate || !endDate) return true; // Skip validation if either is missing
             const start = new Date(startDate);
             const end = new Date(endDate);
             if (isNaN(start.getTime()) || isNaN(end.getTime())) return true; // defer invalid date format to other validators if any
@@ -354,7 +354,7 @@ export const validSubscriptionCreate = [
         .isInt({ min: 0 }).withMessage('Duration days must be greater than 0'),
     body('status')
         .optional()
-        .isIn(['Active', 'Expired', 'Suspended', 'PendingPayment']).withMessage('Status must be Active, Expired, Suspended, or PendingPayment'),
+        .isIn(['Active', 'Expired', 'Suspended', 'PendingPayment', 'NotStarted']).withMessage('Status must be Active, Expired, Suspended, PendingPayment, or NotStarted'),
     handleValidationErrors
 ]
 export const validSubscriptionUpdate = [
@@ -380,7 +380,7 @@ export const validSubscriptionUpdate = [
         .isInt({ min: 0 }).withMessage('Duration days must be at least 1 day'),
     body('status')
         .optional()
-        .isIn(['Active', 'Expired', 'Suspended', 'PendingPayment']).withMessage('Status must be Active, Expired, Suspended, or PendingPayment'),
+        .isIn(['Active', 'Expired', 'Suspended', 'PendingPayment', 'NotStarted']).withMessage('Status must be Active, Expired, Suspended, PendingPayment, or NotStarted'),
     handleValidationErrors
 ]
 
