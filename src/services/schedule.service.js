@@ -53,7 +53,11 @@ export const getScheduleById = async (id) => {
 };
 
 export const updateScheduleById = async (id, scheduleNewData) => {
-    const schedule = await Schedule.findByIdAndUpdate(id, scheduleNewData, { new: true, runValidators: true });
+    const schedule = await Schedule.findByIdAndUpdate(id, scheduleNewData, { new: true, runValidators: true })
+        .populate('trainerId', 'fullName email phone trainerInfo')
+        .populate('memberId', 'fullName email phone memberInfo')
+        .populate('branchId', 'name address')
+        .populate('subscriptionId', 'type membershipType ptsessionsRemaining');
     if (!schedule) {
         const error = new Error("Schedule not found");
         error.statusCode = 404;
@@ -77,7 +81,12 @@ export const deleteScheduleById = async (id) => {
 //xem lại các function dưới đây xem có ổn hay cần thiết hay không
 
 export const getSchedulesByMember = async (memberId) => {
-    const schedules = await Schedule.findByMember(memberId);
+    const schedules = await Schedule.find({ memberId })
+        .populate('trainerId', 'fullName email phone trainerInfo')
+        .populate('memberId', 'fullName email phone memberInfo')
+        .populate('branchId', 'name address')
+        .populate('subscriptionId', 'type membershipType ptsessionsRemaining')
+        .sort({ dateTime: 1 });
     return schedules;
 };
 // export const getUpcomingSchedulesByMember = async (memberId) => {
@@ -92,7 +101,12 @@ export const getSchedulesByMember = async (memberId) => {
 
 
 export const getSchedulesByTrainer = async (trainerId) => {
-    const schedules = await Schedule.findByTrainer(trainerId);
+    const schedules = await Schedule.find({ trainerId })
+        .populate('trainerId', 'fullName email phone trainerInfo')
+        .populate('memberId', 'fullName email phone memberInfo')
+        .populate('branchId', 'name address')
+        .populate('subscriptionId', 'type membershipType ptsessionsRemaining')
+        .sort({ dateTime: 1 });
     return schedules;
 };
 

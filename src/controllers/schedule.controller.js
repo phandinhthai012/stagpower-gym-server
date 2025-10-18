@@ -86,6 +86,7 @@ export const updateScheduleByIdController = async (req, res, next) => {
             branchId,
             dateTime,
             durationMinutes,
+            status,
             notes,
             assignedExercises
         } = req.body;
@@ -96,6 +97,7 @@ export const updateScheduleByIdController = async (req, res, next) => {
             branchId,
             dateTime,
             durationMinutes,
+            status,
             notes,
             assignedExercises
         });
