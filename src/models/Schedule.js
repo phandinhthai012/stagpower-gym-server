@@ -15,7 +15,7 @@ const scheduleSchema = new mongoose.Schema({
     subscriptionId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Subscription',
-        required: [true, 'Subscription ID is required'],
+        required: false,
     },
     branchId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -33,8 +33,8 @@ const scheduleSchema = new mongoose.Schema({
     status: {
         type: String,
         required: [true, 'Status is required'],
-        enum: ['Confirmed', 'Completed', 'Cancelled', 'NoShow'],
-        default: 'Confirmed',
+        enum: ['Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'],
+        default: 'Pending',
     },
     notes: {
         type: String,

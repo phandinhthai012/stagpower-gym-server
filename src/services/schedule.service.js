@@ -9,7 +9,8 @@ export const createSchedule = async (scheduleData) => {
         dateTime,
         durationMinutes,
         notes,
-        assignedExercises
+        assignedExercises,
+        status
     } = scheduleData;
 
     const schedule = await Schedule.create({
@@ -21,19 +22,27 @@ export const createSchedule = async (scheduleData) => {
         durationMinutes,
         notes,
         assignedExercises,
-        status: 'Confirmed'
+        status: status || 'Pending'
     });
 
     return schedule;
 };
 
 export const getAllSchedules = async () => {
-    const schedules = await Schedule.find();
+    const schedules = await Schedule.find()
+        .populate('trainerId', 'fullName email phone trainerInfo')
+        .populate('memberId', 'fullName email phone memberInfo')
+        .populate('branchId', 'name address')
+        .populate('subscriptionId', 'type membershipType ptsessionsRemaining');
     return schedules;
 };
 
 export const getScheduleById = async (id) => {
-    const schedule = await Schedule.findById(id);
+    const schedule = await Schedule.findById(id)
+        .populate('trainerId', 'fullName email phone trainerInfo')
+        .populate('memberId', 'fullName email phone memberInfo')
+        .populate('branchId', 'name address')
+        .populate('subscriptionId', 'type membershipType ptsessionsRemaining');
     if (!schedule) {
         const error = new Error("Schedule not found");
         error.statusCode = 404;
@@ -142,7 +151,14 @@ export const getAllSchedulesWithPagination = async (options) => {
     if (options.status) {
         query.status = options.status;
     }
-    const schedules = await paginate(Schedule, query, options);
+    const schedules = await paginate(Schedule, query, options, {
+        populate: [
+            { path: 'trainerId', select: 'fullName email phone trainerInfo' },
+            { path: 'memberId', select: 'fullName email phone memberInfo' },
+            { path: 'branchId', select: 'name address' },
+            { path: 'subscriptionId', select: 'type membershipType ptsessionsRemaining' }
+        ]
+    });
     return schedules;
 }
 
