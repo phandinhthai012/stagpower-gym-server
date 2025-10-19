@@ -10,7 +10,6 @@ export const createBookingRequest = async (bookingRequestData) => {
     const {
         memberId,
         trainerId,
-        subscriptionId,
         requestDateTime,
         duration,
         notes
@@ -33,22 +32,25 @@ export const createBookingRequest = async (bookingRequestData) => {
         error.code = "INVALID_TRAINER";
         throw error;
     }
+    // tìm các gói đăng kí PT còn lại của member
+    const ptSubscriptions = await Subscription.find({
+        memberId: memberId,
+        status: { $in: ['Active', 'NotStarted'] },
+        ptsessionsRemaining: { $gt: 0 }
+    }).sort({ startDate: 1 });
 
-    // Kiểm tra subscription tồn tại và thuộc về member
-    const subscription = await Subscription.findById(subscriptionId);
-    if (!subscription || subscription.memberId.toString() !== memberId) {
-        const error = new Error("Invalid subscription");
+    // Kiểm tra có gói PT còn lại không
+    if (!ptSubscriptions || ptSubscriptions.length === 0) {
+        const error = new Error("No PT sessions remaining across all packages.");
         error.statusCode = 400;
-        error.code = "INVALID_SUBSCRIPTION";
+        error.code = "NO_PT_SESSIONS_REMAINING";
         throw error;
     }
-
-    // Kiểm tra subscription còn active và có PT sessions
-    if (subscription.status !== 'Active' || subscription.remainingPtSessions <= 0) {
-        const error = new Error("Subscription not active or no PT sessions remaining");
-        error.statusCode = 400;
-        error.code = "SUBSCRIPTION_INVALID";
-        throw error;
+    // lấy gói PT còn lại đầu tiên
+    let subscriptionToUse = ptSubscriptions.find(sub => sub.status === 'Active');
+    if (!subscriptionToUse) {
+        // Nếu không có gói active nào còn buổi tập, lấy gói 'NotStarted' đầu tiên
+        subscriptionToUse = ptSubscriptions[0];
     }
 
     // Chuyển đổi requestDateTime thành Date object
@@ -76,17 +78,15 @@ export const createBookingRequest = async (bookingRequestData) => {
     const existingBooking = await BookingRequest.findOne({
         trainerId,
         status: { $in: ['Pending', 'Confirmed'] },
-        $or: [
-            {
-                requestDateTime: { $gte: startTime, $lte: endTime }
-            },
-            {
-                requestDateTime: {
-                    $gte: new Date(startTime.getTime() - duration * 60000),
-                    $lte: startTime
-                }
-            }
-        ]
+        // Một lịch hẹn bị coi là trùng nếu:
+        // Nó bắt đầu trước khi lịch mới kết thúc VÀ nó kết thúc sau khi lịch mới bắt đầu.
+        requestDateTime: { $lt: endTime },
+        $expr: {
+            $gt: [
+                { $add: ["$requestDateTime", { $multiply: ["$duration", 60000] }] },
+                startTime
+            ]
+        }
     });
 
     if (existingBooking) {
@@ -99,7 +99,7 @@ export const createBookingRequest = async (bookingRequestData) => {
     const bookingRequest = await BookingRequest.create({
         memberId,
         trainerId,
-        subscriptionId,
+        subscriptionId: subscriptionToUse._id,
         requestDateTime: requestDate,
         duration,
         notes,

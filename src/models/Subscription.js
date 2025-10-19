@@ -113,7 +113,12 @@ const subscriptionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: false,
         default: null,
-    }
+    },
+    bonusDays: {
+        type: Number,
+        min: [0, 'Bonus days cannot be negative'],
+        default: 0,
+    },
 }, {
     timestamps: true,
     collection: 'subscriptions',
@@ -135,7 +140,7 @@ subscriptionSchema.index({ memberId: 1, status: 1 });
 subscriptionSchema.index({ startDate: 1, endDate: 1 });
 subscriptionSchema.index({ endDate: 1, status: 1 });
 
-subscriptionSchema.pre('save', function(next) {
+subscriptionSchema.pre('save', function (next) {
     if (!this.endDate && this.startDate && this.durationDays) {
         this.endDate = new Date(this.startDate.getTime() + (this.durationDays * 24 * 60 * 60 * 1000));
     }
@@ -144,38 +149,40 @@ subscriptionSchema.pre('save', function(next) {
 
 
 // Static methods
-subscriptionSchema.statics.findActiveByMember = function(memberId) {
-    return this.find({ 
-        memberId, 
+subscriptionSchema.statics.findActiveByMember = function (memberId) {
+    return this.find({
+        memberId,
         status: 'Active',
         endDate: { $gt: new Date() }
     });
 };
 
 // Find subscriptions expiring soon 7 days from now
-subscriptionSchema.statics.findExpiringSoon = function(days = 7) {
+subscriptionSchema.statics.findExpiringSoon = function (days = 7) {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + days);
-    
+
     return this.find({
         status: 'Active',
         endDate: { $lte: futureDate, $gt: new Date() }
-    });
+    })
+    .populate('memberId').select('-password')
+    .populate('packageId').select('-__v');
 };
 
 
 // Instance methods
-subscriptionSchema.methods.isExpired = function() {
+subscriptionSchema.methods.isExpired = function () {
     return new Date() > this.endDate;
 };
-subscriptionSchema.methods.isActive = function() {
+subscriptionSchema.methods.isActive = function () {
     return this.status === 'Active' && !this.isSuspended && !this.isExpired();
 };
-subscriptionSchema.methods.canUsePT = function() {
+subscriptionSchema.methods.canUsePT = function () {
     return (this.type === 'PT' || this.type === 'Combo') && this.ptsessionsRemaining > 0;
 };
 
-subscriptionSchema.methods.usePTSession = function() {
+subscriptionSchema.methods.usePTSession = function () {
     if (this.canUsePT()) {
         this.ptsessionsRemaining -= 1;
         this.ptsessionsUsed += 1;
@@ -184,15 +191,15 @@ subscriptionSchema.methods.usePTSession = function() {
     return false;
 };
 
-subscriptionSchema.methods.suspend = function(reason, startDate, endDate) {
+subscriptionSchema.methods.suspend = function (reason, startDate, endDate) {
     this.isSuspended = true;
-    this.suspensionStartDate = startDate? new Date(startDate) : new Date();
+    this.suspensionStartDate = startDate ? new Date(startDate) : new Date();
     this.suspensionEndDate = new Date(endDate);
     this.suspensionReason = reason || 'No reason';
     this.status = 'Suspended';
 };
 
-subscriptionSchema.methods.unsuspend = function() {
+subscriptionSchema.methods.unsuspend = function () {
     // Lưu thông tin tạm ngưng trước khi xóa
     const suspensionInfo = {
         startDate: this.suspensionStartDate,
@@ -201,10 +208,10 @@ subscriptionSchema.methods.unsuspend = function() {
         status: 'Completed',
         completedAt: new Date()
     };
-    
+
     // Thêm vào lịch sử
     this.suspensionHistory.push(suspensionInfo);
-    
+
     // Reset thông tin tạm ngưng
     this.isSuspended = false;
     this.suspensionStartDate = undefined;
@@ -213,12 +220,12 @@ subscriptionSchema.methods.unsuspend = function() {
     this.status = 'Active';
 };
 
-subscriptionSchema.methods.extend = function(days) {
+subscriptionSchema.methods.extend = function (days) {
     this.endDate = new Date(this.endDate.getTime() + (days * 24 * 60 * 60 * 1000));
     this.durationDays += days;
 };
 
-subscriptionSchema.methods.extendPTSessions = function(sessions) {
+subscriptionSchema.methods.extendPTSessions = function (sessions) {
     if (this.type === 'PT' || this.type === 'Combo') {
         this.ptsessionsRemaining += sessions;
         return true;

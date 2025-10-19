@@ -212,7 +212,7 @@ export const autoUnsuspend = async (id) => {
 // gia hạn hói tập
 
 export const renewSubscription = async (currentSubscriptionId, newPackageId, data) => {
-    const { branchId, paymentDetails, bonusDays = 0, extendPTSessions = 0 } = data;
+    const { branchId, paymentDetails, bonusDays = 0,isPaid = false,paymentDate } = data;
     const result = await withTransaction(async (session) => {
         const currentSubscription = await findByIdWithSession(Subscription, currentSubscriptionId, session);
         if(!currentSubscription){
@@ -227,14 +227,14 @@ export const renewSubscription = async (currentSubscriptionId, newPackageId, dat
             error.code = "SUBSCRIPTION_NOT_ACTIVE_OR_EXPIRED";
             throw error;
         }
-        const newPackage = await findByIdWithSession(Package, newPackageId, session);
+        const newPackage = await findByIdWithSession(Package, (newPackageId), session);
         if(!newPackage || newPackage.status !== 'Active') {
             const error = new Error("Package not found or not active");
             error.statusCode = 404;
             error.code = "PACKAGE_NOT_FOUND_OR_NOT_ACTIVE";
             throw error;
         }
-                // sao lưu thông tin cũ
+        // Backup old state
         const oldState = {
             endDate: currentSubscription.endDate,
             durationDays: currentSubscription.durationDays,
@@ -242,34 +242,63 @@ export const renewSubscription = async (currentSubscriptionId, newPackageId, dat
             packageId: currentSubscription.packageId,
             ptsessionsRemaining: currentSubscription.ptsessionsRemaining
         };
-                // Tính toán ngày bắt đầu và kết thúc mới
         const now = new Date();
+        // ngày kết thúc của gói cũ
         const currentEndDate = new Date(currentSubscription.endDate);
-        const renewalStartDate = currentEndDate < now ? now : currentEndDate;
-        const renewalEndDate = addMonths(renewalStartDate, newPackage.durationMonths);
-        const finalEndDate = addDays(renewalEndDate, bonusDays);
-        let ptSessions = 0;
-        if (newPackage.type === 'PT' || newPackage.type === 'Combo') {
-            ptSessions = (newPackage.ptSessions || 0) + extendPTSessions;
+        // kiểm tra xem gói cũ có hết hạn không
+        const isExpired = currentEndDate < now;
+
+        // ngày bắt đầu của gói mới (nếu gói cũ chưa hết hạn thì ngày bắt đầu là ngày kết thúc của gói cũ + 1 ngày, nếu gói cũ hết hạn thì ngày bắt đầu là ngày thanh toán)
+        const newStartDate = !isExpired ? addDays(currentEndDate, 1) : (paymentDate||now);
+        // ngày kết thúc của gói mới (ngày kết thúc của gói mới = ngày bắt đầu của gói mới + số tháng của gói mới)
+        const newEndDate = addMonths(newStartDate, newPackage.durationMonths);
+        let finalEndDate = newEndDate;
+        // nếu gói cũ chưa hết hạn thì ngày kết thúc của gói mới = ngày kết thúc của gói mới + số ngày bonus
+        if(!isExpired){ // uu dãi gia hạn sớm
+            finalEndDate = addDays(finalEndDate, bonusDays);
+        }else {
+            finalEndDate = newEndDate;
         }
-                // Cập nhật thông tin gói đăng ký hiện tại
-                // tạo subscription mới
+
+
+        let totalPTSessions = 0; // số buổi PT của gói mới
+        let inheritedSessions = 0; // số buổi PT còn lại từ gói cũ
+        if (newPackage.type === 'PT' || newPackage.type === 'Combo') {
+            // Kế thừa số buổi còn lại từ gói cũ (chỉ khi chưa hết hạn)
+            inheritedSessions = !isExpired ? (currentSubscription.ptsessionsRemaining || 0) : 0;
+            totalPTSessions = inheritedSessions + (newPackage.ptSessions || 0);
+        }
+        // reset số buổi PT còn lại của gói cũ
+        currentSubscription.ptsessionsRemaining = 0;
+        await saveWithSession(currentSubscription, session);
+        // tạo subscription mới
+        let startDate, endDate, status;
+        if (isPaid) {
+            startDate = newStartDate;
+            endDate = finalEndDate;
+            status = newStartDate > now ? 'NotStarted' : 'Active';
+        } else {
+            startDate = null;
+            endDate = null;
+            status = 'PendingPayment';
+        }
         const newSubscription = await createWithSession(Subscription, {
             memberId: currentSubscription.memberId,
             packageId: newPackageId,
             branchId: branchId,
             type: newPackage.type,
             membershipType: newPackage.membershipType,
-            startDate: renewalStartDate,
-            endDate: finalEndDate,
-            durationDays: Math.ceil((finalEndDate - renewalStartDate) / (1000 * 60 * 60 * 24)),
-            ptsessionsRemaining: ptSessions,
+            startDate: startDate,
+            endDate: endDate,
+            durationDays: Math.ceil((finalEndDate - newStartDate) / (1000 * 60 * 60 * 24)),
+            ptsessionsRemaining: totalPTSessions,
             ptsessionsUsed: 0,
-            status: 'PendingPayment',// Chờ thanh toán
+            status: status,
             renewedFrom: currentSubscription._id,
+            bonusDays: bonusDays,
         }, session);
-                // tạo payment record
-         const payment = await createWithSession(Payment, {
+        // thanh toán    
+        const payment = await createWithSession(Payment, {
             subscriptionId: newSubscription._id,
             memberId: currentSubscription.memberId,
             originalAmount: newPackage.price,
@@ -283,19 +312,21 @@ export const renewSubscription = async (currentSubscriptionId, newPackageId, dat
                 appliedAt: new Date()
             })) || [],
             paymentMethod: paymentDetails?.paymentMethod || 'Cash',
-            paymentStatus: 'Pending',
-            notes: `Renewal for subscription ${currentSubscriptionId} - Additional ${Math.ceil((finalEndDate - renewalStartDate) / (1000 * 60 * 60 * 24))} days`
+            paymentStatus: isPaid ? 'Completed' : 'Pending',
+            paymentDate: isPaid ? paymentDate : null,
+            notes: `Renewal for subscription ${currentSubscriptionId} - ${isExpired ? 'After expiry' : 'Before expiry'} - Inherited ${inheritedSessions} PT sessions`
         }, session);
         const response = {
             subscription: newSubscription,
             payment: payment,
             oldState: oldState
-        };
-        if(paymentDetails?.paymentMethod === 'Momo'){
-            const momoPayment = await createMomoPayment(payment.amount, payment._id, payment.invoiceNumber);
+        }
+        if (!isPaid && paymentDetails?.paymentMethod === 'Momo') {
+            const momoPayment = await createMomoPayment(paymentResponse.amount, paymentResponse._id, paymentResponse.invoiceNumber);
             response.momoPayment = momoPayment;
         }
         return response;
+
     });
     return result;
 }

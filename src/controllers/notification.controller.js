@@ -138,7 +138,8 @@ export const getAllNotificationsWithPaginationController = async (req, res, next
 
 export const getUserNotificationsWithPaginationController = async (req, res, next) => {
     try {
-        const { userId, page, limit, sort, order } = req.query;
+        const userId = req.user.id || req.params.userId;
+        const { page, limit, sort, order } = req.query;
         const notifications = await getUserNotificationsWithPagination(userId, { page, limit, sort, order });
         return response(res, {
             success: true,

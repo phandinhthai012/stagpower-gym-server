@@ -179,7 +179,7 @@
       
       <div class="warning-box">
         <h3 style="color: #ff6b6b; margin-top: 0;">🚨 Thông báo quan trọng</h3>
-        <p><strong>Gói tập của bạn sẽ hết hạn trong vòng 7 ngày tới!</strong></p>
+        <p><strong>Gói tập của bạn sẽ hết hạn trong vòng {{daysRemaining}} ngày tới!</strong></p>
         <p>Để không gián đoạn quá trình tập luyện, vui lòng gia hạn gói tập ngay hôm nay.</p>
       </div>
 
@@ -190,23 +190,8 @@
       <div class="package-details">
         <h4 style="color: #ff6b6b; margin-top: 0;">📋 Thông tin gói tập hiện tại:</h4>
         <ul style="margin: 10px 0; padding-left: 20px;">
-          <li><strong>Mã thành viên:</strong> {{user.uid}}</li>
-          <li><strong>Tên gói:</strong> {{package.name}}</li>
-          <li><strong>Loại gói:</strong> {{subscription.type}}</li>
-          <li><strong>Hạng thành viên:</strong> {{subscription.membershipType}}</li>
-          <li><strong>Danh mục gói:</strong> {{package.packageCategory}}</li>
-          <li><strong>Thời gian gói:</strong> {{package.durationMonths}} tháng</li>
-          <li><strong>Ngày bắt đầu:</strong> {{subscription.startDate}}</li>
-          <li><strong>Ngày hết hạn:</strong> {{subscription.endDate}}</li>
-          <li><strong>Trạng thái:</strong> 
-            <span class="status-badge status-{{subscription.status.toLowerCase}}">{{subscription.status}}</span>
-          </li>
-          {{#if subscription.ptsessionsRemaining}}
-          <li><strong>Buổi PT còn lại:</strong> {{subscription.ptsessionsRemaining}} buổi</li>
-          {{/if}}
-          {{#if subscription.ptsessionsUsed}}
-          <li><strong>Buổi PT đã sử dụng:</strong> {{subscription.ptsessionsUsed}} buổi</li>
-          {{/if}}
+          <li><strong>Mã thành viên:</strong> {{user._id}}</li>
+          <li><strong>Tên gói:</strong> {{packageName}}</li>
         </ul>
       </div>
 
@@ -215,9 +200,6 @@
         • Sau khi gói tập hết hạn, bạn sẽ không thể sử dụng các dịch vụ của phòng gym<br>
         • Việc gia hạn sớm sẽ giúp bạn tránh được tình trạng gián đoạn tập luyện<br>
         • Chúng tôi có nhiều gói tập ưu đãi đặc biệt dành cho việc gia hạn<br>
-        {{#if subscription.isSuspended}}
-        • <strong>⚠️ Gói tập của bạn đang bị tạm ngưng!</strong> Vui lòng liên hệ để được hỗ trợ.
-        {{/if}}
       </div>
 
       <div style="text-align: center; margin: 30px 0;">
@@ -235,16 +217,10 @@
 
       <div style="background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 20px; margin: 20px 0; color: #2e7d32;">
         <strong>🎁 Ưu đãi đặc biệt cho việc gia hạn:</strong><br>
-        • Giảm 10% cho việc gia hạn trước 3 ngày<br>
-        • Tặng thêm 1 tuần tập miễn phí khi gia hạn gói 3 tháng<br>
+        • Giảm giá đặc biệt cho việc gia hạn sớm <br>
+        • Tặng thêm các dịch vụ miễn phí<br>
         • Ưu tiên đặt lịch với huấn luyện viên cá nhân<br>
         • Tham gia các lớp học nhóm miễn phí<br>
-        {{#if subscription.type 'Combo'}}
-        • Gói Combo: Ưu đãi đặc biệt cho buổi PT cá nhân<br>
-        {{/if}}
-        {{#if subscription.type 'PT'}}
-        • Gói PT: Giảm giá cho gói PT tiếp theo<br>
-        {{/if}}
       </div>
 
       <div style="background: #f0f8ff; border: 1px solid #2196f3; border-radius: 8px; padding: 20px; margin: 20px 0; color: #1565c0;">
