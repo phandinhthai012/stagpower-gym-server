@@ -3,7 +3,7 @@ import response from '../utils/response';
 
 export const loginRateLimiter = rateLimit({
     windowMs: 20 * 60 * 1000, // 20 minutes
-    max: 10,
+    max: 1000,
     message: { error: 'Too many login attempts. Try again later.' },
     standardHeaders: true,
     legacyHeaders: false,

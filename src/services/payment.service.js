@@ -15,25 +15,36 @@ const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
     if (subscription) {
         const packageInfo = await Package.findById(subscription.packageId);
         if (!packageInfo) return;
-        
-        // Tìm tất cả gói đã thanh toán (Active hoặc NotStarted) của member này
-        const paidSubscriptions = await Subscription.find({
-            memberId: subscription.memberId,
-            status: { $in: ['Active', 'NotStarted'] },
-            _id: { $ne: subscription._id }
-        }).sort({ endDate: -1 }); // Sắp xếp theo endDate giảm dần
-        
-        if (paidSubscriptions.length === 0) {
-            // Không có gói nào đã thanh toán: Bắt đầu ngay
+         // Xác định các gói xung đột dựa trên type
+        let conflictingSubscriptions;
+        if (subscription.type === 'Membership' || subscription.type === 'Combo') {
+            // Membership và Combo xung đột với nhau (vì cả 2 đều cho phép vào gym)
+            conflictingSubscriptions = await Subscription.find({
+                memberId: subscription.memberId,
+                type: { $in: ['Membership', 'Combo'] },
+                status: { $in: ['Active', 'NotStarted'] },
+                _id: { $ne: subscription._id }
+            }).sort({ endDate: -1 });
+        } else if (subscription.type === 'PT') {
+            // PT chỉ xung đột với PT khác, không xung đột với Membership/Combo
+            conflictingSubscriptions = await Subscription.find({
+                memberId: subscription.memberId,
+                type: 'PT',
+                status: { $in: ['Active', 'NotStarted'] },
+                _id: { $ne: subscription._id }
+            }).sort({ endDate: -1 });
+        }
+        if (!conflictingSubscriptions || conflictingSubscriptions.length === 0) {
+            // Không có gói nào xung đột: Bắt đầu ngay
             subscription.startDate = paymentDate || new Date();
             const newEndDate = new Date(subscription.startDate);
             newEndDate.setMonth(newEndDate.getMonth() + packageInfo.durationMonths);
-            newEndDate.setDate(newEndDate.getDate() + (subscription.bonusDays || 0)); // thêm cái này nếu có ưu dãi gì đó
+            newEndDate.setDate(newEndDate.getDate() + (subscription.bonusDays || 0));
             subscription.endDate = newEndDate;
             subscription.status = 'Active';
         } else {
-            // Có gói đã thanh toán: Tìm latestEndDate
-            const latestEndDate = new Date(Math.max(...paidSubscriptions.map(sub => new Date(sub.endDate))));
+            // Có gói xung đột: Tìm latestEndDate và xếp hàng
+            const latestEndDate = new Date(Math.max(...conflictingSubscriptions.map(sub => new Date(sub.endDate))));
             
             // Bắt đầu sau gói cuối cùng + 1 ngày
             subscription.startDate = new Date(latestEndDate);
@@ -42,11 +53,43 @@ const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
             // Tính endDate
             const newEndDate = new Date(subscription.startDate);
             newEndDate.setMonth(newEndDate.getMonth() + packageInfo.durationMonths);
-            newEndDate.setDate(newEndDate.getDate() + (subscription.bonusDays || 0)); // thêm cái này nếu có ưu dãi gì đó
+            newEndDate.setDate(newEndDate.getDate() + (subscription.bonusDays || 0));
             subscription.endDate = newEndDate;
             
             subscription.status = 'NotStarted';
         }
+        // Tìm tất cả gói đã thanh toán (Active hoặc NotStarted) của member này
+        // const paidSubscriptions = await Subscription.find({
+        //     memberId: subscription.memberId,
+        //     type: subscription.type,
+        //     status: { $in: ['Active', 'NotStarted'] },
+        //     _id: { $ne: subscription._id }
+        // }).sort({ endDate: -1 }); // Sắp xếp theo endDate giảm dần
+        
+        // if (paidSubscriptions.length === 0) {
+        //     // Không có gói nào đã thanh toán: Bắt đầu ngay
+        //     subscription.startDate = paymentDate || new Date();
+        //     const newEndDate = new Date(subscription.startDate);
+        //     newEndDate.setMonth(newEndDate.getMonth() + packageInfo.durationMonths);
+        //     newEndDate.setDate(newEndDate.getDate() + (subscription.bonusDays || 0)); // thêm cái này nếu có ưu dãi gì đó
+        //     subscription.endDate = newEndDate;
+        //     subscription.status = 'Active';
+        // } else {
+        //     // Có gói đã thanh toán: Tìm latestEndDate
+        //     const latestEndDate = new Date(Math.max(...paidSubscriptions.map(sub => new Date(sub.endDate))));
+            
+        //     // Bắt đầu sau gói cuối cùng + 1 ngày
+        //     subscription.startDate = new Date(latestEndDate);
+        //     subscription.startDate.setDate(subscription.startDate.getDate() + 1);
+            
+        //     // Tính endDate
+        //     const newEndDate = new Date(subscription.startDate);
+        //     newEndDate.setMonth(newEndDate.getMonth() + packageInfo.durationMonths);
+        //     newEndDate.setDate(newEndDate.getDate() + (subscription.bonusDays || 0)); // thêm cái này nếu có ưu dãi gì đó
+        //     subscription.endDate = newEndDate;
+            
+        //     subscription.status = 'NotStarted';
+        // }
         
         await subscription.save();
     }

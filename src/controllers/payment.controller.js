@@ -157,6 +157,12 @@ export const momoPaymentController = async (req, res, next) => {
             paymentDate,
         });
         const momoPayment = await createMomoPayment(newPayment.amount, newPayment._id, newPayment.invoiceNumber);
+        
+        // Lưu QR code vào database
+        if (momoPayment.qrCodeUrl || momoPayment.payUrl) {
+            newPayment.paymentQrCode = momoPayment.qrCodeUrl || momoPayment.payUrl;
+            await newPayment.save();
+        }
         return response(res, {
             success: true,
             statusCode: 200,

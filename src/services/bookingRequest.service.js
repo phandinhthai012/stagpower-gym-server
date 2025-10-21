@@ -33,25 +33,26 @@ export const createBookingRequest = async (bookingRequestData) => {
         throw error;
     }
     // tìm các gói đăng kí PT còn lại của member
-    const ptSubscriptions = await Subscription.find({
+    const availablePTSubscriptions = await Subscription.find({
         memberId: memberId,
-        status: { $in: ['Active', 'NotStarted'] },
+        type: { $in: ['PT', 'Combo'] },
+        status: 'Active', // ✅ CHỈ LẤY ACTIVE (không lấy NotStarted)
         ptsessionsRemaining: { $gt: 0 }
-    }).sort({ startDate: 1 });
-
+    })
+    .sort({ 
+        endDate: 1,                    // ✅ Sắp hết hạn trước (tránh lãng phí)
+        ptsessionsRemaining: 1         // ✅ Ít buổi còn lại trước (dùng hết gói nhỏ)
+    })
+    .limit(1); 
     // Kiểm tra có gói PT còn lại không
-    if (!ptSubscriptions || ptSubscriptions.length === 0) {
+    if (!availablePTSubscriptions || availablePTSubscriptions.length === 0) {
         const error = new Error("No PT sessions remaining across all packages.");
         error.statusCode = 400;
         error.code = "NO_PT_SESSIONS_REMAINING";
         throw error;
     }
     // lấy gói PT còn lại đầu tiên
-    let subscriptionToUse = ptSubscriptions.find(sub => sub.status === 'Active');
-    if (!subscriptionToUse) {
-        // Nếu không có gói active nào còn buổi tập, lấy gói 'NotStarted' đầu tiên
-        subscriptionToUse = ptSubscriptions[0];
-    }
+    let subscriptionToUse = availablePTSubscriptions[0];
 
     // Chuyển đổi requestDateTime thành Date object
     const requestDate = new Date(requestDateTime);

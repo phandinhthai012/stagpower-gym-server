@@ -52,6 +52,11 @@ const paymentSchema = new mongoose.Schema({
         required: [true, 'Payment method is required'],
         enum: ['Momo', 'ZaloPay', 'Cash', 'Card', 'BankTransfer', 'VNPay']
     },
+    paymentQrCode: {
+        type: String,
+        required: false,
+        default: null
+    },
     paymentDate: {
         type: Date,
         required: false,
