@@ -49,7 +49,9 @@ const checkReplicaSet = async () => {
  */
 export const createWithSession = async (Model, data, session = null) => {
     if (session) {
-        return await Model.create(data, { session });
+        const docs = await Model.create([data], { session });
+        return docs[0];
+
     } else {
         return await Model.create(data);
     }

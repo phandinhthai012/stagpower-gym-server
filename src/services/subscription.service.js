@@ -9,7 +9,7 @@ import { withTransaction,createWithSession,findByIdWithSession,saveWithSession }
 import { createMomoPayment } from "../config/momo";
 
 
-export const createSubscription = async (subscriptionData) => {
+export const createSubscription = async (subscriptionData,session = null) => {
     
     const existPackage = await Package.findById(subscriptionData.packageId);
     if (!existPackage) {
@@ -39,8 +39,13 @@ export const createSubscription = async (subscriptionData) => {
         throw error;
     }
 
-    const newSubscription = await Subscription.create(subscriptionData);
-    return newSubscription;
+    // const newSubscription = await Subscription.create(subscriptionData);
+    // return newSubscription;
+    const subscription = session 
+        ? await Subscription.create([subscriptionData], { session }).then(docs => docs[0])
+        : await Subscription.create(subscriptionData);
+    
+    return subscription;
 };
 
 export const getAllSubscriptions = async () => {

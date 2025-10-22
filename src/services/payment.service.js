@@ -96,9 +96,14 @@ const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
 };
 
 
-export const createPayment = async (paymentData) => {
-    const payment = await Payment.create(paymentData);
+export const createPayment = async (paymentData,session = null) => {
+    const payment = session
+        ? await Payment.create([paymentData], { session }).then(docs => docs[0])
+        : await Payment.create(paymentData);
+    
     return payment;
+    // const payment = await Payment.create(paymentData);
+    // return payment;
 }
 
 export const getAllPayments = async () => {

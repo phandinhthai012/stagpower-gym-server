@@ -13,7 +13,7 @@ const createCheckIn = async (checkInData) => {
         error.code = "MEMBER_NOT_FOUND";
         throw error;
     }
-    
+
     // 2. Check member có phải role 'member' không
     if (member.role !== 'member') {
         const error = new Error("Only members can check in");
@@ -21,15 +21,15 @@ const createCheckIn = async (checkInData) => {
         error.code = "INVALID_ROLE";
         throw error;
     }
-     // 3. Check member có bị cấm không
-     if (member.status === 'banned') {
+    // 3. Check member có bị cấm không
+    if (member.status === 'banned') {
         const error = new Error("Member is banned");
         error.statusCode = 403;
         error.code = "MEMBER_BANNED";
         throw error;
     }
-     // 4. ✅ QUAN TRỌNG: Check subscription theo nghiệp vụ
-     const activeSubscription = await Subscription.findOne({
+    // 4. ✅ QUAN TRỌNG: Check subscription theo nghiệp vụ
+    const activeSubscription = await Subscription.findOne({
         memberId: member._id,
         type: { $in: ['Membership', 'Combo'] },
         status: 'Active',
@@ -50,13 +50,15 @@ const createCheckIn = async (checkInData) => {
         error.code = "PT_SUBSCRIPTION_NO_GYM_ACCESS";
         throw error;
     }
-    
+
     // 6. Check branch access (nếu subscription có giới hạn branch)
-    if (activeSubscription.branchId && activeSubscription.branchId.toString() !== checkInData.branchId) {
-        const error = new Error("Subscription not valid for this branch");
-        error.statusCode = 403;
-        error.code = "INVALID_BRANCH";
-        throw error;
+    if (activeSubscription.membershipType !== 'VIP') {
+        if (activeSubscription.branchId && activeSubscription.branchId.toString() !== checkInData.branchId) {
+            const error = new Error("Subscription not valid for this branch");
+            error.statusCode = 403;
+            error.code = "INVALID_BRANCH";
+            throw error;
+        }
     }
     // 7. Check member có đang check-in ở chi nhánh khác không
     const activeCheckIn = await CheckIn.findOne({
@@ -98,7 +100,7 @@ const updateCheckInById = async (id, checkInData) => {
         error.code = "CHECKIN_NOT_FOUND";
         throw error;
     }
-    if(checkIn.checkOutTime) {
+    if (checkIn.checkOutTime) {
         await checkIn.save();
     }
     return checkIn;
@@ -137,7 +139,7 @@ const generateQRCodeCheckIn = async (data) => {
     const qrCode = await generateQRCode({ memberId });
     // ổn sẽ lưu vào db collection user.memberInfo.qr_code
     const user = await User.findById(memberId);
-    if(!user) {
+    if (!user) {
         const error = new Error("User not found");
         error.statusCode = 404;
         error.code = "USER_NOT_FOUND";
@@ -149,14 +151,14 @@ const generateQRCodeCheckIn = async (data) => {
 }
 const processQRCodeCheckIn = async (data) => {
     const { token, branchId } = data;
-    if(!token) {
+    if (!token) {
         const error = new Error("Token QR Code is required");
         error.statusCode = 400;
         error.code = "TOKEN_QR_CODE_REQUIRED";
         throw error;
     }
     const validationResult = validateQRCode(token);
-    if(!validationResult.isValid) {
+    if (!validationResult.isValid) {
         const error = new Error(validationResult.error);
         error.statusCode = 400;
         error.code = "INVALID_QR_CODE";
@@ -167,7 +169,7 @@ const processQRCodeCheckIn = async (data) => {
         memberId,
         branchId,
         checkInMethod: 'QR_Code',
-     });
+    });
     return checkIn;
 }
 

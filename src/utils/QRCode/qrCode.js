@@ -17,12 +17,12 @@ export const generateQRCode = async (data) => {
         if(!member){
             throw new Error('Member not found');
         }
-        console.log(member);
+        // console.log(member);
         const subscriptions = await Subscription.find({
             memberId: member._id,
             type: { $in: ['Membership', 'Combo'] }
         });
-        console.log(subscriptions);
+        // console.log(subscriptions);
         const activeSubscription = subscriptions.find(sub => sub.isActive());
         if (!activeSubscription) {
             throw new Error('Member does not have an active subscription Membership or Combo, maybe suspended or expired');

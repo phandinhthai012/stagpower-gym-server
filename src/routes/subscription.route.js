@@ -9,7 +9,8 @@ import {
     suspendSubscriptionController,
     unsuspendSubscriptionController,
     changeSubscriptionStatusController,
-    renewSubscriptionController
+    renewSubscriptionController,
+    createSubscriptionWithPaymentController
 } from "../controllers/subscription.controller";
 
 import { authenticateToken,authorize } from "../middleware/auth";
@@ -37,5 +38,7 @@ router.post("/:id/unsuspend",authenticateToken, authorize(["admin","staff"]), un
 router.put("/:id/status",authenticateToken, authorize(["admin","staff"]), changeSubscriptionStatusController);
 
 router.put("/:id/renew",authenticateToken,validRenewSubscription, renewSubscriptionController);
+
+router.post("/create-subscription-with-payment",authenticateToken, authorize(["admin","staff"]), createSubscriptionWithPaymentController);
 
 export default router;

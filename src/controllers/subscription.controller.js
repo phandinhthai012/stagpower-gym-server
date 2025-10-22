@@ -15,7 +15,11 @@ import response from "../utils/response";
 import socketService from "../services/socket.service";
 import { roleRoomMap } from "../utils/socketUtils";
 import { createNotification } from "../services/notification.service";
-
+import { createPayment } from "../services/payment.service";
+import { withTransaction } from "../utils/transactionHelper";
+import {
+    createMomoPayment,
+} from "../config/momo";
 
 export const createSubscriptionController = async (req, res, next) => {
     try {
@@ -112,7 +116,7 @@ export const updateSubscriptionController = async (req, res, next) => {
         const { id } = req.params;
         const subscriptionNewData = req.body;
         const subscription = await updateSubscription(id, subscriptionNewData);
-        
+
         await createNotification({
             userId: subscription.memberId,
             title: "Subscription updated successfully",
@@ -139,7 +143,7 @@ export const changeSubscriptionStatusController = async (req, res, next) => {
         const { id } = req.params;
         const status = req.body;
         const subscription = await changeSubscriptionStatus(id, status);
-        
+
         await createNotification({
             userId: subscription.memberId,
             title: "Subscription status changed successfully",
@@ -147,7 +151,7 @@ export const changeSubscriptionStatusController = async (req, res, next) => {
         });
         socketService.emitToUser(subscription.memberId, "subscription_status_changed", subscription);
         socketService.emitToRoom(roleRoomMap.admin, "subscription_status_changed", subscription);
-        
+
         return response(res, {
             success: true,
             statusCode: 200,
@@ -163,7 +167,7 @@ export const deleteSubscriptionController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const subscription = await deleteSubscription(id);
-        
+
         await createNotification({
             userId: subscription.memberId,
             title: "Subscription deleted successfully",
@@ -171,8 +175,8 @@ export const deleteSubscriptionController = async (req, res, next) => {
         });
         socketService.emitToUser(subscription.memberId, "subscription_deleted", subscription);
         socketService.emitToRoom(roleRoomMap.admin, "subscription_deleted", subscription);
-        
-        
+
+
         return response(res, {
             success: true,
             statusCode: 200,
@@ -191,7 +195,7 @@ export const suspendSubscriptionController = async (req, res, next) => {
         const { id } = req.params;
         const suspendData = req.body;
         const subscription = await suspendSubscription(id, suspendData);
-        
+
         await createNotification({
             userId: subscription.memberId,
             title: "Subscription Suspended",
@@ -199,7 +203,7 @@ export const suspendSubscriptionController = async (req, res, next) => {
         });
         socketService.emitToUser(subscription.memberId, "subscription_suspended", subscription);
         socketService.emitToRoom(roleRoomMap.admin, "subscription_suspended", subscription);
-        
+
         return response(res, {
             success: true,
             statusCode: 200,
@@ -245,6 +249,107 @@ export const renewSubscriptionController = async (req, res, next) => {
             statusCode: 200,
             message: "Subscription renewed successfully",
             data: result
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const createSubscriptionWithPaymentController = async (req, res, next) => {
+    try {
+        const {
+            memberId,
+            packageId,
+            branchId,
+            type,
+            membershipType,
+            durationDays,
+            ptsessionsRemaining,
+            ptsessionsUsed,
+            paymentMethod,
+            originalAmount,
+            amount,
+            discountDetails,
+            notes
+        } = req.body;
+        const result = await withTransaction(async (session) => {
+            // 1. Tạo subscription với status PendingPayment
+            const subscriptionData = {
+                memberId,
+                packageId,
+                branchId,
+                type,
+                membershipType,
+                durationDays,
+                ptsessionsRemaining,
+                ptsessionsUsed,
+                status: 'PendingPayment'
+            };
+            const newSubscription = await createSubscription(subscriptionData, session);
+            // // 2. Tạo payment với subscriptionId vừa tạo
+            const paymentData = {
+                subscriptionId: newSubscription._id,
+                memberId,
+                originalAmount,
+                amount,
+                discountDetails,
+                paymentMethod,
+                paymentStatus: 'Pending',
+                notes
+            };
+            const newPayment = await createPayment(paymentData, session);
+            return {
+                subscription: newSubscription,
+                payment: newPayment,
+            }
+        });
+        let momoPaymentInfo = null;
+        
+        if (paymentMethod === 'Momo') {
+            try {
+                momoPaymentInfo = await createMomoPayment(
+                    result.payment.amount,
+                    result.payment._id,
+                    result.payment.invoiceNumber
+                );
+                if (momoPaymentInfo?.qrCodeUrl || momoPaymentInfo?.payUrl) {
+                    result.payment.paymentQrCode = momoPaymentInfo.qrCodeUrl || momoPaymentInfo.payUrl;
+                    await result.payment.save();
+                }
+                
+            } catch (momoError) {
+                console.error('⚠️ MoMo API error (non-critical):', momoError);
+                result.payment.notes = (result.payment.notes || '') + 
+                    `\n[ERROR] MoMo QR creation failed: ${momoError.message}`;
+                await result.payment.save();
+            }
+        }
+        try {
+            // Notification không cần thiết phải trong transaction
+            // Nếu fail → không ảnh hưởng data integrity
+            await createNotification({
+                userId: memberId,
+                title: "Subscription and Payment created",
+                message: "Gói tập và hóa đơn đã được tạo thành công",
+            });
+
+            // Socket events
+            socketService.emitToUser(memberId, "subscription_payment_created", result);
+            socketService.emitToRoom(roleRoomMap.admin, "subscription_payment_created", result);
+        } catch (notificationError) {
+            // Log lỗi nhưng không throw (không ảnh hưởng chính)
+            console.error('⚠️ Notification/Socket error:', notificationError);
+        }
+
+        return response(res, {
+            success: true,
+            statusCode: 201,
+            message: "Subscription and payment created successfully",
+            data: {
+                subscription: result.subscription,
+                payment: result.payment,
+                momoPayment: momoPaymentInfo
+            }
         });
     } catch (error) {
         return next(error);
