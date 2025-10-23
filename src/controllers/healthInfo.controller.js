@@ -6,7 +6,8 @@ import {
     getHealthInfoByMemberId,
     updateHealthInfoById,
     getAllHealthInfo,
-    deleteHealthInfoById
+    deleteHealthInfoById,
+    parseHealthFile
 } from "../services/healthInfo.service";
 
 
@@ -138,6 +139,28 @@ export const deleteHealthInfoByIdController = async (req, res, next) => {
             statusCode: 200,
             message: "Health info deleted successfully",
             data: { message: "Health info deleted successfully" }
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export const parseHealthDataPreview = async (req, res, next) => {
+    if (!req.file) {
+        const error = new Error('Vui lòng tải lên một file.');
+        error.statusCode = 400;
+        return next(error);
+    }
+    try {
+        const fileBuffer = req.file.buffer;
+        console.log('📁 File uploaded:', req.file.originalname, req.file.size, 'bytes');
+        const parsedData = await parseHealthFile(fileBuffer);
+        console.log('📊 Parsed data:', JSON.stringify(parsedData, null, 2));
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Health data parsed successfully",
+            data: parsedData
         });
     } catch (error) {
         return next(error);
