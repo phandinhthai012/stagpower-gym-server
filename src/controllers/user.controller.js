@@ -9,6 +9,7 @@ import {
     getAllMembersWithPagination,
     getallStaffsWithPagination,
     createUser,
+    getMembersWithActiveSubscriptions,
 } from "../services/user.service";
 import response from "../utils/response";
 import socketService from "../services/socket.service";
@@ -187,3 +188,17 @@ export const createUserController = async (req, res, next) => {
         return next(error);
     }
 }
+
+export const getMembersWithActiveSubscriptionsController = async (req, res, next) => {
+    try {
+        const members = await getMembersWithActiveSubscriptions();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Members with active subscriptions fetched successfully",
+            data: members
+        });
+    } catch (error) {
+        return next(error);
+    }
+};

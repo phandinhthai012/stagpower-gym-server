@@ -1,6 +1,6 @@
 import User from "../models/User";
 import { paginate } from "../utils/pagination";
-
+import Subscription from '../models/Subscription.js';
 export const getAllUsers = async () => {
     const users = await User.find();
     return users;
@@ -361,3 +361,22 @@ export const createUser = async (payload) => {
 //         message: "User deleted successfully"
 //     };
 // }
+
+export const getMembersWithActiveSubscriptions = async () => {
+    const activeSubscriptions = await Subscription.find({ 
+        status: 'Active' 
+    }).populate('memberId', 'fullName email phone avatar role status');
+    const memberIds = [...new Set(activeSubscriptions.map(sub => sub.memberId._id.toString()))];
+    const members = await User.find({
+        _id: { $in: memberIds },
+        role: 'member',
+        status: 'active'
+    }).select('-password');
+    if(!members) {
+        const error = new Error("No members found");
+        error.statusCode = 404;
+        error.code = "NO_MEMBERS_FOUND";
+        throw error;
+    }
+    return members;
+};
