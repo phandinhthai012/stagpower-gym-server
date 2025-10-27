@@ -37,31 +37,51 @@ export const createBookingRequestController = async (req, res, next) => {
             notes,
             status
         });
+
+        // Fetch member and trainer info
+        const User = require('../models/User.js').default;
+        const member = await User.findById(bookingRequest.memberId).select('fullName');
+        const trainer = await User.findById(bookingRequest.trainerId).select('fullName');
+
+        const requestDate = new Date(bookingRequest.requestDateTime);
+        const formattedDate = requestDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
         // tạo notification
         if (user._id === bookingRequest.trainerId) {
             await createNotification({
                 userId: bookingRequest.memberId,
-                title: "New booking request",
-                message: "New booking request",
+                title: "Yêu cầu đặt lịch mới",
+                message: `HLV ${trainer?.fullName || 'N/A'} đã gửi yêu cầu đặt lịch tập vào ${formattedDate}.`,
+                type: "INFO"
             });
             socketService.emitToUser(bookingRequest.memberId, "new_booking_request", bookingRequest);
         } else if (user._id === bookingRequest.memberId) {
             await createNotification({
                 userId: bookingRequest.trainerId,
-                title: "New booking request",
-                message: "New booking request",
+                title: "Yêu cầu đặt lịch mới",
+                message: `Hội viên ${member?.fullName || 'N/A'} đã gửi yêu cầu đặt lịch vào ${formattedDate}.`,
+                type: "INFO"
             });
             socketService.emitToUser(bookingRequest.trainerId, "new_booking_request", bookingRequest);
         }else {
             await createNotification({
                 userId: bookingRequest.trainerId,
-                title: "New booking request",
-                message: "New booking request",
+                title: "Yêu cầu đặt lịch mới",
+                message: `Yêu cầu đặt lịch với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate} đã được tạo.`,
+                type: "INFO"
             });
             await createNotification({
                 userId: bookingRequest.memberId,
-                title: "New booking request",
-                message: "New booking request",
+                title: "Yêu cầu đặt lịch mới",
+                message: `Yêu cầu đặt lịch với HLV ${trainer?.fullName || 'N/A'} vào ${formattedDate} đã được tạo.`,
+                type: "INFO"
             });
             socketService.emitToUser(bookingRequest.trainerId, "new_booking_request", bookingRequest);
             socketService.emitToUser(bookingRequest.memberId, "new_booking_request", bookingRequest);
@@ -129,36 +149,51 @@ export const updateBookingRequestByIdController = async (req, res, next) => {
             notes,
             status,
         });
+        // Fetch member and trainer info
+        const User = require('../models/User.js').default;
+        const member = await User.findById(bookingRequest.memberId).select('fullName');
+        const trainer = await User.findById(bookingRequest.trainerId).select('fullName');
+
+        const requestDate = new Date(bookingRequest.requestDateTime);
+        const formattedDate = requestDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
         // tạo notification
         if (user._id === bookingRequest.trainerId) {
             await createNotification({
                 userId: bookingRequest.memberId,
-                title: "Booking request updated",
-                message: "Booking request updated",
+                title: "Yêu cầu đặt lịch đã cập nhật",
+                message: `HLV ${trainer?.fullName || 'N/A'} đã cập nhật yêu cầu đặt lịch vào ${formattedDate}.`,
+                type: "INFO"
             });
             socketService.emitToUser(bookingRequest.memberId, "booking_request_updated", bookingRequest);
         } else if (user._id === bookingRequest.memberId) {
             await createNotification({
                 userId: bookingRequest.trainerId,
-                title: "Booking request updated",
-                message: "Booking request updated",
+                title: "Yêu cầu đặt lịch đã cập nhật",
+                message: `Hội viên ${member?.fullName || 'N/A'} đã cập nhật yêu cầu đặt lịch vào ${formattedDate}.`,
+                type: "INFO"
             });
             socketService.emitToUser(bookingRequest.trainerId, "booking_request_updated", bookingRequest);
         } else {
             await createNotification({
                 userId: bookingRequest.trainerId,
                 title: "Yêu cầu đặt lịch đã được cập nhật",
-                message: "Yêu cầu đặt lịch đã được admin cập nhật",
+                message: `Yêu cầu đặt lịch với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate} đã được cập nhật.`,
                 type: "INFO",
-                status: "UNREAD"
             });
             
             await createNotification({
                 userId: bookingRequest.memberId,
                 title: "Yêu cầu đặt lịch đã được cập nhật", 
-                message: "Yêu cầu đặt lịch của bạn đã được admin cập nhật",
+                message: `Yêu cầu đặt lịch với HLV ${trainer?.fullName || 'N/A'} vào ${formattedDate} đã được cập nhật.`,
                 type: "INFO",
-                status: "UNREAD"
             });
             socketService.emitToUser(bookingRequest.trainerId, "booking_request_updated", bookingRequest);
             socketService.emitToUser(bookingRequest.memberId, "booking_request_updated", bookingRequest);
@@ -180,16 +215,32 @@ export const deleteBookingRequestByIdController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const bookingRequest = await deleteBookingRequestById(id);
+
+        // Fetch member and trainer info
+        const User = require('../models/User.js').default;
+        const member = await User.findById(bookingRequest.memberId).select('fullName');
+        const trainer = await User.findById(bookingRequest.trainerId).select('fullName');
+
+        const requestDate = new Date(bookingRequest.requestDateTime);
+        const formattedDate = requestDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
         await createNotification({
             userId: bookingRequest.trainerId,
-            title: "Booking request deleted",
-            message: "Booking request deleted",
+            title: "Yêu cầu đặt lịch đã bị xóa",
+            message: `Yêu cầu đặt lịch với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate} đã bị xóa.`,
             type: "WARNING",
         });
         await createNotification({
             userId: bookingRequest.memberId,
-            title: "Booking request deleted",
-            message: "Booking request deleted",
+            title: "Yêu cầu đặt lịch đã bị xóa",
+            message: `Yêu cầu đặt lịch với HLV ${trainer?.fullName || 'N/A'} vào ${formattedDate} đã bị xóa.`,
             type: "WARNING",
         });
         // gửi tới trainer
@@ -217,16 +268,33 @@ export const confirmBookingRequestController = async (req, res, next) => {
         const { id } = req.params;
         const user = req.user;
         const result = await confirmBookingRequest(id);
+
+        // Fetch member and trainer info
+        const User = require('../models/User.js').default;
+        const member = await User.findById(result.bookingRequest.memberId).select('fullName');
+        const trainer = await User.findById(result.bookingRequest.trainerId).select('fullName');
+
+        const requestDate = new Date(result.bookingRequest.requestDateTime);
+        const formattedDate = requestDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
         
         await createNotification({
             userId: result.bookingRequest.memberId,
-            title: "Booking request confirmed",
-            message: "Booking request confirmed",
+            title: "Yêu cầu đặt lịch đã được xác nhận",
+            message: `HLV ${trainer?.fullName || 'N/A'} đã xác nhận lịch tập vào ${formattedDate}. Lịch tập đã được tạo thành công.`,
+            type: "INFO"
         });
         await createNotification({
             userId: result.bookingRequest.trainerId,
-            title: "Booking request confirmed",
-            message: "Booking request confirmed",
+            title: "Yêu cầu đặt lịch đã được xác nhận",
+            message: `Bạn đã xác nhận lịch dạy với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate}.`,
+            type: "INFO"
         });
 
         if(user._id === result.bookingRequest.trainerId) {
@@ -258,15 +326,34 @@ export const rejectBookingRequestController = async (req, res, next) => {
         const user = req.user;
         const bookingRequest = await rejectBookingRequest(id, rejectReason);
 
+        // Fetch member and trainer info
+        const User = require('../models/User.js').default;
+        const member = await User.findById(bookingRequest.memberId).select('fullName');
+        const trainer = await User.findById(bookingRequest.trainerId).select('fullName');
+
+        const requestDate = new Date(bookingRequest.requestDateTime);
+        const formattedDate = requestDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const reasonText = rejectReason ? ` Lý do: ${rejectReason}` : '';
+
         await createNotification({
             userId: bookingRequest.memberId,
-            title: "Booking request rejected",
-            message: "Booking request rejected",
+            title: "Yêu cầu đặt lịch bị từ chối",
+            message: `HLV ${trainer?.fullName || 'N/A'} đã từ chối yêu cầu đặt lịch vào ${formattedDate}.${reasonText}`,
+            type: "WARNING"
         });
         await createNotification({
             userId: bookingRequest.trainerId,
-            title: "Booking request rejected",
-            message: "Booking request rejected",
+            title: "Yêu cầu đặt lịch bị từ chối",
+            message: `Bạn đã từ chối yêu cầu đặt lịch với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate}.`,
+            type: "INFO"
         });
         if(user._id === bookingRequest.trainerId) {
             socketService.emitToUser(bookingRequest.trainerId, "booking_request_rejected", bookingRequest);

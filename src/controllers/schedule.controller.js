@@ -21,16 +21,33 @@ export const createScheduleController = async (req, res, next) => {
     try {
         const schedule = await createSchedule(req.body);
 
+        // Fetch member and trainer info for better notifications
+        const User = require('../models/User.js').default;
+        const member = await User.findById(schedule.memberId).select('fullName');
+        const trainer = await User.findById(schedule.trainerId).select('fullName');
+
+        const scheduleDate = new Date(schedule.dateTime);
+        const formattedDate = scheduleDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
         await createNotification({
             userId: schedule.memberId,
-            title: "Schedule created successfully",
-            message: "Schedule created successfully",
+            title: "Lịch tập mới đã được tạo",
+            message: `Lịch tập với HLV ${trainer?.fullName || 'N/A'} vào ${formattedDate} đã được tạo thành công.`,
+            type: "INFO"
         });
         socketService.emitToUser(schedule.memberId, "schedule_created", schedule);
         await createNotification({
             userId: schedule.trainerId,
-            title: "Schedule created successfully",
-            message: "Schedule created successfully",
+            title: "Lịch dạy mới đã được tạo",
+            message: `Lịch dạy với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate} đã được tạo.`,
+            type: "INFO"
         });
         socketService.emitToUser(schedule.trainerId, "schedule_created", schedule);
         socketService.emitToRoom(roleRoomMap.admin, "schedule_created", schedule);
@@ -101,18 +118,36 @@ export const updateScheduleByIdController = async (req, res, next) => {
             notes,
             assignedExercises
         });
+
+        // Fetch member and trainer info for better notifications
+        const User = require('../models/User.js').default;
+        const member = await User.findById(schedule.memberId).select('fullName email');
+        const trainer = await User.findById(schedule.trainerId).select('fullName email');
+
+        const scheduleDate = new Date(schedule.dateTime);
+        const formattedDate = scheduleDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
         // 🔔 TẠO NOTIFICATION CHO MEMBER
         await createNotification({
             userId: schedule.memberId,
-            title: "Schedule Updated",
-            message: `Your schedule has been updated for ${new Date(schedule.dateTime).toLocaleDateString()}`,
+            title: "Lịch tập đã được cập nhật",
+            message: `Lịch tập với HLV ${trainer?.fullName || 'N/A'} vào ${formattedDate} đã được cập nhật. Vui lòng kiểm tra lại thông tin.`,
+            type: "INFO"
         });
 
         // 🔔 TẠO NOTIFICATION CHO TRAINER
         await createNotification({
             userId: schedule.trainerId,
-            title: "Schedule Updated",
-            message: `Your schedule with ${schedule.memberId} has been updated`,
+            title: "Lịch dạy đã được cập nhật",
+            message: `Lịch dạy với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate} đã được cập nhật.`,
+            type: "INFO"
         });
 
         // 📡 SOCKET EMIT CHO MEMBER
@@ -139,16 +174,33 @@ export const deleteScheduleByIdController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const schedule = await deleteScheduleById(id);
+
+        // Fetch member and trainer info for better notifications
+        const User = require('../models/User.js').default;
+        const member = await User.findById(schedule.memberId).select('fullName');
+        const trainer = await User.findById(schedule.trainerId).select('fullName');
+
+        const scheduleDate = new Date(schedule.dateTime);
+        const formattedDate = scheduleDate.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
         
         await createNotification({
             userId: schedule.memberId,
-            title: "Schedule Cancelled",
-            message: "Your schedule has been cancelled",
+            title: "Lịch tập đã bị hủy",
+            message: `Lịch tập với HLV ${trainer?.fullName || 'N/A'} vào ${formattedDate} đã bị hủy.`,
+            type: "WARNING"
         });
         await createNotification({
             userId: schedule.trainerId,
-            title: "Schedule Cancelled",
-            message: "Your schedule has been cancelled",
+            title: "Lịch dạy đã bị hủy",
+            message: `Lịch dạy với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate} đã bị hủy.`,
+            type: "WARNING"
         });
 
         socketService.emitToUser(schedule.memberId, "schedule_deleted", schedule);
