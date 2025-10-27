@@ -49,7 +49,9 @@ export const createSubscription = async (subscriptionData,session = null) => {
 };
 
 export const getAllSubscriptions = async () => {
-    const subscriptions = await Subscription.find();
+    const subscriptions = await Subscription.find()
+        .populate('packageId', 'name type price durationMonths ptSessions')
+        .populate('memberId', 'fullName email phone');
     return subscriptions;
 };
 
@@ -59,7 +61,9 @@ export const getSubscriptionById = async (id) => {
 };
 
 export const getAllSubscriptionsByMember = async (memberId) => {
-    const subscriptions = await Subscription.find({ memberId }).sort({ createdAt: -1 });
+    const subscriptions = await Subscription.find({ memberId })
+        .populate('packageId', 'name type price durationMonths ptSessions')
+        .sort({ createdAt: -1 });
     return subscriptions;
 };
 
