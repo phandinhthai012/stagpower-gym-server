@@ -92,11 +92,11 @@ export const validateChangePassword = [
 
 export const validateHealthProfileCreate = [
     body('height')
-        .notEmpty().withMessage('Height is required')
+        .optional()
         .isFloat({ gt: 0, lt: 300 }).withMessage('Height must be between 0 and 300 cm'),
 
     body('weight')
-        .notEmpty().withMessage('Weight is required')
+        .optional()
         .isFloat({ gt: 0, lt: 500 }).withMessage('Weight must be between 0 and 500 kg'),
 
     body('age')
@@ -108,22 +108,22 @@ export const validateHealthProfileCreate = [
         .isFloat({ min: 0, max: 100 }).withMessage('Body fat percent must be between 0 and 100'),
 
     body('gender')
-        .notEmpty().withMessage('Gender is required')
+        .optional()
         .trim()
         .isIn(['male', 'female']).withMessage('Gender must be male or female'),
 
     body('goal')
-        .notEmpty().withMessage('Goal is required')
+        .optional()
         .trim(),
 
     body('experience')
-        .notEmpty().withMessage('Experience is required')
+        .optional()
         .trim()
         .isIn(['beginner', 'intermediate', 'advanced'])
         .withMessage('Experience must be beginner, intermediate, or advanced'),
 
     body('fitnessLevel')
-        .notEmpty().withMessage('Fitness level is required')
+        .optional()
         .trim()
         .isIn(['low', 'medium', 'high'])
         .withMessage('Fitness level must be low, medium, or high'),

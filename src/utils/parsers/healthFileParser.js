@@ -2,15 +2,15 @@ const COLUMN_MAPPING = {
     'height': ['height', 'chieu cao', 'chiều cao', 'chiều cao (cm)'],
     'weight': ['weight', 'can nang', 'cân nặng', 'cân nặng (kg)'],
     'gender': ['gender', 'gioi tinh', 'giới tính', 'sex'],
-    'age': ['age', 'tuoi', 'tuổi', 'age (years)'],
-    'bodyFatPercent': ['bodyfat', 'body fat', 'ty le mo', 'tỷ lệ mỡ', 'body fat %'],
-    'medicalHistory': ['medical history', 'tien su benh', 'tiền sử bệnh', 'medical'],
-    'allergies': ['allergies', 'di ung', 'dị ứng', 'allergy'],
     'goal': ['goal', 'muc tieu', 'mục tiêu', 'objective'],
     'experience': ['experience', 'kinh nghiem', 'kinh nghiệm', 'exp'],
-    'fitnessLevel': ['fitness level', 'muc do the luc', 'mức độ thể lực', 'level'],
-    'preferredTime': ['preferred time', 'thoi gian uu tien', 'thời gian ưu tiên', 'time'],
-    'weeklySessions': ['weekly sessions', 'buoi tap trong tuan', 'buổi tập trong tuần', 'sessions']
+    'fitnessLevel': ['fitnesslevel', 'fitness level', 'muc do the luc', 'mức độ thể lực', 'level'],
+    'age': ['age', 'tuoi', 'tuổi', 'age (years)'],
+    'bodyFatPercent': ['bodyfatpercent', 'bodyfat', 'body fat percent', 'body fat', 'ty le mo', 'tỷ lệ mỡ', 'body fat %'],
+    'preferredTime': ['preferredtime', 'preferred time', 'thoi gian uu tien', 'thời gian ưu tiên', 'time'],
+    'weeklySessions': ['weeklysessions', 'weekly sessions', 'buoi tap trong tuan', 'buổi tập trong tuần', 'sessions'],
+    'medicalHistory': ['medicalhistory', 'medical history', 'tien su benh', 'tiền sử bệnh', 'medical'],
+    'allergies': ['allergies', 'di ung', 'dị ứng', 'allergy']
 };
 
 export const mapColumnNames = (row) => {

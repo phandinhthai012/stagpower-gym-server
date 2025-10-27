@@ -9,11 +9,11 @@ const healthInfoSchema = new mongoose.Schema({
     },
     height: {
         type: Number, // cm
-        required: true
+        // Not required - can be added later when member comes to gym
     },
     weight: {
         type: Number, // kg
-        required: true
+        // Not required - can be added later when member comes to gym
     },
     bmi: {
         type: Number,
@@ -27,12 +27,11 @@ const healthInfoSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        required: true,
+        // Not required - can be added later
         enum: ['male', 'female']
     },
     age: {
         type: Number,
-        // required: true,
         min: [1, 'Age must be at least 1'],
         max: [100, 'Age cannot exceed 100']
     },
@@ -48,18 +47,18 @@ const healthInfoSchema = new mongoose.Schema({
     },
     goal: {
         type: String,
-        required: true,
+        // Not required - can be added later when trainer assesses member
         // enum: ['weightLoss', 'muscleGain', 'health', 'endurance', 'other'],
     },
     experience: {
         type: String,
-        required: true,
+        // Not required - can be added later when trainer assesses member
         enum: ['beginner', 'intermediate', 'advanced'],
         lowercase: true
     },
     fitnessLevel: {
         type: String,
-        required: true,
+        // Not required - can be added later when trainer assesses member
         enum: ['low', 'medium', 'high'],
         lowercase: true
     },
