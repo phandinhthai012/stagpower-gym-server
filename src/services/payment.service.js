@@ -1,12 +1,36 @@
 import Payment from "../models/Payment";
 import Subscription from "../models/Subscription";
 import Package from "../models/Package";
+import User from "../models/User";
 import {
     changeSubscriptionStatus
 
 } from "./subscription.service";
 
 import { paginate } from "../utils/pagination";
+
+// Helper function to update member's total spending
+const updateMemberTotalSpending = async (memberId, paymentAmount) => {
+    try {
+        const user = await User.findById(memberId);
+        if (!user || user.role !== 'member') return;
+        
+        // Initialize memberInfo if it doesn't exist
+        if (!user.memberInfo) {
+            user.memberInfo = {};
+        }
+        
+        // Update total spending
+        const currentSpending = user.memberInfo.total_spending || 0;
+        user.memberInfo.total_spending = currentSpending + paymentAmount;
+        
+        await user.save();
+        console.log(`Updated member ${memberId} total spending: ${user.memberInfo.total_spending}`);
+    } catch (error) {
+        console.error('Error updating member total spending:', error);
+        // Don't throw error, just log it to avoid breaking payment flow
+    }
+};
 
 // Helper function để xử lý subscription khi payment completed
 const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
@@ -147,6 +171,10 @@ export const getPaymentByStatus = async (status) => {
 }
 
 export const updatePayment = async (id, paymentData) => {
+    // Get old payment to check if status changed
+    const oldPayment = await Payment.findById(id);
+    const wasNotCompleted = oldPayment && oldPayment.paymentStatus !== "Completed";
+    
     // If updating to Completed status, set paymentDate
     if (paymentData.paymentStatus === "Completed") {
         paymentData.paymentDate = new Date();
@@ -157,6 +185,11 @@ export const updatePayment = async (id, paymentData) => {
     // If payment is completed, update subscription status to Active
     if (payment && paymentData.paymentStatus === "Completed" && payment.subscriptionId) {
         await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
+        
+        // Update member's total spending (only if status changed from not-completed to completed)
+        if (wasNotCompleted) {
+            await updateMemberTotalSpending(payment.memberId, payment.amount);
+        }
     }
     
     return payment;
@@ -187,6 +220,9 @@ export const completePayment = async (id) => {
     // Handle subscription activation
     await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
     
+    // Update member's total spending
+    await updateMemberTotalSpending(payment.memberId, payment.amount);
+    
     return payment;
 }
 
@@ -216,6 +252,9 @@ export const completePaymentMomo = async (id, transactionId, resultCode) => {
     
     // Handle subscription activation
     await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
+    
+    // Update member's total spending
+    await updateMemberTotalSpending(payment.memberId, payment.amount);
     
     return payment;
 }
