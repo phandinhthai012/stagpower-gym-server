@@ -84,6 +84,13 @@ const paymentSchema = new mongoose.Schema({
     notes: {
         type: String,
         maxlength: [500, 'Notes cannot exceed 500 characters']
+    },
+    paymentType: {
+        type: String,
+        enum: ['NEW_SUBSCRIPTION', 'RENEWAL', 'PT_PURCHASE'],
+        required: false,
+        default: null,
+        index: true
     }
 }, {
     timestamps: true,

@@ -20,6 +20,7 @@ import { withTransaction } from "../utils/transactionHelper";
 import {
     createMomoPayment,
 } from "../config/momo";
+import Package from "../models/Package";
 
 export const createSubscriptionController = async (req, res, next) => {
     try {
@@ -287,6 +288,13 @@ export const createSubscriptionWithPaymentController = async (req, res, next) =>
             };
             const newSubscription = await createSubscription(subscriptionData, session);
             // // 2. Tạo payment với subscriptionId vừa tạo
+            // Xác định paymentType dựa trên package type
+            let paymentType = 'NEW_SUBSCRIPTION'; // Mặc định là đăng ký gói mới
+            const packageInfo = await Package.findById(packageId);
+            if (packageInfo && (packageInfo.type === 'PT')) {
+                paymentType = 'PT_PURCHASE'; // Mua buổi tập PT
+            }
+            
             const paymentData = {
                 subscriptionId: newSubscription._id,
                 memberId,
@@ -295,6 +303,7 @@ export const createSubscriptionWithPaymentController = async (req, res, next) =>
                 discountDetails,
                 paymentMethod,
                 paymentStatus: 'Pending',
+                paymentType: paymentType,
                 notes
             };
             const newPayment = await createPayment(paymentData, session);

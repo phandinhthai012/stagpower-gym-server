@@ -120,14 +120,39 @@ const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
 };
 
 
-export const createPayment = async (paymentData,session = null) => {
+export const createPayment = async (paymentData, session = null) => {
+    // Nếu chưa có paymentType, tự động xác định dựa trên subscription
+    if (!paymentData.paymentType && paymentData.subscriptionId) {
+        try {
+            const subscription = await Subscription.findById(paymentData.subscriptionId)
+                .populate('packageId', 'type');
+            
+            if (subscription) {
+                // Kiểm tra nếu là renewal (có renewedFrom)
+                if (subscription.renewedFrom) {
+                    paymentData.paymentType = 'RENEWAL';
+                } 
+                // Kiểm tra nếu là PT package
+                else if (subscription.packageId && subscription.packageId.type === 'PT') {
+                    paymentData.paymentType = 'PT_PURCHASE';
+                } 
+                // Mặc định là đăng ký gói mới
+                else {
+                    paymentData.paymentType = 'NEW_SUBSCRIPTION';
+                }
+            }
+        } catch (error) {
+            console.error('Error determining paymentType:', error);
+            // Nếu lỗi, mặc định là NEW_SUBSCRIPTION
+            paymentData.paymentType = 'NEW_SUBSCRIPTION';
+        }
+    }
+    
     const payment = session
         ? await Payment.create([paymentData], { session }).then(docs => docs[0])
         : await Payment.create(paymentData);
     
     return payment;
-    // const payment = await Payment.create(paymentData);
-    // return payment;
 }
 
 export const getAllPayments = async () => {

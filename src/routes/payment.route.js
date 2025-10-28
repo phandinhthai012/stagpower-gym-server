@@ -9,7 +9,8 @@ import {
     momoIpnController,
     momoPaymentController,
     completePaymentController,
-    getPaymentStatsController
+    getPaymentStatsController,
+    regeneratePaymentQRController
 } from '../controllers/payment.controller.js'
 
 import { authenticateToken, authorize } from '../middleware/auth.js';
@@ -36,6 +37,8 @@ router.get('/member/:memberId', authenticateToken, getPaymentByMemberIdControlle
 router.post('/momo/create', momoPaymentController);
 // callback momo methods không cần tạo service trên frontend
 router.post('/momo/ipn', momoIpnController);
+// regenerate QR code for pending payment
+router.post('/:id/regenerate-qr', authenticateToken, regeneratePaymentQRController);
 // complete payment
 router.post('/:id/complete', authenticateToken, authorize(['admin', "staff"]), completePaymentController);
 

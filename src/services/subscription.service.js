@@ -323,6 +323,7 @@ export const renewSubscription = async (currentSubscriptionId, newPackageId, dat
             paymentMethod: paymentDetails?.paymentMethod || 'Cash',
             paymentStatus: isPaid ? 'Completed' : 'Pending',
             paymentDate: isPaid ? paymentDate : null,
+            paymentType: 'RENEWAL', // Gia hạn gói tập
             notes: `Renewal for subscription ${currentSubscriptionId} - ${isExpired ? 'After expiry' : 'Before expiry'} - Inherited ${inheritedSessions} PT sessions`
         }, session);
         const response = {
@@ -330,9 +331,21 @@ export const renewSubscription = async (currentSubscriptionId, newPackageId, dat
             payment: payment,
             oldState: oldState
         }
-        if (!isPaid && paymentDetails?.paymentMethod === 'Momo') {
-            const momoPayment = await createMomoPayment(paymentResponse.amount, paymentResponse._id, paymentResponse.invoiceNumber);
-            response.momoPayment = momoPayment;
+        // Tạo QR code cho Momo payment (kể cả paid hay chưa)
+        if (paymentDetails?.paymentMethod === 'Momo') {
+            try {
+                const momoPayment = await createMomoPayment(payment.amount, payment._id, payment.invoiceNumber);
+                response.momoPayment = momoPayment;
+                
+                // Lưu QR code vào payment
+                if (momoPayment.qrCodeUrl || momoPayment.payUrl) {
+                    payment.paymentQrCode = momoPayment.qrCodeUrl || momoPayment.payUrl;
+                    await saveWithSession(payment, session);
+                }
+            } catch (momoError) {
+                console.error('⚠️ MoMo QR creation error (non-critical):', momoError);
+                response.momoPayment = null;
+            }
         }
         return response;
 

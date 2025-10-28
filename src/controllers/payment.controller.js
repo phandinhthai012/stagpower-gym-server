@@ -174,6 +174,53 @@ export const momoPaymentController = async (req, res, next) => {
     }
 }
 
+// Regenerate QR code for pending payment
+export const regeneratePaymentQRController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const payment = await getPaymentById(id);
+        
+        // Only regenerate if payment is pending
+        if (payment.paymentStatus !== 'Pending') {
+            return response(res, {
+                success: false,
+                statusCode: 400,
+                message: "Chỉ có thể tạo lại QR cho thanh toán đang chờ",
+            });
+        }
+
+        // Only for MoMo payment
+        if (payment.paymentMethod !== 'Momo') {
+            return response(res, {
+                success: false,
+                statusCode: 400,
+                message: "Chỉ có thể tạo QR cho thanh toán MoMo",
+            });
+        }
+
+        // Create new MoMo payment request
+        const momoPayment = await createMomoPayment(payment.amount, payment._id, payment.invoiceNumber);
+        
+        // Update QR code in database
+        if (momoPayment.qrCodeUrl || momoPayment.payUrl) {
+            payment.paymentQrCode = momoPayment.qrCodeUrl || momoPayment.payUrl;
+            await payment.save();
+        }
+
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "QR code đã được tạo lại thành công",
+            data: {
+                payment: payment,
+                qrCodeUrl: momoPayment.qrCodeUrl || momoPayment.payUrl
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const momoIpnController = async (req, res, next) => {
     try {
         const {
