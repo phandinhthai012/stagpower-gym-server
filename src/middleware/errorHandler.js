@@ -23,8 +23,19 @@ const errorHandler = (err, req, res, next) => {
     // Mongoose duplicate key
     if (err.code === 11000) {
         statusCode = 409;
-        const field = Object.keys(err.keyValue)[0];
-        message = `${field} already exists`;
+        const field = Object.keys(err.keyValue || {})[0];
+        let fieldMessage = field;
+        
+        // User-friendly field names
+        const fieldMap = {
+            'email': 'Email',
+            'phone': 'Phone number',
+            'uid': 'UID',
+            'cccd': 'CCCD'
+        };
+        
+        fieldMessage = fieldMap[field] || field.charAt(0).toUpperCase() + field.slice(1);
+        message = `${fieldMessage} already exists`;
         code = 'DUPLICATE_KEY';
     }
 

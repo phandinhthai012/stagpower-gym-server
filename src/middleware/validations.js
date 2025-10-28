@@ -20,35 +20,52 @@ export const handleValidationErrors = (req, res, next) => {
 // Validation rules cho register
 export const validateRegister = [
     body('email')
+        .notEmpty()
+        .withMessage('Email is required')
         .isEmail()
         .withMessage('Please enter a valid email')
-        .normalizeEmail(),
+        .normalizeEmail()
+        .trim(),
 
     // password: ít nhất 6 kí tự , bao gồm ít nhất 1 chữ cái viết hoa, 1 chữ cái viết thường, 1 số, có thể có kí tự đặc biệt
     body('password')
+        .notEmpty()
+        .withMessage('Password is required')
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),
     // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/)
     // .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number, and can have special characters'),
 
     body('phone')
+        .notEmpty()
+        .withMessage('Phone number is required')
+        .trim()
         .matches(/^(0|\+84|84)[0-9]{9}$/)
-        .withMessage('Please enter a valid Vietnamese phone number'),
+        .withMessage('Please enter a valid Vietnamese phone number (e.g., 0123456789, +84123456789)'),
 
     body('fullName')
+        .notEmpty()
+        .withMessage('Full name is required')
         .trim()
         .isLength({ min: 2, max: 100 })
         .withMessage('Full name must be between 2 and 100 characters'),
 
     body('role')
         .optional()
+        .trim()
         .isIn(['member', 'admin', 'trainer', 'staff'])
         .withMessage('Invalid role'),
 
     body('gender')
         .optional()
+        .trim()
         .isIn(['male', 'female', 'other'])
         .withMessage('Invalid gender'),
+
+    body('dateOfBirth')
+        .optional()
+        .isISO8601()
+        .withMessage('Date of birth must be a valid date'),
 
     handleValidationErrors
 ];

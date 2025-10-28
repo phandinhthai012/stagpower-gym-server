@@ -16,33 +16,90 @@ export const register = async (data) => {
         dateOfBirth,
         gender } = data;
 
-    const existingUser = await User.findOne({ email });
+    // Check for existing user by email or phone
+    const existingUser = await User.findOne({ 
+        $or: [
+            { email: email?.toLowerCase()?.trim() },
+            { phone: phone?.trim() }
+        ]
+    });
+    
     if (existingUser) {
-        const error = new Error("User already exists");
+        const error = new Error(
+            existingUser.email === email?.toLowerCase()?.trim() 
+                ? "Email already exists" 
+                : "Phone number already exists"
+        );
         error.statusCode = 409;
         error.code = "DUPLICATE_KEY";
         throw error;
     }
 
-    const newUser = await User.create({
-        email,
-        password,
-        phone,
-        fullName,
-        role,
-        dateOfBirth,
-        gender
-    });
-    if (newUser) {
-        await sendWelcomeEmail({ to: email, data: { userEmail: email, userName: fullName, uid: newUser.uid, joinDate: newUser.joinDate, packageName: 'None' } });
-    }
+    try {
+        const newUser = await User.create({
+            email: email?.toLowerCase()?.trim(),
+            password,
+            phone: phone?.trim(),
+            fullName,
+            role: role || 'member',
+            dateOfBirth,
+            gender
+        });
+        
+        if (newUser) {
+            try {
+                await sendWelcomeEmail({ 
+                    to: email, 
+                    data: { 
+                        userEmail: email, 
+                        userName: fullName, 
+                        uid: newUser.uid, 
+                        joinDate: newUser.joinDate, 
+                        packageName: 'None' 
+                    } 
+                });
+            } catch (emailError) {
+                // Log email error but don't fail registration
+                console.error('Failed to send welcome email:', emailError);
+            }
+        }
 
-    return newUser;
+        return newUser;
+    } catch (error) {
+        // Handle MongoDB duplicate key errors
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyValue || {})[0];
+            const fieldMessage = field === 'email' 
+                ? 'Email already exists' 
+                : field === 'phone'
+                ? 'Phone number already exists'
+                : field === 'uid'
+                ? 'UID already exists. Please try again.'
+                : `${field} already exists`;
+            
+            const dbError = new Error(fieldMessage);
+            dbError.statusCode = 409;
+            dbError.code = 'DUPLICATE_KEY';
+            throw dbError;
+        }
+        throw error;
+    }
 }
 
 export const login = async (data) => {
     const { email, password } = data;
-    const user = await User.findOne({ email }).select('+password');
+    
+    if (!email || !password) {
+        const error = new Error("Email and password are required");
+        error.statusCode = 400;
+        error.code = "MISSING_CREDENTIALS";
+        throw error;
+    }
+
+    // Normalize email (lowercase and trim)
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
 
     if (!user) {
         const error = new Error("Invalid email or password");
@@ -50,6 +107,15 @@ export const login = async (data) => {
         error.code = "INVALID_CREDENTIALS";
         throw error;
     }
+
+    // Check if user account is active
+    if (user.status === 'banned' || user.status === 'inactive') {
+        const error = new Error("Your account has been " + (user.status === 'banned' ? 'banned' : 'deactivated'));
+        error.statusCode = 403;
+        error.code = "ACCOUNT_DISABLED";
+        throw error;
+    }
+
     const isPasswordValid = await user.correctPassword(password);
     if (!isPasswordValid) {
         const error = new Error("Invalid email or password");
@@ -57,6 +123,7 @@ export const login = async (data) => {
         error.code = "INVALID_CREDENTIALS";
         throw error;
     }
+    
     const accessToken = generateAccessToken({ userId: user._id, role: user.role, tokenVersion: user.tokenVersion });
     const refreshToken = generateRefreshToken({ userId: user._id, role: user.role, tokenVersion: user.tokenVersion });
     delete user.password;
@@ -68,7 +135,6 @@ export const login = async (data) => {
         accessToken: accessToken,
         refreshToken: refreshToken
     };
-
 }
 
 export const getMe = async (userId) => {

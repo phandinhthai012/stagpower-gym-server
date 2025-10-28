@@ -232,32 +232,66 @@ userSchema.index({ 'otp.createdAt': 1 }, {
 
 // pre-save middleware
 userSchema.pre('save', async function (next) {
-    if (this.role === 'member' && !this.uid) {
-        try {
-            const count = await mongoose.model('User').countDocuments({ role: 'member' });
-            this.uid = `MEM${String(count + 1).padStart(6, '0')}`;
-            next();
-        } catch (error) {
-            next(error);
+    // Only generate UID if it doesn't exist and role is defined
+    if (this.uid || !this.role) {
+        return next();
+    }
+
+    const maxAttempts = 10;
+    
+    try {
+        let prefix, query;
+        
+        if (this.role === 'member') {
+            prefix = 'MEM';
+            query = { role: 'member' };
+        } else if (this.role === 'trainer' || this.role === 'staff') {
+            prefix = 'EMP';
+            query = { role: { $in: ['trainer', 'staff'] } };
+        } else if (this.role === 'admin') {
+            prefix = 'ADM';
+            query = { role: 'admin' };
+        } else {
+            return next(); // Unknown role, skip UID generation
         }
-    } else if (this.role === 'trainer' || this.role === 'staff' ) {
-        try {
-            const count = await mongoose.model('User').countDocuments({ role: { $in: ['trainer', 'staff'] } });
-            this.uid = `EMP${String(count + 1).padStart(6, '0')}`;
-            next();
-        } catch (error) {
-            next(error);
+
+        // Find the highest existing UID number for this role
+        const existingUsers = await mongoose.model('User')
+            .find({ ...query, uid: { $exists: true, $ne: null } })
+            .select('uid')
+            .sort({ uid: -1 })
+            .limit(1)
+            .lean();
+
+        let nextNumber = 1;
+        
+        if (existingUsers.length > 0 && existingUsers[0].uid) {
+            // Extract number from existing UID (e.g., "MEM000001" -> 1)
+            const match = existingUsers[0].uid.match(/\d+$/);
+            if (match) {
+                nextNumber = parseInt(match[0], 10) + 1;
+            }
         }
-    } else if (this.role === 'admin') {
-        try {
-            const count = await mongoose.model('User').countDocuments({ role: 'admin' });
-            this.uid = `ADM${String(count + 1).padStart(6, '0')}`;
-            next();
-        } catch (error) {
-            next(error);
+
+        // Try to find an available UID with incrementing numbers
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            const candidateUid = `${prefix}${String(nextNumber + attempt).padStart(6, '0')}`;
+            
+            // Check if this UID already exists
+            const uidExists = await mongoose.model('User').findOne({ uid: candidateUid });
+            if (!uidExists) {
+                this.uid = candidateUid;
+                return next();
+            }
         }
-    } else {
-        next();
+
+        // If all sequential attempts failed, fall back to timestamp-based UID
+        const timestamp = Date.now().toString().slice(-6);
+        this.uid = `${prefix}${timestamp}`;
+        return next();
+        
+    } catch (error) {
+        return next(error);
     }
 })
 // hash password middleware
