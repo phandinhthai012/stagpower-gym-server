@@ -19,6 +19,22 @@ const aiSuggestionSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Goal is required'],
     },
+    // === 1. Đánh giá sức khỏe (do AI tạo ra) ===
+    evaluation: {
+        healthScore: {
+            type: Number,
+            min: [0, 'Health score must be between 0-100'],
+            max: [100, 'Health score must be between 0-100']
+        },
+        healthStatus: {
+            type: String,
+            enum: ['excellent', 'good', 'fair', 'poor', 'critical']
+        },
+        healthScoreDescription: { // Phân tích chi tiết của AI
+            type: String,
+            maxlength: [2000, 'Description cannot exceed 2000 characters']
+        }
+    },
     exercises: [{
         name: {
             type: String,
@@ -45,7 +61,7 @@ const aiSuggestionSchema = new mongoose.Schema({
             type: String,
             default: '',
         },
-        
+
     }],
     workoutDuration: {
         type: Number,
@@ -60,6 +76,39 @@ const aiSuggestionSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    // Gợi ý dinh dưỡng: chỉ calo và thời gian ăn
+    dietPlan: {
+        // Tổng calo khuyến nghị mỗi ngày
+        dailyCalories: {
+            type: Number,
+            min: [800],
+            max: [8000]
+        },
+        // Macro nutrients (grams) - hữu ích cho nghiên cứu
+        macros: {
+            protein: Number,    // grams
+            carbs: Number,      // grams
+            fat: Number         // grams
+        },
+        // Thời gian ăn và gợi ý calo cho mỗi bữa
+        mealTimes: [{
+            time: {
+                type: String,  // "7:00 AM", "12:00 PM", "6:00 PM"
+            },
+            mealName: {
+                type: String,  // "Bữa sáng", "Bữa trưa", "Bữa tối"
+            },
+            suggestedCalories: {
+                type: Number,  // Gợi ý calo cho bữa này
+                min: [0]
+            }
+        }],
+        // Ghi chú dinh dưỡng (lưu ý, tips...)
+        notes: {
+            type: String,
+            default: ''
+        }
+    },
     notes: {
         type: String,
         default: '',
@@ -67,36 +116,22 @@ const aiSuggestionSchema = new mongoose.Schema({
     status: {
         type: String,
         required: [true, 'Status is required'],
-        enum: ['Pending', 'Completed', 'Cancelled'],
+        enum: ['Pending', 'Accepted', 'Completed', 'Cancelled', 'Archived'],
         default: 'Pending',
     },
     message: {
         type: String,
         default: '',
     },
-    response: {
-        answer: {
-            type: String,
-            default: '',
-        },
-        notes: {
-            type: String,
-            default: '',
-        },
-        suggestedActions: {
-            type: [String],
-            default: [],
-        },
-        safetyWarning: {
-            type: String,
-            default: '',
-        },
-    }
 }, {
     timestamps: true,
     collection: 'aiSuggestions'
 });
 
+// Indexes for better query performance
+aiSuggestionSchema.index({ memberId: 1, recommendationDate: -1 });
+aiSuggestionSchema.index({ status: 1 });
+aiSuggestionSchema.index({ 'evaluation.healthScore': 1 });
 
 const AISuggestion = mongoose.model('AISuggestion', aiSuggestionSchema);
 export default AISuggestion;

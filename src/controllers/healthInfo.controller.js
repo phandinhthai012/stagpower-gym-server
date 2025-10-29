@@ -7,7 +7,9 @@ import {
     updateHealthInfoById,
     getAllHealthInfo,
     deleteHealthInfoById,
-    parseHealthFile
+    parseHealthFile,
+    getHealthInfoHistoryByMemberId,
+    getLatestHealthInfoByMemberId
 } from "../services/healthInfo.service";
 
 
@@ -21,26 +23,8 @@ const ALLOWED_FIELDS = [
 export const createHealthInfoController = async (req, res, next) => {
     try {
         const memberId = req.params.memberId;
-        const {
-            height,
-            weight,
-            gender,
-            age,
-            bodyFatPercent,
-            medicalHistory,
-            allergies,
-            goal,
-            experience,
-            fitnessLevel,
-            preferredTime,
-            weeklySessions
-        } = req.body;
-        const healthInfo = await createHealthInfo(memberId, {
-            height,
-            weight, gender, age, bodyFatPercent,
-            medicalHistory, allergies, goal,
-            experience, fitnessLevel, preferredTime, weeklySessions
-        });
+        // Lấy tất cả các fields từ req.body (bao gồm cả fields mới)
+        const healthInfo = await createHealthInfo(memberId, req.body);
         return response(res, {
             success: true,
             statusCode: 201,
@@ -161,6 +145,38 @@ export const parseHealthDataPreview = async (req, res, next) => {
             statusCode: 200,
             message: "Health data parsed successfully",
             data: parsedData
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+// Lấy tất cả HealthInfo của member (lịch sử)
+export const getHealthInfoHistoryByMemberIdController = async (req, res, next) => {
+    try {
+        const memberId = req.params.memberId;
+        const healthInfoList = await getHealthInfoHistoryByMemberId(memberId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Health info history fetched successfully",
+            data: healthInfoList
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+// Lấy HealthInfo mới nhất của member
+export const getLatestHealthInfoByMemberIdController = async (req, res, next) => {
+    try {
+        const memberId = req.params.memberId;
+        const healthInfo = await getLatestHealthInfoByMemberId(memberId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Latest health info fetched successfully",
+            data: healthInfo
         });
     } catch (error) {
         return next(error);
