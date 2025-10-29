@@ -25,7 +25,7 @@
 //     ${message ? `
 //         [MESSAGE CỦA HỘI VIÊN]
 //         "${message}"
-        
+
 //         Hãy phân tích message này và tạo kế hoạch tập luyện phù hợp với yêu cầu cụ thể của hội viên.
 //         ` : ''}
 
@@ -80,7 +80,7 @@
 
 export const createWorkoutSuggestionPrompt = (healthInfo, userInfo, message) => {
     const today = new Date().toISOString().split('T')[0];
-  
+
     return `
     Bạn là huấn luyện viên thể hình chuyên nghiệp với hơn 10 năm kinh nghiệm. 
     Dựa trên hồ sơ sức khỏe và mục tiêu của hội viên, hãy tạo kế hoạch tập luyện 
@@ -149,8 +149,8 @@ export const createWorkoutSuggestionPrompt = (healthInfo, userInfo, message) => 
     - Mọi giá trị chuỗi phải nằm trong dấu ngoặc kép.
     - JSON phải parse được trực tiếp bằng JSON.parse().
     `;
-  };
-  
+};
+
 
 export const createNutritionSuggestionPrompt = (healthInfo, userInfo, message) => {
     return `
@@ -242,5 +242,50 @@ export const createProgressAnalysisPrompt = (healthInfo, progressData) => {
         },
         "nextCheckpoint": "2024-02-15"
     }
+    `;
+};
+
+export const createChatbotConsultationPrompt = (healthInfo, userInfo, conversationHistory, currentMessage) => {
+    const historyText = conversationHistory && conversationHistory.length > 0
+        ? conversationHistory.map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.content}`).join('\n')
+        : 'Chưa có lịch sử trò chuyện.';
+
+    return `
+Bạn là AI Trainer Assistant của phòng gym StagPower. Bạn là huấn luyện viên thân thiện, nhiệt tình và chuyên nghiệp có nhiều năm kinh nghiệm trong việc tập luyện và dinh dưỡng.
+
+[THÔNG TIN HỘI VIÊN]
+- Tên: ${userInfo?.fullName || 'Hội viên'}
+- Tuổi: ${healthInfo?.age || 'N/A'}
+- Chiều cao: ${healthInfo?.height || 'N/A'} cm
+- Cân nặng: ${healthInfo?.weight || 'N/A'} kg
+- Mục tiêu: ${healthInfo?.goal || 'Chưa xác định'}
+- Kinh nghiệm: ${healthInfo?.experience || 'N/A'}
+
+[LỊCH SỬ TRÒ CHUYỆN]
+${historyText}
+
+[NGUỜI DÙNG HỎI]
+"${currentMessage}"
+
+[YÊU CẦU]
+1. Trả lời tự nhiên, gần gũi như đang chat
+2. Nhớ ngữ cảnh cuộc trò chuyện trước đó
+3. Đưa ra lời khuyên cụ thể, có thể áp dụng ngay
+4. Ưu tiên an toàn - cảnh báo nếu có rủi ro
+5. Có thể hỏi lại nếu cần thêm thông tin
+6. Gợi ý các tính năng: tạo kế hoạch tập, dinh dưỡng, theo dõi tiến độ
+
+[LƯU Ý]
+- KHÔNG chẩn đoán y tế
+- KHÔNG hứa hẹn kết quả cụ thể
+
+[ĐỊNH DẠNG JSON]
+{
+    "answer": "Câu trả lời tự nhiên (tiếng Việt)",
+    "suggestedActions": ["Tạo kế hoạch tập luyện"] nếu có,
+    "safetyWarning": "Cảnh báo nếu cần"
+}
+
+Trả về CHỈ JSON, không thêm text khác.
     `;
 };

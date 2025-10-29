@@ -4,7 +4,8 @@ import {
     getAISuggestionByMemberId,
     deleteAISuggestionById,
     generateAISuggestion,
-    generateNutritionSuggestion
+    generateNutritionSuggestion,
+    chatWithAI
 } from "../services/AISuggestion.service";
 
 import response from "../utils/response";
@@ -104,6 +105,33 @@ export const generateNutritionSuggestionController = async (req, res, next) => {
             statusCode: 200,
             message: "NutritionSuggestion generated successfully",
             data: nutritionSuggestion,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const chatWithAIController = async (req, res, next) => {
+    try {
+        const { memberId, message, conversationHistory } = req.body;
+        
+        if (!memberId || !message) {
+            return response(res, {
+                statusCode: 400,
+                message: "memberId and message are required",
+            });
+        }
+        
+        const aiResponse = await chatWithAI({ 
+            memberId, 
+            message, 
+            conversationHistory: conversationHistory || [] 
+        });
+        
+        response(res, {
+            statusCode: 200,
+            message: "Chat response generated successfully",
+            data: aiResponse,
         });
     } catch (error) {
         next(error);

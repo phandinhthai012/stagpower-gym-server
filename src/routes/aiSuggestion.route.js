@@ -5,7 +5,8 @@ import {
     getAISuggestionByMemberIdController,
     deleteAISuggestionByIdController,
     generateAISuggestionController,
-    generateNutritionSuggestionController
+    generateNutritionSuggestionController,
+    chatWithAIController
 } from "../controllers/aiSuggestion.controller";
 import { authenticateToken } from "../middleware/auth";
 
@@ -19,6 +20,9 @@ router.get("/test",(req,res,next)=>{
 });
 
 router.post("/", authenticateToken, createAISuggestionController);
+
+// Thêm route mới:
+router.post("/chat", authenticateToken, chatWithAIController);
 
 router.get("/member/:memberId", authenticateToken, getAISuggestionByMemberIdController);
 

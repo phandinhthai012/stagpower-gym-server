@@ -70,6 +70,28 @@ const aiSuggestionSchema = new mongoose.Schema({
         enum: ['Pending', 'Completed', 'Cancelled'],
         default: 'Pending',
     },
+    message: {
+        type: String,
+        default: '',
+    },
+    response: {
+        answer: {
+            type: String,
+            default: '',
+        },
+        notes: {
+            type: String,
+            default: '',
+        },
+        suggestedActions: {
+            type: [String],
+            default: [],
+        },
+        safetyWarning: {
+            type: String,
+            default: '',
+        },
+    }
 }, {
     timestamps: true,
     collection: 'aiSuggestions'
