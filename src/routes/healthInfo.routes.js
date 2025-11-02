@@ -9,7 +9,9 @@ import {
   updateHealthInfoByIdController,
   getAllHealthInfoController,
   deleteHealthInfoByIdController,
-  parseHealthDataPreview
+  parseHealthDataPreview,
+  getHealthInfoHistoryByMemberIdController,
+  getLatestHealthInfoByMemberIdController
 } from "../controllers/healthInfo.controller"
 import { validateHealthProfileCreate, validateHealthProfileUpdate } from "../middleware/validations"
 
@@ -29,6 +31,10 @@ router.get("/me", authenticateToken, getMyHealthInfoController);
 
 // get health info by member id ==> admin and trainer and staff
 router.get("/member/:memberId", getHealthInfoByMemberIdController);
+// get health info history by member id
+router.get("/member/:memberId/history", getHealthInfoHistoryByMemberIdController);
+// get latest health info by member id
+router.get("/member/:memberId/latest", getLatestHealthInfoByMemberIdController);
 // get health info by id
 router.get("/:id", authenticateToken, getHealthInfoByIdController);
 // create health info

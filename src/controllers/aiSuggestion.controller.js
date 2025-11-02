@@ -3,8 +3,10 @@ import {
     getAISuggestionById,
     getAISuggestionByMemberId,
     deleteAISuggestionById,
-    generateAISuggestion,
-    generateNutritionSuggestion
+    chatWithAI,
+    generateCompleteWorkoutSuggestion,
+    generateNutritionOnlySuggestion,
+    generateWorkoutOnlySuggestion
 } from "../services/AISuggestion.service";
 
 import response from "../utils/response";
@@ -81,28 +83,71 @@ export const deleteAISuggestionByIdController = async (req, res, next) => {
 
 }
 
-
-export const generateAISuggestionController = async (req, res, next) => {
+export const chatWithAIController = async (req, res, next) => {
     try {
-        const { memberId, message } = req.body;
-        const aiSuggestion = await generateAISuggestion({ memberId, message });
+        const { memberId, message, conversationHistory } = req.body;
+        
+        if (!memberId || !message) {
+            return response(res, {
+                statusCode: 400,
+                message: "memberId and message are required",
+            });
+        }
+        
+        const aiResponse = await chatWithAI({ 
+            memberId, 
+            message, 
+            conversationHistory: conversationHistory || [] 
+        });
+        
         response(res, {
             statusCode: 200,
-            message: "AISuggestion generated successfully",
-            data: aiSuggestion,
+            message: "Chat response generated successfully",
+            data: aiResponse,
         });
     } catch (error) {
         next(error);
     }
 }
 
-export const generateNutritionSuggestionController = async (req, res, next) => {
+
+export const generateCompleteWorkoutSuggestionController = async (req, res, next) => {
     try {
         const { memberId, message } = req.body;
-        const nutritionSuggestion = await generateNutritionSuggestion({ memberId, message });
+        const completeWorkoutSuggestion = await generateCompleteWorkoutSuggestion({ memberId, message });
         response(res, {
             statusCode: 200,
-            message: "NutritionSuggestion generated successfully",
+            message: "CompleteWorkoutSuggestion generated successfully",
+            data: completeWorkoutSuggestion,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Generate Workout Only
+export const generateWorkoutOnlyController = async (req, res, next) => {
+    try {
+        const { memberId, message } = req.body; 
+        const workoutSuggestion = await generateWorkoutOnlySuggestion({ memberId, message });
+        response(res, {
+            statusCode: 200,
+            message: "Workout suggestion generated successfully",
+            data: workoutSuggestion,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Generate Nutrition Only
+export const generateNutritionOnlyController = async (req, res, next) => {
+    try {
+        const { memberId, message } = req.body;
+        const nutritionSuggestion = await generateNutritionOnlySuggestion({ memberId, message });
+        response(res, {
+            statusCode: 200,
+            message: "Nutrition suggestion generated successfully",
             data: nutritionSuggestion,
         });
     } catch (error) {

@@ -4,8 +4,10 @@ import {
     getAISuggestionByIdController,
     getAISuggestionByMemberIdController,
     deleteAISuggestionByIdController,
-    generateAISuggestionController,
-    generateNutritionSuggestionController
+    chatWithAIController,
+    generateCompleteWorkoutSuggestionController,
+    generateWorkoutOnlyController,
+    generateNutritionOnlyController
 } from "../controllers/aiSuggestion.controller";
 import { authenticateToken } from "../middleware/auth";
 
@@ -20,14 +22,32 @@ router.get("/test",(req,res,next)=>{
 
 router.post("/", authenticateToken, createAISuggestionController);
 
+// Thêm route mới:
+
+
 router.get("/member/:memberId", authenticateToken, getAISuggestionByMemberIdController);
 
 router.get("/:id", authenticateToken, getAISuggestionByIdController);
 
 router.delete("/:id", authenticateToken, deleteAISuggestionByIdController);
 
-router.post("/suggestion/generate", generateAISuggestionController);
+// ===== AI GENERATION ENDPOINTS =====
 
-router.post("/suggestion/nutrition", generateNutritionSuggestionController);
+// Chat with AI
+router.post("/chat", chatWithAIController);
+
+// Generate gợi ý toàn diện (Evaluation + Workout + DietPlan) - PROMPT CHÍNH CHO NGHIÊN CỨU
+router.post("/generate/complete", generateCompleteWorkoutSuggestionController);
+
+// Generate chỉ workout (không có nutrition)
+router.post("/generate/workout", generateWorkoutOnlyController);
+
+// Generate chỉ nutrition (không có workout)
+router.post("/generate/nutrition", generateNutritionOnlyController);
 
 export default router;
+
+
+// POST /api/ai-suggestions/generate/complete    # Prompt chính - toàn diện cả evaluation, workout và diet plan
+// POST /api/ai-suggestions/generate/workout    # Chỉ workout như bài tập
+// POST /api/ai-suggestions/generate/nutrition  # Chỉ nutrition 
