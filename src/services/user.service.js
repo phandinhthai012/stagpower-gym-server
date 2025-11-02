@@ -262,13 +262,17 @@ export const createUser = async (payload) => {
         staffInfo,
         adminInfo
     } = payload;
-    if (!fullName || !email || !phone || !password || !role || !cccd) {
+    if (!fullName || !email || !phone || !password || !role) {
         const error = new Error("Missing required fields");
         error.statusCode = 400;
         error.code = "MISSING_REQUIRED_FIELDS";
         throw error;
     }
-    const existingUser = await User.findOne({ $or: [{ email }, { cccd }] });
+    // Check existing user - only check cccd if provided
+    const emailCheck = { email };
+    const cccdCheck = cccd && cccd.trim() ? { cccd: cccd.trim() } : null;
+    const queryConditions = cccdCheck ? [{ email }, cccdCheck] : [{ email }];
+    const existingUser = await User.findOne({ $or: queryConditions });
     if (existingUser) {
         if (existingUser.email === email) {
             const error = new Error("Email already exists");
@@ -276,7 +280,7 @@ export const createUser = async (payload) => {
             error.code = "EMAIL_ALREADY_EXISTS";
             throw error;
         }
-        if (existingUser.cccd === cccd) {
+        if (cccd && cccd.trim() && existingUser.cccd === cccd.trim()) {
             const error = new Error("CCCD already exists");
             error.statusCode = 400;
             error.code = "CCCD_ALREADY_EXISTS";
@@ -291,7 +295,7 @@ export const createUser = async (payload) => {
         dateOfBirth,
         photo,
         password,
-        cccd,
+        cccd: cccd && cccd.trim() ? cccd.trim() : undefined, // Only include cccd if provided
         role,
         status: status || "active"
     };
