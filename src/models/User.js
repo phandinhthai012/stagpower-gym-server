@@ -86,7 +86,6 @@ const userSchema = new mongoose.Schema({
         },
         qr_code: {
             type: String,
-            unique: true,
             sparse: true // allow null or undefined
         },
         notes: {

@@ -6,6 +6,22 @@ export const createChatbotConsultationPrompt = (healthInfo, userInfo, conversati
       return `${index + 1}. ${role}: ${msg.content}`;
     }).join('\n')
     : 'Chưa có lịch sử trò chuyện.';
+  // Format segmental analysis nếu có
+  const segmentalLeanText = healthInfo?.segmentalLeanAnalysis
+    ? `\n- Phân tích cơ theo vùng:
++ Tay trái: ${healthInfo.segmentalLeanAnalysis.leftArm?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.leftArm?.percent || 'N/A'}%)
++ Tay phải: ${healthInfo.segmentalLeanAnalysis.rightArm?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.rightArm?.percent || 'N/A'}%)
++ Chân trái: ${healthInfo.segmentalLeanAnalysis.leftLeg?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.leftLeg?.percent || 'N/A'}%)
++ Chân phải: ${healthInfo.segmentalLeanAnalysis.rightLeg?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.rightLeg?.percent || 'N/A'}%)`
+    : '';
+  const segmentalFatText = healthInfo?.segmentalFatAnalysis
+    ? `\n- Phân tích mỡ theo vùng:
+  + Tay trái: ${healthInfo.segmentalFatAnalysis.leftArm?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.leftArm?.percent || 'N/A'}%)
+  + Tay phải: ${healthInfo.segmentalFatAnalysis.rightArm?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.rightArm?.percent || 'N/A'}%)
+  + Thân: ${healthInfo.segmentalFatAnalysis.trunk?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.trunk?.percent || 'N/A'}%)
+  + Chân trái: ${healthInfo.segmentalFatAnalysis.leftLeg?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.leftLeg?.percent || 'N/A'}%)
+  + Chân phải: ${healthInfo.segmentalFatAnalysis.rightLeg?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.rightLeg?.percent || 'N/A'}%)`
+    : '';
 
   return `
 Bạn là AI Trainer Assistant của phòng gym StagPower. Bạn là huấn luyện viên cá nhân thân thiện, nhiệt tình và chuyên nghiệp với hơn 15 năm kinh nghiệm trong việc tập luyện và dinh dưỡng.
@@ -19,11 +35,20 @@ Bạn là AI Trainer Assistant của phòng gym StagPower. Bạn là huấn luy�
 - BMI: ${healthInfo?.bmi || 'N/A'}
 - Tỷ lệ mỡ: ${healthInfo?.bodyFatPercent || 'N/A'}%
 - Khối lượng cơ: ${healthInfo?.muscleMass || 'N/A'} kg
+- Khối lượng mỡ: ${healthInfo?.bodyFatMass || 'N/A'} kg
+- Mỡ nội tạng (cấp độ): ${healthInfo?.visceralFatLevel || 'N/A'}
+- Tỷ lệ nước: ${healthInfo?.waterPercent || 'N/A'}%
+- Khối lượng xương: ${healthInfo?.boneMass || 'N/A'} kg
+- Tỷ lệ vòng eo/vòng hông: ${healthInfo?.waistHipRatio || 'N/A'}
+- Tỷ lệ trao đổi chất cơ bản (BMR): ${healthInfo?.basalMetabolicRate || 'N/A'} kcal
+- Điểm InBody: ${healthInfo?.inBodyScore || 'N/A'}${segmentalLeanText}${segmentalFatText}
 - Mục tiêu: ${healthInfo?.goal || 'Chưa xác định'}
 - Kinh nghiệm tập luyện: ${healthInfo?.experience || 'N/A'}
 - Mức độ thể lực: ${healthInfo?.fitnessLevel || 'N/A'}
 - Số buổi tập/tuần: ${healthInfo?.weeklySessions || 'N/A'}
 - Thời gian ưu tiên: ${healthInfo?.preferredTime || 'N/A'}
+- Loại chế độ ăn: ${healthInfo?.dietType || 'balanced'}
+- Calo hàng ngày hiện tại: ${healthInfo?.dailyCalories || 'N/A'} kcal
 - Tiền sử bệnh: ${healthInfo?.medicalHistory || 'Không có'}
 - Dị ứng: ${healthInfo?.allergies || 'Không có'}
 - Lối sống:
@@ -85,7 +110,23 @@ Trả về CHỈ JSON, không thêm text khác:
 
 export const createCompleteWorkoutSuggestionPrompt = (healthInfo, userInfo, message) => {
   const today = new Date().toISOString().split('T')[0];
+  // Format segmental analysis
+  const segmentalLeanText = healthInfo?.segmentalLeanAnalysis 
+    ? `\n- Phân tích cơ theo vùng:
+  + Tay trái: ${healthInfo.segmentalLeanAnalysis.leftArm?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.leftArm?.percent || 'N/A'}%)
+  + Tay phải: ${healthInfo.segmentalLeanAnalysis.rightArm?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.rightArm?.percent || 'N/A'}%)
+  + Chân trái: ${healthInfo.segmentalLeanAnalysis.leftLeg?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.leftLeg?.percent || 'N/A'}%)
+  + Chân phải: ${healthInfo.segmentalLeanAnalysis.rightLeg?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.rightLeg?.percent || 'N/A'}%)`
+    : '';
 
+  const segmentalFatText = healthInfo?.segmentalFatAnalysis
+    ? `\n- Phân tích mỡ theo vùng:
+  + Tay trái: ${healthInfo.segmentalFatAnalysis.leftArm?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.leftArm?.percent || 'N/A'}%)
+  + Tay phải: ${healthInfo.segmentalFatAnalysis.rightArm?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.rightArm?.percent || 'N/A'}%)
+  + Thân: ${healthInfo.segmentalFatAnalysis.trunk?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.trunk?.percent || 'N/A'}%)
+  + Chân trái: ${healthInfo.segmentalFatAnalysis.leftLeg?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.leftLeg?.percent || 'N/A'}%)
+  + Chân phải: ${healthInfo.segmentalFatAnalysis.rightLeg?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.rightLeg?.percent || 'N/A'}%)`
+    : '';
   return `
 Bạn là Huấn luyện viên Cá nhân và Chuyên gia Dinh dưỡng cao cấp với hơn 15 năm kinh nghiệm.
 
@@ -98,13 +139,19 @@ Bạn là Huấn luyện viên Cá nhân và Chuyên gia Dinh dưỡng cao cấp
 - BMI: ${healthInfo.bmi || 'N/A'}
 - Tỷ lệ mỡ: ${healthInfo.bodyFatPercent || 'N/A'}%
 - Khối lượng cơ: ${healthInfo.muscleMass || 'N/A'} kg
+- Khối lượng mỡ: ${healthInfo.bodyFatMass || 'N/A'} kg
 - Mỡ nội tạng (cấp độ): ${healthInfo.visceralFatLevel || 'N/A'}
+- Tỷ lệ nước: ${healthInfo.waterPercent || 'N/A'}%
 - Khối lượng xương: ${healthInfo.boneMass || 'N/A'} kg
+- Tỷ lệ vòng eo/vòng hông: ${healthInfo.waistHipRatio || 'N/A'}
+- Tỷ lệ trao đổi chất cơ bản (BMR): ${healthInfo.basalMetabolicRate || 'N/A'} kcal
+- Điểm InBody: ${healthInfo.inBodyScore || 'N/A'}${segmentalLeanText}${segmentalFatText}
 - Mục tiêu: ${healthInfo.goal || 'Chưa xác định'}
 - Kinh nghiệm tập luyện: ${healthInfo.experience || 'N/A'}
 - Mức độ thể lực: ${healthInfo.fitnessLevel || 'N/A'}
 - Số buổi tập/tuần: ${healthInfo.weeklySessions || 'N/A'}
 - Thời gian ưu tiên: ${healthInfo.preferredTime || 'N/A'}
+- Calo hàng ngày hiện tại: ${healthInfo.dailyCalories || 'N/A'} kcal
 - Tiền sử bệnh: ${healthInfo.medicalHistory || 'Không có'}
 - Dị ứng: ${healthInfo.allergies || 'Không có'}
 - Lối sống: 
@@ -119,7 +166,7 @@ Hãy phân tích message này và tạo kế hoạch phù hợp với yêu cầu
 
 [YÊU CẦU - PHẢI HOÀN THÀNH 3 NHIỆM VỤ]
 1. **ĐÁNH GIÁ SỨC KHỎE (Evaluation):**
-   - Tính điểm sức khỏe (0-100) dựa trên: BMI, tỷ lệ mỡ, khối lượng cơ, lối sống (giấc ngủ, stress, rượu, thuốc)
+   - Tính điểm sức khỏe (0-100) dựa trên: BMI, tỷ lệ mỡ, khối lượng cơ, mỡ nội tạng, lối sống (giấc ngủ, stress, rượu, thuốc)
    - Xác định healthStatus: excellent (80-100), good (60-79), fair (40-59), poor (20-39), critical (0-19)
    - Phân tích ngắn gọn (tối đa 2000 ký tự) lý do tại sao đạt điểm này
 
@@ -131,8 +178,11 @@ Hãy phân tích message này và tạo kế hoạch phù hợp với yêu cầu
    - Lưu ý an toàn và kỹ thuật trong notes
 
 3. **KẾ HOẠCH DINH DƯỠNG (DietPlan):**
-   - Tính dailyCalories phù hợp với mục tiêu ${healthInfo.goal || 'general fitness'}
+   - Sử dụng BMR (${healthInfo.basalMetabolicRate || 'N/A'} kcal) nếu có để tính toán chính xác hơn
+   - Tính dailyCalories phù hợp với mục tiêu ${healthInfo.goal || 'general fitness'} và BMR
+   - Nếu đã có dailyCalories hiện tại (${healthInfo.dailyCalories || 'N/A'} kcal), cân nhắc điều chỉnh phù hợp với mục tiêu
    - Tính macros: protein (grams), carbs (grams), fat (grams) - PHẢI LÀ SỐ, KHÔNG PHẢI STRING
+   - Tôn trọng loại chế độ ăn: ${healthInfo.dietType || 'balanced'}
    - Tạo mealTimes: chỉ gợi ý thời gian ăn và số calo cho mỗi bữa (KHÔNG cần liệt kê thức ăn cụ thể)
    - Mỗi mealTime cần: time (ví dụ "7:00 AM"), mealName (ví dụ "Bữa sáng"), suggestedCalories (số)
    - Ghi chú dinh dưỡng trong notes nếu cần
@@ -221,6 +271,25 @@ Bắt đầu trả về JSON ngay bây giờ:
 export const createWorkoutOnlySuggestionPrompt = (healthInfo, userInfo, message) => {
   const today = new Date().toISOString().split('T')[0];
 
+  const segmentalLeanText = healthInfo?.segmentalLeanAnalysis 
+  ? `\n- Phân tích cơ theo vùng:
++ Tay trái: ${healthInfo.segmentalLeanAnalysis.leftArm?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.leftArm?.percent || 'N/A'}%)
++ Tay phải: ${healthInfo.segmentalLeanAnalysis.rightArm?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.rightArm?.percent || 'N/A'}%)
++ Chân trái: ${healthInfo.segmentalLeanAnalysis.leftLeg?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.leftLeg?.percent || 'N/A'}%)
++ Chân phải: ${healthInfo.segmentalLeanAnalysis.rightLeg?.mass || 'N/A'} kg (${healthInfo.segmentalLeanAnalysis.rightLeg?.percent || 'N/A'}%)`
+  : '';
+
+const segmentalFatText = healthInfo?.segmentalFatAnalysis
+  ? `\n- Phân tích mỡ theo vùng:
++ Tay trái: ${healthInfo.segmentalFatAnalysis.leftArm?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.leftArm?.percent || 'N/A'}%)
++ Tay phải: ${healthInfo.segmentalFatAnalysis.rightArm?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.rightArm?.percent || 'N/A'}%)
++ Thân: ${healthInfo.segmentalFatAnalysis.trunk?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.trunk?.percent || 'N/A'}%)
++ Chân trái: ${healthInfo.segmentalFatAnalysis.leftLeg?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.leftLeg?.percent || 'N/A'}%)
++ Chân phải: ${healthInfo.segmentalFatAnalysis.rightLeg?.mass || 'N/A'} kg (${healthInfo.segmentalFatAnalysis.rightLeg?.percent || 'N/A'}%)`
+  : '';
+
+
+
   return `
 Bạn là Huấn luyện viên Thể hình chuyên nghiệp với hơn 15 năm kinh nghiệm. 
 Nhiệm vụ của bạn là tạo kế hoạch tập luyện an toàn, hiệu quả và phù hợp với hội viên.
@@ -234,6 +303,10 @@ Nhiệm vụ của bạn là tạo kế hoạch tập luyện an toàn, hiệu q
 - BMI: ${healthInfo?.bmi || 'N/A'}
 - Tỷ lệ mỡ: ${healthInfo?.bodyFatPercent || 'N/A'}%
 - Khối lượng cơ: ${healthInfo?.muscleMass || 'N/A'} kg
+- Khối lượng mỡ: ${healthInfo?.bodyFatMass || 'N/A'} kg
+- Mỡ nội tạng (cấp độ): ${healthInfo?.visceralFatLevel || 'N/A'}
+- Tỷ lệ nước: ${healthInfo?.waterPercent || 'N/A'}%
+- Khối lượng xương: ${healthInfo?.boneMass || 'N/A'} kg${segmentalLeanText}${segmentalFatText}
 - Mục tiêu: ${healthInfo?.goal || 'Chưa xác định'}
 - Kinh nghiệm tập luyện: ${healthInfo?.experience || 'N/A'}
 - Mức độ thể lực: ${healthInfo?.fitnessLevel || 'N/A'}
@@ -347,6 +420,13 @@ Nhiệm vụ của bạn là tạo kế hoạch dinh dưỡng phù hợp với m
 - BMI: ${healthInfo?.bmi || 'N/A'}
 - Tỷ lệ mỡ: ${healthInfo?.bodyFatPercent || 'N/A'}%
 - Khối lượng cơ: ${healthInfo?.muscleMass || 'N/A'} kg
+- Khối lượng mỡ: ${healthInfo?.bodyFatMass || 'N/A'} kg
+- Mỡ nội tạng (cấp độ): ${healthInfo?.visceralFatLevel || 'N/A'}
+- Tỷ lệ nước: ${healthInfo?.waterPercent || 'N/A'}%
+- Khối lượng xương: ${healthInfo?.boneMass || 'N/A'} kg
+- Tỷ lệ vòng eo/vòng hông: ${healthInfo?.waistHipRatio || 'N/A'}
+- Tỷ lệ trao đổi chất cơ bản (BMR): ${healthInfo?.basalMetabolicRate || 'N/A'} kcal
+- Điểm InBody: ${healthInfo?.inBodyScore || 'N/A'}
 - Mục tiêu: ${healthInfo?.goal || 'Chưa xác định'}
 - Loại chế độ ăn: ${healthInfo?.dietType || 'balanced'}
 - Dị ứng: ${healthInfo?.allergies || 'Không có'}
@@ -362,7 +442,10 @@ ${message ? `[MESSAGE CỦA HỘI VIÊN]
 Hãy phân tích message này và tạo kế hoạch dinh dưỡng phù hợp với yêu cầu cụ thể của hội viên.` : ''}
 
 [YÊU CẦU TẠO KẾ HOẠCH DINH DƯỠNG]
-1. **Tính toán calo hàng ngày**: Dựa trên mục tiêu "${healthInfo?.goal || 'general fitness'}", tính toán tổng calo phù hợp
+1. **Tính toán calo hàng ngày**: 
+  - Dựa trên mục tiêu "${healthInfo?.goal || 'general fitness'}", tính toán tổng calo phù hợp
+  - Sử dụng BMR (${healthInfo?.basalMetabolicRate || 'N/A'} kcal) nếu có để tính toán chính xác hơn
+  - Nếu đã có dailyCalories hiện tại (${healthInfo?.dailyCalories || 'N/A'} kcal), cân nhắc điều chỉnh phù hợp với mục tiêu
 2. **Phân chia macros**: Tính toán protein, carbs, fat (grams) phù hợp với mục tiêu
 3. **Chia bữa ăn**: Gợi ý thời gian ăn và phân bổ calo cho từng bữa (KHÔNG cần liệt kê thức ăn cụ thể)
 4. **Lưu ý dị ứng**: Nếu có dị ứng, ghi chú trong notes
