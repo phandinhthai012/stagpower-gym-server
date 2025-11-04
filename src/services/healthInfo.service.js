@@ -1,7 +1,6 @@
 import HealthInfo from "../models/HealthInfo";
-import xlsx from 'xlsx';
-import { readExcelFile } from '../utils/parsers/fileParser';
-import { mapColumnNames, validateHealthData } from '../utils/parsers/healthFileParser';
+import { readHealthFile } from '../utils/parsers/fileParser';
+import { validateHealthData } from '../utils/parsers/healthFileParser';
 
 export const createHealthInfo = async (memberId, healthInfo) => {
     // Sử dụng spread operator để lấy tất cả fields từ healthInfo
@@ -26,7 +25,10 @@ export const getHealthInfoById = async (id) => {
 }
 
 export const getHealthInfoByMemberId = async (memberId) => {
-    const healthInfo = await HealthInfo.findOne({ memberId });
+    // Lấy HealthInfo mới nhất của member (thay vì chỉ lấy một bản ghi đầu tiên)
+    const healthInfo = await HealthInfo.findOne({ memberId })
+        .sort({ createdAt: -1 })
+        .limit(1);
     if (!healthInfo) {
         const error = new Error("Health info not found");
         error.statusCode = 404;
@@ -88,17 +90,14 @@ export const deleteHealthInfoById = async (id) => {
     return deleted;
 }
 
-export const parseHealthFile = async (fileBuffer) => {
+export const parseHealthFile = async (fileBuffer, mimeType) => {
     try {
-        // 1. Read Excel file
-        const jsonData = readExcelFile(fileBuffer);
-        const row = jsonData[0]; // Get first row (single member)
+        // 1. Read PDF file and extract health data
+        const jsonData = await readHealthFile(fileBuffer, mimeType);
+        const extractedData = jsonData[0]; // Get extracted data (PDF parser returns array with single object)
 
-        // 2. Map column names
-        const mappedData = mapColumnNames(row);
-
-        // 3. Validate all fields
-        const result = validateHealthData(mappedData);
+        // 2. Validate all fields (PDF - goal, experience, fitnessLevel are optional)
+        const result = validateHealthData(extractedData, 'pdf');
 
         return result;
     } catch (error) {
@@ -118,3 +117,39 @@ export const getHealthInfoHistoryByMemberId = async (memberId) => {
     }
     return healthInfoList;
 }
+
+// Upload PDF file and create HealthInfo
+export const uploadAndCreateHealthInfo = async (memberId, fileBuffer, mimeType) => {
+    try {
+        // 1. Parse PDF file
+        const parsedResult = await parseHealthFile(fileBuffer, mimeType);
+        
+        // 2. Check if parsed data is valid
+        if (!parsedResult.isValid) {
+            const error = new Error(`Dữ liệu không hợp lệ: ${parsedResult.errors.join(', ')}`);
+            error.statusCode = 400;
+            error.code = "INVALID_HEALTH_DATA";
+            error.errors = parsedResult.errors;
+            error.warnings = parsedResult.warnings;
+            throw error;
+        }
+        
+        // 3. Create HealthInfo with parsed data
+        const healthInfo = await createHealthInfo(memberId, parsedResult.data);
+        
+        return {
+            healthInfo,
+            warnings: parsedResult.warnings || []
+        };
+    } catch (error) {
+        // Re-throw error if it already has statusCode
+        if (error.statusCode) {
+            throw error;
+        }
+        // Otherwise wrap it
+        const newError = new Error(`Lỗi upload và tạo HealthInfo: ${error.message}`);
+        newError.statusCode = 500;
+        newError.code = "UPLOAD_HEALTH_INFO_ERROR";
+        throw newError;
+    }
+};

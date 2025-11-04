@@ -9,7 +9,8 @@ import {
     deleteHealthInfoById,
     parseHealthFile,
     getHealthInfoHistoryByMemberId,
-    getLatestHealthInfoByMemberId
+    getLatestHealthInfoByMemberId,
+    uploadAndCreateHealthInfo
 } from "../services/healthInfo.service";
 
 
@@ -137,8 +138,9 @@ export const parseHealthDataPreview = async (req, res, next) => {
     }
     try {
         const fileBuffer = req.file.buffer;
-        console.log('📁 File uploaded:', req.file.originalname, req.file.size, 'bytes');
-        const parsedData = await parseHealthFile(fileBuffer);
+        const mimeType = req.file.mimetype;
+        console.log('📁 File uploaded:', req.file.originalname, req.file.size, 'bytes', 'Type:', mimeType);
+        const parsedData = await parseHealthFile(fileBuffer, mimeType);
         console.log('📊 Parsed data:', JSON.stringify(parsedData, null, 2));
         return response(res, {
             success: true,
@@ -177,6 +179,40 @@ export const getLatestHealthInfoByMemberIdController = async (req, res, next) =>
             statusCode: 200,
             message: "Latest health info fetched successfully",
             data: healthInfo
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+// Upload PDF and create HealthInfo
+export const uploadHealthInfoController = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            const error = new Error('Vui lòng tải lên một file PDF.');
+            error.statusCode = 400;
+            error.code = "NO_FILE_UPLOADED";
+            return next(error);
+        }
+
+        const memberId = req.params.memberId;
+        const fileBuffer = req.file.buffer;
+        const mimeType = req.file.mimetype;
+
+        console.log('📄 File uploaded:', req.file.originalname, req.file.size, 'bytes', 'Type:', mimeType);
+
+        const result = await uploadAndCreateHealthInfo(memberId, fileBuffer, mimeType);
+
+        return response(res, {
+            success: true,
+            statusCode: 201,
+            message: result.warnings.length > 0 
+                ? `Health info created successfully. Warnings: ${result.warnings.join(', ')}`
+                : "Health info uploaded and created successfully",
+            data: {
+                healthInfo: result.healthInfo,
+                warnings: result.warnings
+            }
         });
     } catch (error) {
         return next(error);

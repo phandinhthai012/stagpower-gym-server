@@ -89,10 +89,6 @@ const userSchema = new mongoose.Schema({
             unique: true,
             sparse: true // allow null or undefined
         },
-        health_info_id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'HealthInfo'
-        },
         notes: {
             type: String,
             maxlength: [500, 'Notes cannot exceed 500 characters']

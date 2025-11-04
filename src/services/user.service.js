@@ -54,7 +54,6 @@ export const updateUserProfile = async (userId, updateData) => {
             roleSpecificFields = [
                 "memberInfo.membership_level",
                 "memberInfo.qr_code",
-                "memberInfo.health_info_id",
                 "memberInfo.notes",
                 "memberInfo.is_student",
                 "memberInfo.total_spending",
@@ -304,7 +303,6 @@ export const createUser = async (payload) => {
             newUserData.memberInfo = {
                 membership_level: memberInfo?.membership_level || 'basic',
                 qr_code: memberInfo?.qr_code || null,
-                health_info_id: memberInfo?.health_info_id || null,
                 notes: memberInfo?.notes || '',
                 is_student: memberInfo?.is_student || false,
                 total_spending: memberInfo?.total_spending || 0,

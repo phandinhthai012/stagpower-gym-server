@@ -1,36 +1,4 @@
-const COLUMN_MAPPING = {
-    'height': ['height', 'chieu cao', 'chiều cao', 'chiều cao (cm)'],
-    'weight': ['weight', 'can nang', 'cân nặng', 'cân nặng (kg)'],
-    'gender': ['gender', 'gioi tinh', 'giới tính', 'sex'],
-    'goal': ['goal', 'muc tieu', 'mục tiêu', 'objective'],
-    'experience': ['experience', 'kinh nghiem', 'kinh nghiệm', 'exp'],
-    'fitnessLevel': ['fitnesslevel', 'fitness level', 'muc do the luc', 'mức độ thể lực', 'level'],
-    'age': ['age', 'tuoi', 'tuổi', 'age (years)'],
-    'bodyFatPercent': ['bodyfatpercent', 'bodyfat', 'body fat percent', 'body fat', 'ty le mo', 'tỷ lệ mỡ', 'body fat %'],
-    'preferredTime': ['preferredtime', 'preferred time', 'thoi gian uu tien', 'thời gian ưu tiên', 'time'],
-    'weeklySessions': ['weeklysessions', 'weekly sessions', 'buoi tap trong tuan', 'buổi tập trong tuần', 'sessions'],
-    'medicalHistory': ['medicalhistory', 'medical history', 'tien su benh', 'tiền sử bệnh', 'medical'],
-    'allergies': ['allergies', 'di ung', 'dị ứng', 'allergy']
-};
-
-export const mapColumnNames = (row) => {
-    const mappedData = {};
-    
-    Object.keys(COLUMN_MAPPING).forEach(key => {
-        for (const columnName of COLUMN_MAPPING[key]) {
-            const foundKey = Object.keys(row).find(k =>
-                k.toLowerCase().trim() === columnName.toLowerCase().trim()
-            );
-            if (foundKey) {
-                mappedData[key] = row[foundKey];
-                break;
-            }
-        }
-    });
-    
-    return mappedData;
-};
-
+// Remove COLUMN_MAPPING and mapColumnNames - only used for Excel
 
 export const normalizeEnumValue = (value, enumType) => {
     if (!value) return null;
@@ -241,12 +209,15 @@ export const calculateBMI = (height, weight) => {
 
 /**
  * Validate all health data fields
+ * @param {Object} mappedData - The extracted health data from PDF
  */
-export const validateHealthData = (mappedData) => {
+export const validateHealthData = (mappedData, source = 'pdf') => {
     const errors = [];
     const warnings = [];
     const data = {};
     let isValid = true;
+
+    // PDF files don't require goal, experience, fitnessLevel (all optional)
 
     // Height
     const heightResult = validateHeight(mappedData.height);
@@ -288,30 +259,29 @@ export const validateHealthData = (mappedData) => {
     if (bodyFatResult.value !== null) data.bodyFatPercent = bodyFatResult.value;
     if (bodyFatResult.error) errors.push(bodyFatResult.error);
 
-    // Goal (required)
-    if (!mappedData.goal || mappedData.goal.toString().trim() === '') {
-        isValid = false;
-        errors.push('Thiếu mục tiêu (goal)');
-    } else {
+    // Goal (optional for PDF)
+    if (mappedData.goal && mappedData.goal.toString().trim() !== '') {
         data.goal = mappedData.goal.toString().trim();
     }
 
-    // Experience
-    const experienceResult = validateExperience(mappedData.experience);
-    if (!experienceResult.isValid) {
-        isValid = false;
-        errors.push(experienceResult.error);
-    } else {
-        data.experience = experienceResult.value;
+    // Experience (optional for PDF)
+    if (mappedData.experience) {
+        const experienceResult = validateExperience(mappedData.experience);
+        if (experienceResult.isValid && experienceResult.value) {
+            data.experience = experienceResult.value;
+        } else if (experienceResult.error) {
+            warnings.push(experienceResult.error); // Warning instead of error for PDF
+        }
     }
 
-    // Fitness Level
-    const fitnessLevelResult = validateFitnessLevel(mappedData.fitnessLevel);
-    if (!fitnessLevelResult.isValid) {
-        isValid = false;
-        errors.push(fitnessLevelResult.error);
-    } else {
-        data.fitnessLevel = fitnessLevelResult.value;
+    // Fitness Level (optional for PDF)
+    if (mappedData.fitnessLevel) {
+        const fitnessLevelResult = validateFitnessLevel(mappedData.fitnessLevel);
+        if (fitnessLevelResult.isValid && fitnessLevelResult.value) {
+            data.fitnessLevel = fitnessLevelResult.value;
+        } else if (fitnessLevelResult.error) {
+            warnings.push(fitnessLevelResult.error); // Warning instead of error for PDF
+        }
     }
 
     // Preferred Time (optional)
@@ -340,6 +310,28 @@ export const validateHealthData = (mappedData) => {
     if (data.height && data.weight) {
         data.bmi = calculateBMI(data.height, data.weight);
     }
+
+    // Keep all other fields from mappedData that are not explicitly validated
+    // This includes InBody fields and segmental analysis
+    const validatedFieldNames = [
+        'height', 'weight', 'gender', 'age', 'bodyFatPercent',
+        'goal', 'experience', 'fitnessLevel', 'preferredTime',
+        'weeklySessions', 'medicalHistory', 'allergies', 'bmi'
+    ];
+
+    Object.keys(mappedData).forEach(key => {
+        // If field is not in validated list and has a value, keep it
+        if (!validatedFieldNames.includes(key) && mappedData[key] !== undefined && mappedData[key] !== null) {
+            // For nested objects like segmental analysis, preserve them as-is
+            if (typeof mappedData[key] === 'object' && !Array.isArray(mappedData[key])) {
+                data[key] = mappedData[key];
+            } else if (typeof mappedData[key] === 'number') {
+                data[key] = mappedData[key];
+            } else if (typeof mappedData[key] === 'string' && mappedData[key].trim() !== '') {
+                data[key] = mappedData[key].trim();
+            }
+        }
+    });
 
     return { data, isValid, errors, warnings };
 };

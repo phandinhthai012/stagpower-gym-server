@@ -11,17 +11,18 @@ import {
   deleteHealthInfoByIdController,
   parseHealthDataPreview,
   getHealthInfoHistoryByMemberIdController,
-  getLatestHealthInfoByMemberIdController
+  getLatestHealthInfoByMemberIdController,
+  uploadHealthInfoController
 } from "../controllers/healthInfo.controller"
 import { validateHealthProfileCreate, validateHealthProfileUpdate } from "../middleware/validations"
 
 const router = express.Router();
 
+// Parse PDF preview (không tạo HealthInfo, chỉ preview data)
+router.post("/parse-preview", upload.single('healthFile'), parseHealthDataPreview);
 
-router.post("/parse-preview",upload.single('healthFile'),parseHealthDataPreview
-  // authenticateToken,
-  // authorize("admin", "trainer", "staff"),
-);
+// Upload PDF and create HealthInfo
+router.post("/upload/:memberId", authenticateToken, authorize("admin", "trainer", "staff"), upload.single('healthFile'), uploadHealthInfoController);
 
 // get all health info
 router.get("/", authenticateToken, authorize("admin", "trainer", "staff"), getAllHealthInfoController);

@@ -42,6 +42,67 @@ const healthInfoSchema = new mongoose.Schema({
     boneMass: { // khối lượng xương
         type: Number
     },
+    // ===== Các chỉ số từ InBody =====
+    bodyFatMass: {
+        type: Number, // kg - Khối lượng mỡ cơ thể
+        min: [0, 'Body fat mass must be at least 0']
+    },
+    basalMetabolicRate: {
+        type: Number, // kcal - Tỷ lệ trao đổi chất cơ bản
+        min: [0, 'Basal metabolic rate must be at least 0']
+    },
+    waistHipRatio: {
+        type: Number, // Tỷ lệ vòng eo/vòng hông
+        min: [0, 'Waist hip ratio must be at least 0'],
+        max: [3, 'Waist hip ratio cannot exceed 3']
+    },
+    inBodyScore: {
+        type: Number, // Điểm InBody (0-100)
+        min: [0, 'InBody score must be at least 0'],
+        max: [100, 'InBody score cannot exceed 100']
+    },
+    // ===== Segmental Lean Analysis =====
+    segmentalLeanAnalysis: {
+        leftArm: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        },
+        rightArm: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        },
+        leftLeg: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        },
+        rightLeg: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        }
+    },
+    // ===== Segmental Fat Analysis =====
+    segmentalFatAnalysis: {
+        leftArm: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        },
+        rightArm: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        },
+        trunk: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        },
+        leftLeg: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        },
+        rightLeg: {
+            mass: { type: Number }, // kg
+            percent: { type: Number } // %
+        }
+    },
     gender: {
         type: String,
         // Not required - can be added later
