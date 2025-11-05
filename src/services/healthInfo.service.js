@@ -52,6 +52,14 @@ export const getLatestHealthInfoByMemberId = async (memberId) => {
     return healthInfo;
 }
 
+export const getAllHealthInfoByMemberId = async (memberId) => {
+    // Lấy tất cả HealthInfo records của member, sắp xếp theo createdAt (mới nhất trước)
+    const healthInfoList = await HealthInfo.find({ memberId })
+        .sort({ createdAt: -1 });
+    
+    return healthInfoList; // Trả về array, có thể rỗng
+}
+
 export const updateHealthInfoById = async (id, healthInfo) => {
     // Tìm document hiện tại
     const existing = await HealthInfo.findById(id);

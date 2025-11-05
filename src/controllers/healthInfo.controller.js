@@ -4,6 +4,7 @@ import {
     createHealthInfo,
     getHealthInfoById,
     getHealthInfoByMemberId,
+    getAllHealthInfoByMemberId,
     updateHealthInfoById,
     getAllHealthInfo,
     deleteHealthInfoById,
@@ -54,7 +55,7 @@ export const getHealthInfoByIdController = async (req, res, next) => {
 
 
 
-// membergetme
+// Get latest health info by member ID
 export const getHealthInfoByMemberIdController = async (req, res, next) => {
     try {
         const memberId = req.params.memberId;
@@ -64,6 +65,22 @@ export const getHealthInfoByMemberIdController = async (req, res, next) => {
             statusCode: 200,
             message: "Health info fetched successfully",
             data: healthInfo
+        });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+// Get all health info records by member ID
+export const getAllHealthInfoByMemberIdController = async (req, res, next) => {
+    try {
+        const memberId = req.params.memberId;
+        const healthInfoList = await getAllHealthInfoByMemberId(memberId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "All health info records fetched successfully",
+            data: healthInfoList
         });
     } catch (error) {
         return next(error);
