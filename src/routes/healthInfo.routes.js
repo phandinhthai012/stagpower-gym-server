@@ -5,6 +5,7 @@ import {
   createHealthInfoController,
   getHealthInfoByIdController,
   getHealthInfoByMemberIdController,
+  getAllHealthInfoByMemberIdController,
   getMyHealthInfoController,
   updateHealthInfoByIdController,
   getAllHealthInfoController,
@@ -30,8 +31,10 @@ router.get("/", authenticateToken, authorize("admin", "trainer", "staff"), getAl
 // get my health info
 router.get("/me", authenticateToken, getMyHealthInfoController);
 
-// get health info by member id ==> admin and trainer and staff
+// get health info by member id ==> admin and trainer and staff (returns latest)
 router.get("/member/:memberId", getHealthInfoByMemberIdController);
+// get all health info records by member id
+router.get("/member/:memberId/all", getAllHealthInfoByMemberIdController);
 // get health info history by member id
 router.get("/member/:memberId/history", getHealthInfoHistoryByMemberIdController);
 // get latest health info by member id

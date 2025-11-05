@@ -302,7 +302,8 @@ export const createUser = async (payload) => {
         case 'member':
             newUserData.memberInfo = {
                 membership_level: memberInfo?.membership_level || 'basic',
-                qr_code: memberInfo?.qr_code || null,
+                // Don't set qr_code if not provided - let it be undefined (sparse unique index allows multiple nulls)
+                ...(memberInfo?.qr_code && { qr_code: memberInfo.qr_code }),
                 notes: memberInfo?.notes || '',
                 is_student: memberInfo?.is_student || false,
                 total_spending: memberInfo?.total_spending || 0,
