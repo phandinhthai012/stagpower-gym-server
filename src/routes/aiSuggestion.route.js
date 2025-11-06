@@ -34,16 +34,16 @@ router.delete("/:id", authenticateToken, deleteAISuggestionByIdController);
 // ===== AI GENERATION ENDPOINTS =====
 
 // Chat with AI
-router.post("/chat", chatWithAIController);
+router.post("/chat",authenticateToken, chatWithAIController);
 
 // Generate gợi ý toàn diện (Evaluation + Workout + DietPlan) - PROMPT CHÍNH CHO NGHIÊN CỨU
-router.post("/generate/complete", generateCompleteWorkoutSuggestionController);
+router.post("/generate/complete",authenticateToken, generateCompleteWorkoutSuggestionController);
 
 // Generate chỉ workout (không có nutrition)
-router.post("/generate/workout", generateWorkoutOnlyController);
+router.post("/generate/workout",authenticateToken, generateWorkoutOnlyController);
 
 // Generate chỉ nutrition (không có workout)
-router.post("/generate/nutrition", generateNutritionOnlyController);
+router.post("/generate/nutrition",authenticateToken, generateNutritionOnlyController);
 
 export default router;
 

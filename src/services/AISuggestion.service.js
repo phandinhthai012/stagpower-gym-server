@@ -17,10 +17,11 @@ const getLatestHealthInfo = async (memberId) => {
         .limit(1);
     
     if (!healthInfo) {
-        const error = new Error("HealthInfo not found");
-        error.statusCode = 404;
-        error.code = "HEALTHINFO_NOT_FOUND";
-        throw error;
+        // const error = new Error("HealthInfo not found");
+        // error.statusCode = 404;
+        // error.code = "HEALTHINFO_NOT_FOUND";
+        // throw error;
+        return null;
     }
     return healthInfo;
 }
@@ -101,10 +102,10 @@ export const generateCompleteWorkoutSuggestion = async (data) => {
     const {memberId, message} = data;
     const healthInfo = await getLatestHealthInfo(memberId);
     if(!healthInfo) {
-        const error = new Error("HealthInfo not found");
-        error.statusCode = 404;
-        error.code = "HEALTHINFO_NOT_FOUND";
-        throw error;
+        // const error = new Error("HealthInfo not found");
+        // error.statusCode = 404;
+        // error.code = "HEALTHINFO_NOT_FOUND";
+        // throw error;
     }
     const user = await User.findById(memberId);
     if(!user) {
@@ -116,10 +117,22 @@ export const generateCompleteWorkoutSuggestion = async (data) => {
     const prompt = createCompleteWorkoutSuggestionPrompt(healthInfo, user, message);
     const aiSuggestionData = await aiClient.generate(prompt);
     // lưu vào db chỗ này
+    const savedSuggestion = await AISuggestion.create({
+        memberId,
+        recommendationDate: new Date(),
+        goal: aiSuggestionData.goal,
+        evaluation: aiSuggestionData?.evaluation,
+        exercises: aiSuggestionData?.exercises,
+        workoutDuration: aiSuggestionData?.workoutDuration,
+        difficultyLevel: aiSuggestionData?.difficultyLevel,
+        nutrition: aiSuggestionData?.nutrition,
+        dietPlan: aiSuggestionData?.dietPlan,
+        notes: aiSuggestionData.notes,
+        status: 'Pending',
+        message: message
+    });
 
-
-
-    return aiSuggestionData;
+    return savedSuggestion;
 }
 
 // Generate Workout Only (chỉ bài tập, không có nutrition)
@@ -147,19 +160,19 @@ export const generateWorkoutOnlySuggestion = async (data) => {
     // const parsedResponse = parseAIResponse(aiResponse);
     
     // Lưu vào database
-    // const savedSuggestion = await AISuggestion.create({
-    //     memberId,
-    //     recommendationDate: parsedResponse.recommendationDate ? new Date(parsedResponse.recommendationDate) : new Date(),
-    //     goal: parsedResponse.goal || healthInfo.goal,
-    //     exercises: parsedResponse.exercises || [],
-    //     workoutDuration: parsedResponse.workoutDuration,
-    //     difficultyLevel: parsedResponse.difficultyLevel || 'Beginner',
-    //     notes: parsedResponse.notes || '',
-    //     message: message || '',
-    //     status: 'Pending'
-    // });
+    const savedSuggestion = await AISuggestion.create({
+        memberId,
+        recommendationDate: aiResponse.recommendationDate ? new Date(aiResponse.recommendationDate) : new Date(),
+        goal: aiResponse.goal || aiResponse.goal,
+        exercises: aiResponse.exercises || [],
+        workoutDuration: aiResponse.workoutDuration,
+        difficultyLevel: aiResponse.difficultyLevel || 'Beginner',
+        notes: aiResponse.notes || '',
+        message: message || '',
+        status: 'Pending'
+    });
     
-    return aiResponse;
+    return savedSuggestion;
 }
 
 export const generateNutritionOnlySuggestion = async (data) => {
@@ -183,17 +196,16 @@ export const generateNutritionOnlySuggestion = async (data) => {
     
     const prompt = createNutritionOnlySuggestionPrompt(healthInfo, user, message);
     const aiResponse = await aiClient.generate(prompt);
-    // const parsedResponse = parseAIResponse(aiResponse);
     
     // Lưu vào database
-    // const savedSuggestion = await AISuggestion.create({
-    //     memberId,
-    //     recommendationDate: new Date(),
-    //     goal: parsedResponse.goal || healthInfo.goal,
-    //     dietPlan: parsedResponse.dietPlan || {},
-    //     message: message || '',
-    //     status: 'Pending'
-    // });
+    const savedSuggestion = await AISuggestion.create({
+        memberId,
+        recommendationDate: new Date(),
+        goal: aiResponse.goal || healthInfo.goal,
+        dietPlan: aiResponse.dietPlan || {},
+        message: message || '',
+        status: 'Pending'
+    });
     
-    return aiResponse;
+    return savedSuggestion;
 }

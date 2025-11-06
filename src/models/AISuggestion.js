@@ -36,6 +36,7 @@ const aiSuggestionSchema = new mongoose.Schema({
         }
     },
     exercises: [{
+        _id: false,
         name: {
             type: String,
             required: [true, 'Exercise name is required'],
@@ -55,7 +56,7 @@ const aiSuggestionSchema = new mongoose.Schema({
         restTime: {
             type: Number,
             min: [0, 'Rest time cannot be negative'],
-            max: [100, 'Rest time cannot be greater than 100'],
+            max: [1000, 'Rest time cannot be greater than 1000'],
         },
         instructions: {
             type: String,
@@ -92,6 +93,7 @@ const aiSuggestionSchema = new mongoose.Schema({
         },
         // Thời gian ăn và gợi ý calo cho mỗi bữa
         mealTimes: [{
+            _id: false,
             time: {
                 type: String,  // "7:00 AM", "12:00 PM", "6:00 PM"
             },

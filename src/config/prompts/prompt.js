@@ -175,6 +175,12 @@ Hãy phân tích message này và tạo kế hoạch phù hợp với yêu cầu
    - Mỗi bài tập cần: tên, số sets (1-20), số reps (1-100), restTime (0-300 giây), hướng dẫn chi tiết
    - Xác định difficultyLevel: Beginner/Intermediate/Advanced
    - Ước tính workoutDuration (phút)
+    - **QUAN TRỌNG VỀ REPS**: 
+     * reps PHẢI LÀ SỐ NGUYÊN (1-100), KHÔNG PHẢI STRING
+     * Nếu bài tập là AMRAP (As Many Reps As Possible) → set reps = 1 (hoặc số tối thiểu), và ghi "AMRAP" vào instructions
+     * Nếu bài tập là time-based (giữ tư thế, plank, v.v.) → set reps = 1, và ghi thời gian vào instructions (ví dụ: "Hold for 30-60 seconds")
+     * Nếu bài tập có range reps (ví dụ: "10-12") → chọn số lớn nhất (12) cho reps, và ghi range vào instructions
+     * KHÔNG BAO GIỜ trả về reps là string như "AMRAP", "Hold for 30-60 seconds", v.v.
    - Lưu ý an toàn và kỹ thuật trong notes
 
 3. **KẾ HOẠCH DINH DƯỠNG (DietPlan):**
@@ -345,9 +351,9 @@ Hãy phân tích message này và tạo kế hoạch tập luyện phù hợp v�
   "exercises": [
     {
       "name": "Tên bài tập (tiếng Việt hoặc tiếng Anh)",
-      "sets": 3,
-      "reps": 12,
-      "restTime": 60,
+      "sets": 3, // chỉ được nhập số nguyên, không được nhập string
+      "reps": 12, // chỉ được nhập số nguyên, không được nhập string
+      "restTime": 60, // chỉ được nhập số nguyên, không được nhập string
       "instructions": "Hướng dẫn kỹ thuật chi tiết, tư thế đúng, lưu ý an toàn"
     }
   ],
@@ -366,6 +372,12 @@ Hãy phân tích message này và tạo kế hoạch tập luyện phù hợp v�
 6. recommendationDate PHẢI là ngày hôm nay: "${today}"
 7. goal PHẢI phù hợp với mục tiêu của hội viên
 8. JSON phải parse được trực tiếp bằng JSON.parse() mà không cần xử lý gì thêm
+- **QUAN TRỌNG VỀ REPS**: 
+     * reps PHẢI LÀ SỐ NGUYÊN (1-100), KHÔNG PHẢI STRING
+     * Nếu bài tập là AMRAP (As Many Reps As Possible) → set reps = 1 (hoặc số tối thiểu), và ghi "AMRAP" vào instructions
+     * Nếu bài tập là time-based (giữ tư thế, plank, v.v.) → set reps = 1, và ghi thời gian vào instructions (ví dụ: "Hold for 30-60 seconds")
+     * Nếu bài tập có range reps (ví dụ: "10-12") → chọn số lớn nhất (12) cho reps, và ghi range vào instructions
+     * KHÔNG BAO GIỜ trả về reps là string như "AMRAP", "Hold for 30-60 seconds", v.v.
 
 [VÍ DỤ JSON HỢP LỆ]
 {
