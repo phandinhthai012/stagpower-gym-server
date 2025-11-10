@@ -24,12 +24,18 @@ export const createPaymentController = async (req, res, next) => {
         const {
             subscriptionId,
             memberId,
+            packageId,
             originalAmount,
             amount,
             discountDetails,
             paymentMethod,
             paymentStatus,
             paymentDate,
+            paymentType,
+            description,
+            dueDate,
+            branchId,
+            notes,
         } = req.body;
         const paymentData = {
             subscriptionId,
@@ -40,8 +46,18 @@ export const createPaymentController = async (req, res, next) => {
             paymentMethod,
             paymentStatus,
             paymentDate,
+            paymentType,
+            description,
+            dueDate,
+            branchId,
+            notes,
+            packageId,
         }
         const payment = await createPayment(paymentData);
+
+        socketService.emitToUser(payment.memberId, "payment_created", payment);
+        socketService.emitToRoom(roleRoomMap.admin, "payment_created", payment);
+
         return response(res, {
             success: true,
             statusCode: 201,
