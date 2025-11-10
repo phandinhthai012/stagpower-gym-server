@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 
+dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const JWT_ACCESS_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "8h";

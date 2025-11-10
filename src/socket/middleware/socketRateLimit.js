@@ -1,34 +1,45 @@
-const socketRateLimit = (socket, next) => {
-  // Simple rate limiting for socket events
-  const now = Date.now();
-  const windowMs = 60 * 1000; // 1 minute
-  const maxRequests = 100; // max 100 requests per minute
-
-  if (!socket.rateLimit) {
-    socket.rateLimit = {
-      requests: [],
-      blocked: false
-    };
-  }
-
-  // Clean old requests
-  socket.rateLimit.requests = socket.rateLimit.requests.filter(
-    time => now - time < windowMs
-  );
-  // Reset blocked state nếu không còn requests
-  if (socket.rateLimit.requests.length === 0) {
-    socket.rateLimit.blocked = false;
-  }
-
-  // Check if rate limit exceeded
-  if (socket.rateLimit.requests.length >= maxRequests) {
-    socket.rateLimit.blocked = true;
-    return next(new Error('Rate limit exceeded'));
-  }
-
-  // Add current request
-  socket.rateLimit.requests.push(now);
-  next();
+const defaults = {
+  windowMs: 60 * 1000, // 1 phút
+  maxRequests: 100, // tối đa 100 sự kiện / phút
 };
 
-export default socketRateLimit;
+const initialiseRateLimitState = (socket) => {
+  if (!socket.rateLimit) {
+    socket.rateLimit = {
+      timestamps: [],
+      blockedUntil: null,
+    };
+  }
+  return socket.rateLimit;
+};
+
+const createSocketRateLimit = (options = {}) => {
+  const { windowMs, maxRequests } = { ...defaults, ...options };
+
+  return (socket) => {
+    const rateLimitState = initialiseRateLimitState(socket);
+
+    return (packet, next) => {
+      const now = Date.now();
+
+      if (rateLimitState.blockedUntil && now < rateLimitState.blockedUntil) {
+        return next(new Error('Rate limit exceeded'));
+      }
+
+      rateLimitState.timestamps = rateLimitState.timestamps.filter(
+        (time) => now - time < windowMs
+      );
+
+      if (rateLimitState.timestamps.length >= maxRequests) {
+        rateLimitState.blockedUntil = now + windowMs;
+        return next(new Error('Rate limit exceeded'));
+      }
+
+      rateLimitState.timestamps.push(now);
+      rateLimitState.blockedUntil = null;
+      return next();
+    };
+  };
+};
+
+export default createSocketRateLimit;
