@@ -271,7 +271,8 @@ export const createSubscriptionWithPaymentController = async (req, res, next) =>
             originalAmount,
             amount,
             discountDetails,
-            notes
+            notes,
+            dueDate
         } = req.body;
         const result = await withTransaction(async (session) => {
             // 1. Tạo subscription với status PendingPayment
@@ -304,7 +305,8 @@ export const createSubscriptionWithPaymentController = async (req, res, next) =>
                 paymentMethod,
                 paymentStatus: 'Pending',
                 paymentType: paymentType,
-                notes
+                notes,
+                dueDate
             };
             const newPayment = await createPayment(paymentData, session);
             return {

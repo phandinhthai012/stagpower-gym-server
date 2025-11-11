@@ -121,6 +121,67 @@ const handleSubscriptionActivation = async (subscriptionId, paymentDate) => {
 
 
 export const createPayment = async (paymentData, session = null) => {
+    if (!paymentData.memberId) {
+        const error = new Error("Member ID is required");
+        error.statusCode = 400;
+        error.code = "MEMBER_ID_REQUIRED";
+        throw error;
+    }
+
+    if (paymentData.dueDate) {
+        paymentData.dueDate = new Date(paymentData.dueDate);
+    }
+
+    let packageIdForSubscription = paymentData.packageId;
+    let branchIdForSubscription = paymentData.branchId;
+
+    // Nếu chưa có subscriptionId nhưng có packageId => tự tạo subscription mới
+    if (!paymentData.subscriptionId && packageIdForSubscription) {
+        const packageInfo = await Package.findById(packageIdForSubscription);
+        if (!packageInfo) {
+            const error = new Error("Package not found");
+            error.statusCode = 404;
+            error.code = "PACKAGE_NOT_FOUND";
+            throw error;
+        }
+
+        const durationDays = (packageInfo.durationMonths || 0) * 30;
+        if (!durationDays) {
+            const error = new Error("Package duration invalid");
+            error.statusCode = 400;
+            error.code = "INVALID_PACKAGE_DURATION";
+            throw error;
+        }
+
+        const subscriptionPayload = {
+            memberId: paymentData.memberId,
+            packageId: packageIdForSubscription,
+            branchId: branchIdForSubscription || null,
+            type: packageInfo.type,
+            membershipType: packageInfo.membershipType || 'Basic',
+            durationDays: durationDays,
+            status: 'PendingPayment',
+            ptsessionsRemaining: (packageInfo.type === 'PT' || packageInfo.type === 'Combo') ? (packageInfo.ptSessions || 0) : undefined,
+            ptsessionsUsed: (packageInfo.type === 'PT' || packageInfo.type === 'Combo') ? 0 : undefined,
+        };
+
+        // loại bỏ undefined để tránh validation
+        Object.keys(subscriptionPayload).forEach((key) => {
+            if (subscriptionPayload[key] === undefined) {
+                delete subscriptionPayload[key];
+            }
+        });
+
+        const newSubscription = session
+            ? await Subscription.create([subscriptionPayload], { session }).then(docs => docs[0])
+            : await Subscription.create(subscriptionPayload);
+
+        paymentData.subscriptionId = newSubscription._id;
+    }
+
+    delete paymentData.packageId;
+    delete paymentData.branchId;
+
     // Nếu chưa có paymentType, tự động xác định dựa trên subscription
     if (!paymentData.paymentType && paymentData.subscriptionId) {
         try {

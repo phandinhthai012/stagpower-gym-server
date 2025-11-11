@@ -62,6 +62,11 @@ const paymentSchema = new mongoose.Schema({
         required: false,
         default: null
     },
+    dueDate: {
+        type: Date,
+        required: false,
+        default: null
+    },
     paymentStatus: {
         type: String,
         required: [true, 'Payment status is required'],

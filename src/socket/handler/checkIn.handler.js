@@ -8,12 +8,12 @@ const checkInHandler = (socket, io) => {
       const query = { status: 'Active' };
       if (branchId) query.branchId = branchId;
       const checkIns = await CheckIn.find(query).populate('memberId', 'fullName email phone')
-      socket.to('admin-room').emit('active-members-checkIn-response', checkIns);
-      socket.to('trainer-room').emit('active-members-checkIn-response', checkIns);
+      io.to('admin-room').emit('active-members-checkIn-response', checkIns);
+      io.to('trainer-room').emit('active-members-checkIn-response', checkIns);
     } catch (error) {
       console.error(error);
-      socket.to('admin-room').emit('active-members-checkIn-response', { error: 'Error fetching active members checkIn' });
-      socket.to('trainer-room').emit('active-members-checkIn-response', { error: 'Error fetching active members checkIn' });
+      io.to('admin-room').emit('active-members-checkIn-response', { error: 'Error fetching active members checkIn' });
+      io.to('trainer-room').emit('active-members-checkIn-response', { error: 'Error fetching active members checkIn' });
     }
   });
 
