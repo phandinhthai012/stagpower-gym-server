@@ -155,12 +155,16 @@ export const momoPaymentController = async (req, res, next) => {
         const {
             subscriptionId,
             memberId,
+            packageId,
+            branchId,
             originalAmount,
             amount,
             discountDetails,
             paymentMethod,
             paymentStatus,
             paymentDate,
+            dueDate,
+            notes,
         } = req.body;
         const newPayment = await createPayment({
             subscriptionId,
@@ -171,9 +175,15 @@ export const momoPaymentController = async (req, res, next) => {
             paymentMethod: paymentMethod || 'Momo',
             paymentStatus: paymentStatus || 'Pending',
             paymentDate,
+            dueDate,
+            branchId,
+            notes,
+            packageId,
         });
         const momoPayment = await createMomoPayment(newPayment.amount, newPayment._id, newPayment.invoiceNumber);
         
+        socketService.emitToUser(newPayment.memberId, 'payment_created', newPayment);
+        socketService.emitToRoom(roleRoomMap.admin, 'payment_created', newPayment);
         // Lưu QR code vào database
         if (momoPayment.qrCodeUrl || momoPayment.payUrl) {
             newPayment.paymentQrCode = momoPayment.qrCodeUrl || momoPayment.payUrl;
@@ -195,7 +205,7 @@ export const regeneratePaymentQRController = async (req, res, next) => {
     try {
         const { id } = req.params;
         const payment = await getPaymentById(id);
-        
+
         // Only regenerate if payment is pending
         if (payment.paymentStatus !== 'Pending') {
             return response(res, {
@@ -216,7 +226,7 @@ export const regeneratePaymentQRController = async (req, res, next) => {
 
         // Create new MoMo payment request
         const momoPayment = await createMomoPayment(payment.amount, payment._id, payment.invoiceNumber);
-        
+
         // Update QR code in database
         if (momoPayment.qrCodeUrl || momoPayment.payUrl) {
             payment.paymentQrCode = momoPayment.qrCodeUrl || momoPayment.payUrl;
@@ -253,9 +263,9 @@ export const momoIpnController = async (req, res, next) => {
                 statusCode: 400,
                 message: "Missing required fields"
             });
-          }
+        }
         // console.log('verify signature');
-        if(!verifyIpnSignature(req.body)){
+        if (!verifyIpnSignature(req.body)) {
             console.log('invalid signature');
             return response(res, {
                 success: false,
@@ -263,7 +273,7 @@ export const momoIpnController = async (req, res, next) => {
                 message: "Invalid signature"
             });
         }
-        let payment = await completePaymentMomo(orderId,transId,resultCode);
+        let payment = await completePaymentMomo(orderId, transId, resultCode);
         await createNotification({
             userId: payment.memberId,
             title: "Payment completed successfully",
