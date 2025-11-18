@@ -4,6 +4,7 @@
   "main": "src/app.js",
   "scripts": {
     "build": "babel src --out-dir dist --copy-files",
+    "prestart": "npm run build",
     "start": "node dist/app.js",
     "dev": "nodemon -r @babel/register src/app.js",
     "test": "jest"
