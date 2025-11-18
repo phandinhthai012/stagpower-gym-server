@@ -10,7 +10,8 @@ import {
     getAllMembersWithPaginationController,
     getallStaffsWithPaginationController,
     createUserController,
-    getMembersWithActiveSubscriptionsController
+    getMembersWithActiveSubscriptionsController,
+    getMembersWithActivePTSubscriptionsController
 } from "../controllers/user.controller";
 
 import { authenticateToken, authorize } from "../middleware/auth";
@@ -27,6 +28,8 @@ router.get("/members/paginated",authenticateToken, getAllMembersWithPaginationCo
 router.get("/staffs/paginated",authenticateToken, getallStaffsWithPaginationController);
 
 router.get("/members/active-subscriptions", authenticateToken, getMembersWithActiveSubscriptionsController);
+
+router.get("/members/active-pt-subscriptions", authenticateToken, getMembersWithActivePTSubscriptionsController);
 
 
 // Specific routes should come before parameterized routes

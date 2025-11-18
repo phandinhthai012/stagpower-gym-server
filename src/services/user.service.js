@@ -383,3 +383,49 @@ export const getMembersWithActiveSubscriptions = async () => {
     }
     return members;
 };
+
+// Lấy members có PT subscription active với buổi tập còn lại
+export const getMembersWithActivePTSubscriptions = async () => {
+    // Tìm subscriptions có:
+    // - Status: Active
+    // - Type: PT hoặc Combo
+    // - ptsessionsRemaining > 0
+    // - Không bị suspended
+    // - Chưa hết hạn (endDate > now hoặc endDate null)
+    const now = new Date();
+    const activePTSubscriptions = await Subscription.find({ 
+        status: 'Active',
+        type: { $in: ['PT', 'Combo'] },
+        ptsessionsRemaining: { $gt: 0 },
+        isSuspended: false,
+        $or: [
+            { endDate: { $gt: now } },
+            { endDate: null }
+        ]
+    }).populate('memberId', 'fullName email phone avatar role status');
+    
+    // Lọc lại bằng method isActive() để đảm bảo chính xác
+    const validSubscriptions = activePTSubscriptions.filter(sub => {
+        if (!sub.memberId || !sub.memberId._id) return false;
+        // Kiểm tra subscription có thực sự active không
+        return sub.isActive() && sub.canUsePT();
+    });
+    
+    // Lấy unique member IDs
+    const memberIds = [...new Set(validSubscriptions.map(sub => sub.memberId._id.toString()))];
+    
+    // Lấy members
+    const members = await User.find({
+        _id: { $in: memberIds },
+        role: 'member',
+        status: 'active'
+    }).select('-password');
+    
+    if(!members || members.length === 0) {
+        const error = new Error("No members with active PT subscriptions found");
+        error.statusCode = 404;
+        error.code = "NO_MEMBERS_FOUND";
+        throw error;
+    }
+    return members;
+};

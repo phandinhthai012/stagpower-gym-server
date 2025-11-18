@@ -16,76 +16,100 @@ export const createSchedule = async (scheduleData) => {
         status
     } = scheduleData;
 
+    // ===== 0. KIỂM TRA LOẠI LỊCH: LỊCH TRỰC (Direct Schedule) hay LỊCH PT (PT Schedule) =====
+    // Lịch trực: notes chứa "[LỊCH TRỰC]" hoặc memberId === trainerId (dummy value)
+    const isDirectSchedule = notes?.includes('[LỊCH TRỰC]') || memberId === trainerId;
 
-    // ===== 1. VALIDATE MEMBER =====
-    const member = await User.findById(memberId);
-    if (!member || member.role !== 'member') {
-        const error = new Error("Invalid member");
-        error.statusCode = 400;
-        error.code = "INVALID_MEMBER";
-        throw error;
-    }
-    // ===== 2. VALIDATE TRAINER =====
+    // ===== 1. VALIDATE TRAINER/STAFF =====
     const trainer = await User.findById(trainerId);
-    if (!trainer || trainer.role !== 'trainer') {
-        const error = new Error("Invalid trainer");
+    if (!trainer) {
+        const error = new Error("Invalid trainer/staff");
         error.statusCode = 400;
         error.code = "INVALID_TRAINER";
         throw error;
     }
-    // ===== 3. TỰ ĐỘNG CHỌN GÓI PT (NẾU CHƯA CÓ subscriptionId) =====
+    
+    // Với lịch trực: trainer có thể là trainer hoặc staff
+    // Với lịch PT: trainer phải là trainer
+    if (!isDirectSchedule && trainer.role !== 'trainer') {
+        const error = new Error("Invalid trainer - must be a trainer for PT schedule");
+        error.statusCode = 400;
+        error.code = "INVALID_TRAINER";
+        throw error;
+    }
+
+    // ===== 2. VALIDATE MEMBER (CHỈ CHO LỊCH PT) =====
+    let member = null;
     let selectedSubscriptionId = subscriptionId;
-    if (!selectedSubscriptionId) {
-        // Frontend không truyền subscriptionId → TỰ ĐỘNG CHỌN
-        const availableSubscriptions = await Subscription.find({
-            memberId: memberId,
-            type: { $in: ['PT', 'Combo'] },
-            status: 'Active', // ✅ CHỈ LẤY ACTIVE
-            ptsessionsRemaining: { $gt: 0 }
-        })
-            .sort({
-                endDate: 1,                    // Sắp hết hạn trước
-                ptsessionsRemaining: 1         // Ít buổi trước
+    
+    if (!isDirectSchedule) {
+        // Lịch PT: cần member hợp lệ
+        member = await User.findById(memberId);
+        if (!member || member.role !== 'member') {
+            const error = new Error("Invalid member");
+            error.statusCode = 400;
+            error.code = "INVALID_MEMBER";
+            throw error;
+        }
+
+        // ===== 3. TỰ ĐỘNG CHỌN GÓI PT (NẾU CHƯA CÓ subscriptionId) =====
+        if (!selectedSubscriptionId) {
+            // Frontend không truyền subscriptionId → TỰ ĐỘNG CHỌN
+            const availableSubscriptions = await Subscription.find({
+                memberId: memberId,
+                type: { $in: ['PT', 'Combo'] },
+                status: 'Active', // ✅ CHỈ LẤY ACTIVE
+                ptsessionsRemaining: { $gt: 0 }
             })
-            .limit(1);
+                .sort({
+                    endDate: 1,                    // Sắp hết hạn trước
+                    ptsessionsRemaining: 1         // Ít buổi trước
+                })
+                .limit(1);
 
-        const autoSelectedSubscription = availableSubscriptions[0];
+            const autoSelectedSubscription = availableSubscriptions[0];
 
-        if (!autoSelectedSubscription) {
-            const error = new Error(
-                "No active PT subscription with available sessions found. " +
-                "Please purchase a PT package first."
-            );
-            error.statusCode = 400;
-            error.code = "NO_PT_SESSIONS_REMAINING";
-            throw error;
+            if (!autoSelectedSubscription) {
+                const error = new Error(
+                    "No active PT subscription with available sessions found. " +
+                    "Please purchase a PT package first."
+                );
+                error.statusCode = 400;
+                error.code = "NO_PT_SESSIONS_REMAINING";
+                throw error;
+            }
+
+            selectedSubscriptionId = autoSelectedSubscription._id;
+
+            console.log(`✅ Auto-selected subscription for member ${memberId}:`, {
+                subscriptionId: selectedSubscriptionId,
+                sessionsRemaining: autoSelectedSubscription.ptsessionsRemaining,
+                endDate: autoSelectedSubscription.endDate
+            });
+        } else {
+            // ===== 4. VALIDATE SUBSCRIPTION (NẾU CÓ) =====
+            const subscription = await Subscription.findOne({
+                _id: selectedSubscriptionId,
+                memberId: memberId,
+                type: { $in: ['PT', 'Combo'] },
+                status: 'Active',
+                ptsessionsRemaining: { $gt: 0 }
+            });
+
+            if (!subscription) {
+                const error = new Error(
+                    "Invalid subscription or no PT sessions remaining"
+                );
+                error.statusCode = 400;
+                error.code = "INVALID_SUBSCRIPTION";
+                throw error;
+            }
         }
-
-        selectedSubscriptionId = autoSelectedSubscription._id;
-
-        console.log(`✅ Auto-selected subscription for member ${memberId}:`, {
-            subscriptionId: selectedSubscriptionId,
-            sessionsRemaining: autoSelectedSubscription.ptsessionsRemaining,
-            endDate: autoSelectedSubscription.endDate
-        });
     } else {
-        // ===== 4. VALIDATE SUBSCRIPTION (NẾU CÓ) =====
-        const subscription = await Subscription.findOne({
-            _id: selectedSubscriptionId,
-            memberId: memberId,
-            type: { $in: ['PT', 'Combo'] },
-            status: 'Active',
-            ptsessionsRemaining: { $gt: 0 }
-        });
-
-        if (!subscription) {
-            const error = new Error(
-                "Invalid subscription or no PT sessions remaining"
-            );
-            error.statusCode = 400;
-            error.code = "INVALID_SUBSCRIPTION";
-            throw error;
-        }
+        // Lịch trực: không cần member và subscription
+        // Set memberId = null hoặc trainerId (tùy model yêu cầu)
+        // selectedSubscriptionId = null hoặc undefined
+        selectedSubscriptionId = null;
     }
     const requestDate = new Date(dateTime);
     if (requestDate < new Date()) {
@@ -96,8 +120,16 @@ export const createSchedule = async (scheduleData) => {
     }
 
     // ===== 6. VALIDATE DURATION =====
-    if (durationMinutes < 30 || durationMinutes > 150) {
-        const error = new Error("Duration must be between 30 and 150 minutes");
+    // Lịch PT: 30-150 phút (1 buổi PT thông thường)
+    // Lịch trực: 30-1440 phút (tối đa 24 giờ cho ca làm việc)
+    const maxDuration = isDirectSchedule ? 1440 : 150; // 1440 phút = 24 giờ
+    const minDuration = 30;
+    
+    if (durationMinutes < minDuration || durationMinutes > maxDuration) {
+        const errorMessage = isDirectSchedule 
+            ? `Duration must be between ${minDuration} and ${maxDuration} minutes (24 hours) for direct schedule`
+            : `Duration must be between ${minDuration} and ${maxDuration} minutes for PT schedule`;
+        const error = new Error(errorMessage);
         error.statusCode = 400;
         error.code = "INVALID_DURATION";
         throw error;
@@ -136,8 +168,12 @@ export const createSchedule = async (scheduleData) => {
     }
     // check xem member có pt hay combo có pt sessions remaining không
     // check xem trainer có time free không
+    
+    // Với lịch trực: dùng trainerId làm memberId (vì model yêu cầu memberId)
+    const finalMemberId = isDirectSchedule ? trainerId : memberId;
+    
     const schedule = await Schedule.create({
-        memberId,
+        memberId: finalMemberId,
         trainerId,
         subscriptionId: selectedSubscriptionId,
         branchId,
@@ -341,6 +377,16 @@ export const updatePointsSession = async (scheduleId) => {
         }
         if (schedule.status !== 'Completed' && schedule.status !== 'NoShow') {
             return schedule; // Không làm gì cả
+        }
+
+        // ===== KIỂM TRA LỊCH TRỰC =====
+        // Lịch trực: notes chứa "[LỊCH TRỰC]" hoặc không có subscriptionId
+        const isDirectSchedule = schedule.notes?.includes('[LỊCH TRỰC]') || !schedule.subscriptionId;
+        
+        // Lịch trực không cần giảm PT sessions
+        if (isDirectSchedule) {
+            console.log(`ℹ️ Direct schedule ${scheduleId} - skipping PT session deduction`);
+            return schedule;
         }
 
         let subscription;

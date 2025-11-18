@@ -10,6 +10,7 @@ import {
     getallStaffsWithPagination,
     createUser,
     getMembersWithActiveSubscriptions,
+    getMembersWithActivePTSubscriptions,
 } from "../services/user.service";
 import response from "../utils/response";
 import socketService from "../services/socket.service";
@@ -196,6 +197,20 @@ export const getMembersWithActiveSubscriptionsController = async (req, res, next
             success: true,
             statusCode: 200,
             message: "Members with active subscriptions fetched successfully",
+            data: members
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getMembersWithActivePTSubscriptionsController = async (req, res, next) => {
+    try {
+        const members = await getMembersWithActivePTSubscriptions();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Members with active PT subscriptions fetched successfully",
             data: members
         });
     } catch (error) {
