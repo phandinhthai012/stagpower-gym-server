@@ -11,6 +11,8 @@ import {
     createUser,
     getMembersWithActiveSubscriptions,
     getMembersWithActivePTSubscriptions,
+    getAllAdmins,
+    getAdminsWithoutBranch,
 } from "../services/user.service";
 import response from "../utils/response";
 import socketService from "../services/socket.service";
@@ -212,6 +214,34 @@ export const getMembersWithActivePTSubscriptionsController = async (req, res, ne
             statusCode: 200,
             message: "Members with active PT subscriptions fetched successfully",
             data: members
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getAllAdminsController = async (req, res, next) => {
+    try {
+        const admins = await getAllAdmins();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Admins fetched successfully",
+            data: admins
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getAdminsWithoutBranchController = async (req, res, next) => {
+    try {
+        const admins = await getAdminsWithoutBranch();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Admins without branch assignment fetched successfully",
+            data: admins
         });
     } catch (error) {
         return next(error);

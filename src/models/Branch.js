@@ -54,6 +54,11 @@ const branchSchema = new mongoose.Schema({
             },
             message: 'Please enter a valid email address'
         }
+    },
+    adminId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
     }
 }, {
     timestamps: true,

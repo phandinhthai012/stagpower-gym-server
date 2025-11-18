@@ -17,8 +17,30 @@ export const getAllStaffs = async () => {
     return employees;
 }
 
+// Get all admins (for branch assignment)
+export const getAllAdmins = async () => {
+    const admins = await User.find({ role: "admin" })
+        .select('fullName email phone role adminInfo')
+        .populate('adminInfo.branchId', 'name address');
+    return admins;
+}
+
+// Get admins without branch assignment
+export const getAdminsWithoutBranch = async () => {
+    const admins = await User.find({ 
+        role: "admin",
+        $or: [
+            { 'adminInfo.branchId': { $exists: false } },
+            { 'adminInfo.branchId': null }
+        ]
+    }).select('fullName email phone role');
+    return admins;
+}
+
 export const getUserById = async (userId) => {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
+        .populate('adminInfo.branchId', 'name address status')
+        .populate('staffInfo.brand_id', 'name address status');
     if (!user) {
         const error = new Error("User not found");
         error.statusCode = 404;
@@ -78,7 +100,7 @@ export const updateUserProfile = async (userId, updateData) => {
         case 'admin':
             roleSpecificFields = [
                 "adminInfo.permissions",
-                "adminInfo.managed_branches"
+                "adminInfo.branchId"
             ];
             break;
     }
@@ -331,7 +353,7 @@ export const createUser = async (payload) => {
         case 'admin':
             newUserData.adminInfo = {
                 permissions: adminInfo?.permissions || [],
-                managed_branches: adminInfo?.managed_branches || []
+                branchId: adminInfo?.branchId || null
             };
             break;
 

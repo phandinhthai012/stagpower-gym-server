@@ -25,7 +25,7 @@ const roomManager = {
     // 🔹 Room theo chi nhánh (branch)
     const branchId =
       user.staffInfo?.brand_id ||
-      user.adminInfo?.managed_branches?.[0] || // admin quản lý nhiều chi nhánh
+      user.adminInfo?.branchId || // admin quản lý 1 chi nhánh
       user.memberInfo?.current_brand_id;
     if (branchId) {
       const branchRoom = `branch-${branchId}`;
