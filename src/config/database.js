@@ -1,4 +1,8 @@
+import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+
+// Ensure environment variables are loaded
+dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const MONGODB_DATABASE = process.env.MONGODB_DATABASE || 'stagpower-gym';

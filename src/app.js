@@ -1,8 +1,11 @@
+// Load environment variables FIRST before any other imports
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet'; //middleware bảo mật giúp bảo vệ ứng dụng Express khỏi các lỗ hổng bảo mật phổ biến bằng cách thiết lập các HTTP headers bảo mật.
 import morgan from 'morgan'; //một middleware logging cho Express.js, được sử dụng để log tất cả các HTTP requests đến server. Nó giúp developers theo dõi và debug các request một cách dễ dàng.
-import dotenv from 'dotenv';
 import path from 'path';
 import connectDB from './config/database.js';
 import errorHandler from './middleware/errorHandler.js';
@@ -17,9 +20,6 @@ import { SOCKET_CONFIG } from './config/socket.js';
 // socket.io
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-
-// Load environment variables 
-dotenv.config();
 
 
 

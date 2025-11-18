@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "src/app.js",
   "scripts": {
-    "start": "node -r @babel/register src/app.js",
+    "build": "babel src --out-dir dist --copy-files",
+    "start": "node dist/app.js",
     "dev": "nodemon -r @babel/register src/app.js",
     "test": "jest"
   },

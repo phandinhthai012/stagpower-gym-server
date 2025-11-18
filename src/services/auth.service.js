@@ -36,15 +36,28 @@ export const register = async (data) => {
     }
 
     try {
-        const newUser = await User.create({
+        const userRole = role || 'member';
+        const userData = {
             email: email?.toLowerCase()?.trim(),
             password,
             phone: phone?.trim(),
             fullName,
-            role: role || 'member',
+            role: userRole,
             dateOfBirth,
             gender
-        });
+        };
+
+        // Initialize memberInfo for members
+        if (userRole === 'member') {
+            userData.memberInfo = {
+                membership_level: 'basic',
+                is_student: false,
+                total_spending: 0,
+                membership_month: 0
+            };
+        }
+
+        const newUser = await User.create(userData);
         
         if (newUser) {
             try {
