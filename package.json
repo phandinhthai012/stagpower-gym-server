@@ -5,6 +5,8 @@
   "scripts": {
     "start": "node -r @babel/register src/app.js",
     "dev": "nodemon -r @babel/register src/app.js",
+    "build": "babel src --out-dir dist --copy-files",
+    "start:prod": "node dist/app.js",
     "test": "jest"
   },
   "keywords": [],
