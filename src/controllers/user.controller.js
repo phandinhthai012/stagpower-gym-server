@@ -13,6 +13,8 @@ import {
     getMembersWithActivePTSubscriptions,
     getAllAdmins,
     getAdminsWithoutBranch,
+    getStaffsByBranchId,
+    getStaffsWithoutBranch,
 } from "../services/user.service";
 import response from "../utils/response";
 import socketService from "../services/socket.service";
@@ -242,6 +244,35 @@ export const getAdminsWithoutBranchController = async (req, res, next) => {
             statusCode: 200,
             message: "Admins without branch assignment fetched successfully",
             data: admins
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getStaffsByBranchIdController = async (req, res, next) => {
+    try {
+        const { branchId } = req.params;
+        const staffs = await getStaffsByBranchId(branchId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Staffs by branch fetched successfully",
+            data: staffs
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getStaffsWithoutBranchController = async (req, res, next) => {
+    try {
+        const staffs = await getStaffsWithoutBranch();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Staffs without branch assignment fetched successfully",
+            data: staffs
         });
     } catch (error) {
         return next(error);

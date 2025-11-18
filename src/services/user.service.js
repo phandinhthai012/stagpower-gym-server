@@ -17,6 +17,30 @@ export const getAllStaffs = async () => {
     return employees;
 }
 
+// Get staffs by branch ID
+export const getStaffsByBranchId = async (branchId) => {
+    const staffs = await User.find({ 
+        role: { $in: ["staff", "trainer"] },
+        'staffInfo.brand_id': branchId
+    })
+    .select('fullName email phone role status staffInfo')
+    .populate('staffInfo.brand_id', 'name address');
+    return staffs;
+}
+
+// Get staffs without branch assignment
+export const getStaffsWithoutBranch = async () => {
+    const staffs = await User.find({ 
+        role: { $in: ["staff", "trainer"] },
+        $or: [
+            { 'staffInfo.brand_id': { $exists: false } },
+            { 'staffInfo.brand_id': null }
+        ]
+    })
+    .select('fullName email phone role status staffInfo');
+    return staffs;
+}
+
 // Get all admins (for branch assignment)
 export const getAllAdmins = async () => {
     const admins = await User.find({ role: "admin" })

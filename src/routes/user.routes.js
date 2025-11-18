@@ -13,7 +13,9 @@ import {
     getMembersWithActiveSubscriptionsController,
     getMembersWithActivePTSubscriptionsController,
     getAllAdminsController,
-    getAdminsWithoutBranchController
+    getAdminsWithoutBranchController,
+    getStaffsByBranchIdController,
+    getStaffsWithoutBranchController
 } from "../controllers/user.controller";
 
 import { authenticateToken, authorize } from "../middleware/auth";
@@ -36,6 +38,10 @@ router.get("/members/active-pt-subscriptions", authenticateToken, getMembersWith
 router.get("/admins", authenticateToken, authorize(["admin"]), getAllAdminsController);
 
 router.get("/admins/without-branch", authenticateToken, authorize(["admin"]), getAdminsWithoutBranchController);
+
+router.get("/staffs/branch/:branchId", authenticateToken, authorize(["admin", "staff"]), getStaffsByBranchIdController);
+
+router.get("/staffs/without-branch", authenticateToken, authorize(["admin"]), getStaffsWithoutBranchController);
 
 // Specific routes should come before parameterized routes
 router.get("/members",authenticateToken, getAllMembersController);
