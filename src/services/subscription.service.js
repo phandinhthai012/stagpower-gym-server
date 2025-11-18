@@ -52,11 +52,58 @@ export const getAllSubscriptions = async () => {
     const subscriptions = await Subscription.find()
         .populate('packageId', 'name type price durationMonths ptSessions')
         .populate('memberId', 'fullName email phone');
+    
+    // Tự động kích hoạt các subscriptions NotStarted đã đến ngày bắt đầu
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const subscriptionsToActivate = [];
+    for (const sub of subscriptions) {
+        if (sub.status === 'NotStarted' && sub.startDate) {
+            const startDate = new Date(sub.startDate);
+            const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            
+            if (startDateOnly <= today) {
+                subscriptionsToActivate.push(sub);
+            }
+        }
+    }
+    
+    if (subscriptionsToActivate.length > 0) {
+        const subscriptionIds = subscriptionsToActivate.map(sub => sub._id);
+        await Subscription.updateMany(
+            { _id: { $in: subscriptionIds }, status: 'NotStarted' },
+            { $set: { status: 'Active' } }
+        );
+        
+        // Cập nhật lại status trong kết quả trả về
+        subscriptions.forEach(sub => {
+            if (subscriptionIds.includes(sub._id)) {
+                sub.status = 'Active';
+            }
+        });
+    }
+    
     return subscriptions;
 };
 
 export const getSubscriptionById = async (id) => {
     const subscription = await Subscription.findById(id);
+    
+    // Tự động kích hoạt nếu subscription NotStarted đã đến ngày bắt đầu
+    if (subscription && subscription.status === 'NotStarted' && subscription.startDate) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startDate = new Date(subscription.startDate);
+        const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        
+        if (startDateOnly <= today) {
+            subscription.status = 'Active';
+            await subscription.save();
+            console.log(`✅ Auto-activated subscription ${id}`);
+        }
+    }
+    
     return subscription;
 };
 
@@ -64,6 +111,43 @@ export const getAllSubscriptionsByMember = async (memberId) => {
     const subscriptions = await Subscription.find({ memberId })
         .populate('packageId', 'name type price durationMonths ptSessions')
         .sort({ createdAt: -1 });
+    
+    // Tự động kích hoạt các subscriptions NotStarted đã đến ngày bắt đầu
+    const now = new Date();
+    // Set time về 00:00:00 để so sánh chỉ ngày
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const subscriptionsToActivate = [];
+    for (const sub of subscriptions) {
+        if (sub.status === 'NotStarted' && sub.startDate) {
+            const startDate = new Date(sub.startDate);
+            // Set time về 00:00:00 để so sánh chỉ ngày
+            const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            
+            if (startDateOnly <= today) {
+                subscriptionsToActivate.push(sub);
+                console.log(`🔄 Auto-activating subscription ${sub._id}: startDate=${startDateOnly.toISOString()}, today=${today.toISOString()}`);
+            }
+        }
+    }
+    
+    if (subscriptionsToActivate.length > 0) {
+        const subscriptionIds = subscriptionsToActivate.map(sub => sub._id);
+        const updateResult = await Subscription.updateMany(
+            { _id: { $in: subscriptionIds }, status: 'NotStarted' },
+            { $set: { status: 'Active' } }
+        );
+        
+        console.log(`✅ Activated ${updateResult.modifiedCount} subscription(s)`);
+        
+        // Cập nhật lại status trong kết quả trả về
+        subscriptions.forEach(sub => {
+            if (subscriptionIds.includes(sub._id)) {
+                sub.status = 'Active';
+            }
+        });
+    }
+    
     return subscriptions;
 };
 

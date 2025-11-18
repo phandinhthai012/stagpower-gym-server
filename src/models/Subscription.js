@@ -173,10 +173,23 @@ subscriptionSchema.statics.findExpiringSoon = function (days = 7) {
 
 // Instance methods
 subscriptionSchema.methods.isExpired = function () {
+    if (!this.endDate) return false;
     return new Date() > this.endDate;
 };
 subscriptionSchema.methods.isActive = function () {
-    return this.status === 'Active' && !this.isSuspended && !this.isExpired();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Kiểm tra nếu subscription là NotStarted nhưng đã đến ngày bắt đầu, coi như Active
+    let shouldBeActive = (this.status === 'Active');
+    
+    if (this.status === 'NotStarted' && this.startDate) {
+        const startDate = new Date(this.startDate);
+        const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        shouldBeActive = startDateOnly <= today;
+    }
+    
+    return shouldBeActive && !this.isSuspended && !this.isExpired();
 };
 subscriptionSchema.methods.canUsePT = function () {
     return (this.type === 'PT' || this.type === 'Combo') && this.ptsessionsRemaining > 0;
