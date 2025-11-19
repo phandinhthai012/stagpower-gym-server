@@ -35,106 +35,43 @@ const server = createServer(app);
 const io = new Server(server, SOCKET_CONFIG);
 
 (async () => {
-  try {
-    console.log('🚀 Starting server...');
-    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 Hostname: ${hostname}, Port: ${port}`);
+  await connectDB();
 
-    // Connect database với error handling
-    try {
-      await connectDB();
-    } catch (dbError) {
-      console.error('❌ Database connection failed:', dbError.message);
-      console.warn('⚠️  Server will continue to start, but database features may not work');
-      // Không exit, để server vẫn start (có thể retry sau)
-    }
+  await verifyConnection();
 
-    // Verify email connection (non-blocking)
-    try {
-      await verifyConnection();
-    } catch (emailError) {
-      console.warn('⚠️  Email verification failed (non-critical)');
-    }
+  app.use(cors(corsOptions));
+  //Logging middleware
+  app.use(morgan('combined'));
+  app.use(express.static(path.join(__dirname, "templates")));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-    // Setup middleware
-    app.use(cors(corsOptions));
-    app.use(morgan('combined'));
-    app.use(express.static(path.join(__dirname, "templates")));
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
 
-    // Socket.io
-    socketHandler(io);
+  // socket.io
+  socketHandler(io);
 
-    // Cron jobs
-    initCronJobs();
+  // init cron jobs
+  initCronJobs();
 
-    // Routes
-    app.get('/', (req, res) => {
-      res.send('server is running..');
-    });
-    
-    const API_PREFIX = '/api';
-    app.use(API_PREFIX, generalApiRateLimiter, router);
+  // routes
+  app.get('/', (req, res) => {
+    res.send('server is running..');
+  });
+  const API_PREFIX = '/api';
+  app.use(API_PREFIX, generalApiRateLimiter, router);
 
-    // Error handlers
-    app.use(notFoundHandler);
-    app.use(errorHandler);
 
-    // Start server với error handling
-    server.listen(port, hostname, (error) => {
-      if (error) {
-        console.error('❌ Server failed to start:', error);
-        process.exit(1);
-      }
-      console.log(`✅ Server is running on http://${hostname}:${port}`);
-      console.log(`🔌 Socket.IO server is running`);
-    });
 
-    // Handle server errors
-    server.on('error', (error) => {
-      console.error('❌ Server error:', error);
-      if (error.code === 'EADDRINUSE') {
-        console.error(`❌ Port ${port} is already in use`);
-      }
-      process.exit(1);
-    });
+  // error handler
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
-    // Graceful shutdown handlers
-    process.on('SIGTERM', () => {
-      console.log('⚠️  SIGTERM received, shutting down gracefully...');
-      server.close(() => {
-        console.log('✅ Server closed');
-        process.exit(0);
-      });
-    });
-
-    process.on('SIGINT', () => {
-      console.log('⚠️  SIGINT received, shutting down gracefully...');
-      server.close(() => {
-        console.log('✅ Server closed');
-        process.exit(0);
-      });
-    });
-
-    // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      console.error('❌ Uncaught Exception:', error);
-      server.close(() => {
-        process.exit(1);
-      });
-    });
-
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-      // Không exit ngay, chỉ log
-    });
-
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    console.error('Error stack:', error.stack);
-    process.exit(1);
-  }
+  // app.listen(port, hostname, () => {
+  //   console.log(`Server is running on http://${hostname}:${port}`);
+  // });
+  server.listen(port, hostname, () => {
+    console.log(`Server is running on http://${hostname}:${port}`);
+    console.log(`🔌 Socket.IO server is running`);
+  });
 })();
 
