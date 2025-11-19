@@ -2,6 +2,9 @@
   "name": "stagpower-gym-server",
   "version": "1.0.0",
   "main": "src/app.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "babel src --out-dir dist --copy-files",
     "prestart": "npm run build",
