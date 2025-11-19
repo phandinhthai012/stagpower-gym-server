@@ -31,7 +31,6 @@ const emailConfig = {
         user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
         pass: process.env.EMAIL_PASS || 'gold soyk lguh plnz'
     },
-    requireTLS: true,
     connectionTimeout: 60000,
     greetingTimeout: 60000,
     socketTimeout: 60000,
