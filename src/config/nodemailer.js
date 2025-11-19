@@ -6,45 +6,11 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-// const emailConfig = {
-//     // service: 'gmail',
-//     // auth: {
-//     //     user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
-//     //     pass: process.env.EMAIL_PASS || 'gold soyk lguh plnz'
-//     // },
-//     // // Tăng timeout để tránh lỗi ETIMEDOUT trên Render
-//     // connectionTimeout: 30000, // 30 giây (tăng từ 10s)
-//     // greetingTimeout: 30000,   // 30 giây
-//     // socketTimeout: 30000,     // 30 giây
-//     // // Dùng pool connection để tái sử dụng connection
-//     // pool: true,
-//     // maxConnections: 1,
-//     // maxMessages: 3,
-//     // tls: {
-//     //     // Không check certificate nếu server config chưa chuẩn
-//     //     rejectUnauthorized: false 
-//     // }
-//     host: 'smtp.gmail.com',
-//     port: 587, // Sử dụng cổng 587 thay vì 465
-//     secure: false,
-//     auth: {
-//         user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
-//         pass: process.env.EMAIL_PASS || 'gold soyk lguh plnz'
-//     },
-//     connectionTimeout: 60000,
-//     greetingTimeout: 60000,
-//     socketTimeout: 60000,
-//     family: 4,
-//     tls: {
-//         rejectUnauthorized: false,
-//         ciphers: 'SSLv3'
-//     }
-// }
 const emailConfig = {
     service: 'gmail',  // Dùng service thay vì host
     auth: {
         user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
-        pass: process.env.EMAIL_PASS  // Bỏ hardcoded password
+        pass: process.env.EMAIL_PASS || 'xdrumuwidxgmfrih'
     },
     connectionTimeout: 60000,  // Tăng lên 60s
     greetingTimeout: 60000,
