@@ -26,7 +26,7 @@ import { Server } from 'socket.io';
 
 const app = express();
 app.set('trust proxy', 1);
-const hostname = process.env.HOSTNAME || 'localhost';
+const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = process.env.PORT || 5000;
 
 // create server

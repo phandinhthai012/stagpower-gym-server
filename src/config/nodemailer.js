@@ -8,6 +8,14 @@ const emailConfig = {
     auth: {
         user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
         pass: process.env.EMAIL_PASS || 'xdrumuwidxgmfrih'
+    },
+    // Thêm các cấu hình timeout để tránh lỗi ETIMEDOUT
+    connectionTimeout: 10000, // 10 giây
+    greetingTimeout: 10000,   // 10 giây
+    socketTimeout: 10000,     // 10 giây
+    tls: {
+        // Không check certificate nếu server config chưa chuẩn (giúp bypass một số lỗi mạng)
+        rejectUnauthorized: false 
     }
 }
 
