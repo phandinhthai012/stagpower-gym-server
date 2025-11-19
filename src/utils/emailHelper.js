@@ -1,4 +1,4 @@
-import { transporter, emailTemplates, } from "../config/nodemailer";
+import { transporter, emailTemplates, } from "../config/nodemailer.js";
 
 export const sendOtpEmail = async ({ to, data }) => {
     try {
