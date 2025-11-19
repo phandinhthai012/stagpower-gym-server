@@ -147,9 +147,10 @@ const userSchema = new mongoose.Schema({
             type: Array,
             default: []
         },
-        managed_branches: {
-            type: Array,
-            default: []
+        branchId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Branch',
+            required: false
         },
     },
     // để revoka token 

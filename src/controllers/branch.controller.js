@@ -20,8 +20,9 @@ export const createBranchController = async (req, res, next) => {
             closeTime,
             status,
             phone,
-            email, } = req.body;
-        const branch = await createBranch({ name, address, openTime, closeTime, status, phone, email });
+            email,
+            adminId } = req.body;
+        const branch = await createBranch({ name, address, openTime, closeTime, status, phone, email, adminId });
         return response(res, {
             success: true,
             statusCode: 201,
@@ -85,8 +86,8 @@ export const getBranchByIdController = async (req, res, next) => {
 export const updateBranchByIdController = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { name, address, openTime, closeTime, status, phone, email } = req.body;
-        const branch = await updateBranchById(id, { name, address, openTime, closeTime, status, phone, email });
+        const { name, address, openTime, closeTime, status, phone, email, adminId } = req.body;
+        const branch = await updateBranchById(id, { name, address, openTime, closeTime, status, phone, email, adminId });
         return response(res, {
             success: true,
             statusCode: 200,

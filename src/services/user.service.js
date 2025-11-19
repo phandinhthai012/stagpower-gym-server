@@ -17,8 +17,54 @@ export const getAllStaffs = async () => {
     return employees;
 }
 
+// Get staffs by branch ID
+export const getStaffsByBranchId = async (branchId) => {
+    const staffs = await User.find({ 
+        role: { $in: ["staff", "trainer"] },
+        'staffInfo.brand_id': branchId
+    })
+    .select('fullName email phone role status staffInfo')
+    .populate('staffInfo.brand_id', 'name address');
+    return staffs;
+}
+
+// Get staffs without branch assignment
+export const getStaffsWithoutBranch = async () => {
+    const staffs = await User.find({ 
+        role: { $in: ["staff", "trainer"] },
+        $or: [
+            { 'staffInfo.brand_id': { $exists: false } },
+            { 'staffInfo.brand_id': null }
+        ]
+    })
+    .select('fullName email phone role status staffInfo');
+    return staffs;
+}
+
+// Get all admins (for branch assignment)
+export const getAllAdmins = async () => {
+    const admins = await User.find({ role: "admin" })
+        .select('fullName email phone role adminInfo')
+        .populate('adminInfo.branchId', 'name address');
+    return admins;
+}
+
+// Get admins without branch assignment
+export const getAdminsWithoutBranch = async () => {
+    const admins = await User.find({ 
+        role: "admin",
+        $or: [
+            { 'adminInfo.branchId': { $exists: false } },
+            { 'adminInfo.branchId': null }
+        ]
+    }).select('fullName email phone role');
+    return admins;
+}
+
 export const getUserById = async (userId) => {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
+        .populate('adminInfo.branchId', 'name address status')
+        .populate('staffInfo.brand_id', 'name address status');
     if (!user) {
         const error = new Error("User not found");
         error.statusCode = 404;
@@ -78,7 +124,7 @@ export const updateUserProfile = async (userId, updateData) => {
         case 'admin':
             roleSpecificFields = [
                 "adminInfo.permissions",
-                "adminInfo.managed_branches"
+                "adminInfo.branchId"
             ];
             break;
     }
@@ -331,7 +377,7 @@ export const createUser = async (payload) => {
         case 'admin':
             newUserData.adminInfo = {
                 permissions: adminInfo?.permissions || [],
-                managed_branches: adminInfo?.managed_branches || []
+                branchId: adminInfo?.branchId || null
             };
             break;
 
@@ -377,6 +423,52 @@ export const getMembersWithActiveSubscriptions = async () => {
     }).select('-password');
     if(!members) {
         const error = new Error("No members found");
+        error.statusCode = 404;
+        error.code = "NO_MEMBERS_FOUND";
+        throw error;
+    }
+    return members;
+};
+
+// Lấy members có PT subscription active với buổi tập còn lại
+export const getMembersWithActivePTSubscriptions = async () => {
+    // Tìm subscriptions có:
+    // - Status: Active
+    // - Type: PT hoặc Combo
+    // - ptsessionsRemaining > 0
+    // - Không bị suspended
+    // - Chưa hết hạn (endDate > now hoặc endDate null)
+    const now = new Date();
+    const activePTSubscriptions = await Subscription.find({ 
+        status: 'Active',
+        type: { $in: ['PT', 'Combo'] },
+        ptsessionsRemaining: { $gt: 0 },
+        isSuspended: false,
+        $or: [
+            { endDate: { $gt: now } },
+            { endDate: null }
+        ]
+    }).populate('memberId', 'fullName email phone avatar role status');
+    
+    // Lọc lại bằng method isActive() để đảm bảo chính xác
+    const validSubscriptions = activePTSubscriptions.filter(sub => {
+        if (!sub.memberId || !sub.memberId._id) return false;
+        // Kiểm tra subscription có thực sự active không
+        return sub.isActive() && sub.canUsePT();
+    });
+    
+    // Lấy unique member IDs
+    const memberIds = [...new Set(validSubscriptions.map(sub => sub.memberId._id.toString()))];
+    
+    // Lấy members
+    const members = await User.find({
+        _id: { $in: memberIds },
+        role: 'member',
+        status: 'active'
+    }).select('-password');
+    
+    if(!members || members.length === 0) {
+        const error = new Error("No members with active PT subscriptions found");
         error.statusCode = 404;
         error.code = "NO_MEMBERS_FOUND";
         throw error;

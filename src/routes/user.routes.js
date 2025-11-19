@@ -10,7 +10,12 @@ import {
     getAllMembersWithPaginationController,
     getallStaffsWithPaginationController,
     createUserController,
-    getMembersWithActiveSubscriptionsController
+    getMembersWithActiveSubscriptionsController,
+    getMembersWithActivePTSubscriptionsController,
+    getAllAdminsController,
+    getAdminsWithoutBranchController,
+    getStaffsByBranchIdController,
+    getStaffsWithoutBranchController
 } from "../controllers/user.controller";
 
 import { authenticateToken, authorize } from "../middleware/auth";
@@ -28,6 +33,15 @@ router.get("/staffs/paginated",authenticateToken, getallStaffsWithPaginationCont
 
 router.get("/members/active-subscriptions", authenticateToken, getMembersWithActiveSubscriptionsController);
 
+router.get("/members/active-pt-subscriptions", authenticateToken, getMembersWithActivePTSubscriptionsController);
+
+router.get("/admins", authenticateToken, authorize(["admin"]), getAllAdminsController);
+
+router.get("/admins/without-branch", authenticateToken, authorize(["admin"]), getAdminsWithoutBranchController);
+
+router.get("/staffs/branch/:branchId", authenticateToken, authorize(["admin", "staff"]), getStaffsByBranchIdController);
+
+router.get("/staffs/without-branch", authenticateToken, authorize(["admin"]), getStaffsWithoutBranchController);
 
 // Specific routes should come before parameterized routes
 router.get("/members",authenticateToken, getAllMembersController);

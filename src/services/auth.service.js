@@ -151,7 +151,9 @@ export const login = async (data) => {
 }
 
 export const getMe = async (userId) => {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
+        .populate('adminInfo.branchId', 'name address status phone email openTime closeTime')
+        .populate('staffInfo.brand_id', 'name address status phone email openTime closeTime');
     if (!user) {
         const error = new Error("User not found");
         error.statusCode = 404;

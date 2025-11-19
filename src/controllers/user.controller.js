@@ -10,6 +10,11 @@ import {
     getallStaffsWithPagination,
     createUser,
     getMembersWithActiveSubscriptions,
+    getMembersWithActivePTSubscriptions,
+    getAllAdmins,
+    getAdminsWithoutBranch,
+    getStaffsByBranchId,
+    getStaffsWithoutBranch,
 } from "../services/user.service";
 import response from "../utils/response";
 import socketService from "../services/socket.service";
@@ -197,6 +202,77 @@ export const getMembersWithActiveSubscriptionsController = async (req, res, next
             statusCode: 200,
             message: "Members with active subscriptions fetched successfully",
             data: members
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getMembersWithActivePTSubscriptionsController = async (req, res, next) => {
+    try {
+        const members = await getMembersWithActivePTSubscriptions();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Members with active PT subscriptions fetched successfully",
+            data: members
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getAllAdminsController = async (req, res, next) => {
+    try {
+        const admins = await getAllAdmins();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Admins fetched successfully",
+            data: admins
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getAdminsWithoutBranchController = async (req, res, next) => {
+    try {
+        const admins = await getAdminsWithoutBranch();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Admins without branch assignment fetched successfully",
+            data: admins
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getStaffsByBranchIdController = async (req, res, next) => {
+    try {
+        const { branchId } = req.params;
+        const staffs = await getStaffsByBranchId(branchId);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Staffs by branch fetched successfully",
+            data: staffs
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+export const getStaffsWithoutBranchController = async (req, res, next) => {
+    try {
+        const staffs = await getStaffsWithoutBranch();
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Staffs without branch assignment fetched successfully",
+            data: staffs
         });
     } catch (error) {
         return next(error);
