@@ -1,7 +1,8 @@
 # Development stage
 FROM node:18-alpine AS development
 WORKDIR /app
-ENV NODE_ENV=development
+# Không set NODE_ENV=development ở đây để tránh ảnh hưởng việc cài devDependencies nếu có logic khác
+# Mặc định npm install sẽ cài tất cả
 
 COPY package*.json ./
 RUN npm install
@@ -12,25 +13,28 @@ CMD ["npm", "run", "dev"]
 # Production stage
 FROM node:18-alpine AS production
 WORKDIR /app
-ENV NODE_ENV=production
 
-# Copy package files
+# 1. Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
+# 2. Install TOÀN BỘ dependencies (bao gồm cả devDependencies để chạy build)
+# Lưu ý: Không set ENV NODE_ENV=production ở dòng này
 RUN npm ci
 
-# Copy source code
+# 3. Copy source code
 COPY . .
 
-# Build the application (needs babel from devDependencies)
+# 4. Build ứng dụng (Babel sẽ biên dịch src -> dist)
 RUN npm run build
 
-# Remove devDependencies to reduce image size (optional but recommended)
+# 5. Sau khi build xong, xóa devDependencies để giảm nhẹ image
 RUN npm prune --production
 
-# Expose port
+# 6. Thiết lập biến môi trường runtime
+ENV NODE_ENV=production
+
+# 7. Expose port
 EXPOSE 5000
 
-# Start the application
+# 8. Start server
 CMD ["npm", "run", "start:prod"]
