@@ -8,6 +8,8 @@ dotenv.config();
 
 const emailConfig = {
     service: 'gmail',  // Dùng service thay vì host
+    port: 587,
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
         pass: process.env.EMAIL_PASS || 'xdrumuwidxgmfrih'
