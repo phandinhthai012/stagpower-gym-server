@@ -7,7 +7,8 @@ import {
     chatWithAIController,
     generateCompleteWorkoutSuggestionController,
     generateWorkoutOnlyController,
-    generateNutritionOnlyController
+    generateNutritionOnlyController,
+    updateAISuggestionController
 } from "../controllers/aiSuggestion.controller";
 import { authenticateToken } from "../middleware/auth";
 
@@ -28,6 +29,8 @@ router.post("/", authenticateToken, createAISuggestionController);
 router.get("/member/:memberId", authenticateToken, getAISuggestionByMemberIdController);
 
 router.get("/:id", authenticateToken, getAISuggestionByIdController);
+
+router.put("/:id", authenticateToken, updateAISuggestionController);
 
 router.delete("/:id", authenticateToken, deleteAISuggestionByIdController);
 
