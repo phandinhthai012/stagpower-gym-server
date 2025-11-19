@@ -7,7 +7,7 @@ import subscriptionRoutes from "./subscription.route.js";
 import paymentRoutes from "./payment.route.js";
 import branchRoutes from "./branch.route.js";
 import discountRoutes from "./discount.route.js";
-import bookingRequestRoutes from "./bookingrequest.route.js";
+import bookingRequestRoutes from "./bookingRequest.route.js";
 import scheduleRoutes from "./schedule.route.js";
 import checkInRoutes from "./checkIn.route.js";
 import exerciseRoutes from "./exercise.route.js";
