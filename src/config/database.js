@@ -13,11 +13,13 @@ const connectDB = async () => {
     const conn = await mongoose.connect(MONGODB_URI, {
       dbName: MONGODB_DATABASE
     });
-    console.log(`MongoDB Connected Successfully to ${MONGODB_DATABASE}`);
-
+    console.log(`✅ MongoDB Connected Successfully to ${MONGODB_DATABASE}`);
+    return conn;
   } catch (error) {
-    console.error('Database connection error:', error);
-    process.exit(1);
+    console.error('❌ Database connection error:', error);
+    // Không exit ngay, throw error để caller handle
+    // Server vẫn có thể start và retry connection sau
+    throw error;
   }
 };
 
