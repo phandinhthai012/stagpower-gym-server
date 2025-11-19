@@ -7,18 +7,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const emailConfig = {
-    service: 'gmail',  // Dùng service thay vì host
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // Gmail bắt buộc khi dùng port 465
     auth: {
-        user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
-        pass: process.env.EMAIL_PASS || 'xdrumuwidxgmfrih'
-    },
-    connectionTimeout: 60000,  // Tăng lên 60s
-    greetingTimeout: 60000,
-    socketTimeout: 60000,
-    tls: {
-        rejectUnauthorized: false
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS  // App password, không phải mật khẩu Gmail
     }
-}
+};
 
 const transporter = nodemailer.createTransport(emailConfig);
 
@@ -46,21 +42,13 @@ const verifyConnection = async () => {
     }
 
     try {
-        // Set timeout cho verification
-        const verifyPromise = await transporter.verify();
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Verification timeout after 15 seconds')), 15000)
-        );
-        
-        await Promise.race([verifyPromise, timeoutPromise]);
-        console.log('✅ Email connection verified successfully');
+        await transporter.verify();
+        console.log("✅ Gmail SMTP connected successfully");
     } catch (error) {
-        // Không throw error, chỉ log warning để không block server start
-        console.warn('⚠️  Email connection verification failed:', error.message || error);
-        console.warn('⚠️  Server will continue to start, but email sending may fail');
-        console.warn('⚠️  To skip verification, set SKIP_EMAIL_VERIFICATION=true in environment variables');
+        console.warn("⚠️ Gmail SMTP connection failed:", error.message);
+        console.warn("⚠️ Server vẫn chạy nhưng gửi mail có thể fail");
     }
-}
+};
 
 export { 
     transporter,
