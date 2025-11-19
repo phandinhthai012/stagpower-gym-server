@@ -6,44 +6,25 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-// const emailConfig = {
-//     service: 'gmail',
-//     auth: {
-//         user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
-//         pass: process.env.EMAIL_PASS || 'xdrumuwidxgmfrih'
-//     },
-//     // Tăng timeout để tránh lỗi ETIMEDOUT trên Render
-//     connectionTimeout: 30000, // 30 giây (tăng từ 10s)
-//     greetingTimeout: 30000,   // 30 giây
-//     socketTimeout: 30000,     // 30 giây
-//     // Dùng pool connection để tái sử dụng connection
-//     pool: true,
-//     maxConnections: 1,
-//     maxMessages: 3,
-//     tls: {
-//         // Không check certificate nếu server config chưa chuẩn
-//         rejectUnauthorized: false 
-//     }
-// }
-
 const emailConfig = {
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER || 'thaiphan09242002@gmail.com',
+        pass: process.env.EMAIL_PASS || 'gold soyk lguh plnz'
     },
-    // Thử các options này
-    requireTLS: true,
-    connectionTimeout: 60000, // Tăng lên 60s
-    greetingTimeout: 60000,
-    socketTimeout: 60000,
+    // Tăng timeout để tránh lỗi ETIMEDOUT trên Render
+    connectionTimeout: 30000, // 30 giây (tăng từ 10s)
+    greetingTimeout: 30000,   // 30 giây
+    socketTimeout: 30000,     // 30 giây
+    // Dùng pool connection để tái sử dụng connection
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 3,
     tls: {
-        rejectUnauthorized: false,
-        ciphers: 'SSLv3'
+        // Không check certificate nếu server config chưa chuẩn
+        rejectUnauthorized: false 
     }
-};
+}
 
 const transporter = nodemailer.createTransport(emailConfig);
 
