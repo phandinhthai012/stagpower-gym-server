@@ -81,7 +81,7 @@ const verifyConnection = async () => {
 
     try {
         // Set timeout cho verification
-        const verifyPromise = transporter.verify();
+        const verifyPromise = await transporter.verify();
         const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Verification timeout after 15 seconds')), 15000)
         );
