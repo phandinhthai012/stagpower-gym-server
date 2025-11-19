@@ -13,6 +13,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: development
+    env_file:
+      - .env
     environment:
       - HOSTNAME=0.0.0.0
       - PORT=5000
@@ -20,7 +22,6 @@ services:
       - MONGODB_URI=mongodb://mongo:27017
       - MONGODB_DATABASE=stagpower-gym
       - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
     depends_on:
       - mongo
     ports:

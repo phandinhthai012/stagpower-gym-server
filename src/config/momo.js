@@ -1,7 +1,9 @@
 import axios from 'axios';
 import crypto from 'crypto';
-
+import dotenv from 'dotenv';
+dotenv.config();
 const endpoint = 'https://test-payment.momo.vn';
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5000';
 export const momoConfig = {
     accessKey: 'F8BBA842ECF85',
     secretKey: 'K951B6PE1waDMi640xX08PD3vg6EkVlz',
@@ -9,15 +11,15 @@ export const momoConfig = {
     partnerCode: 'MOMO',
     redirectUrl: 'http://localhost:3000/',
     // ipnUrl: 'https://fb4206e827d9.ngrok-free.app/api/payments/momo/ipn',
-    ipnUrl: process.env.MOMO_IPN_URL || 'https://fb4206e827d9.ngrok-free.app/api/payments/momo/ipn',
+    ipnUrl: `${SERVER_URL}/api/payments/momo/ipn` || 'https://fb4206e827d9.ngrok-free.app/api/payments/momo/ipn',
     requestType: "captureWallet",
     extraData: '',
     paymentCode: 'T8Qii53fAXyUftPV3m9ysyRhEanUs9KlOPfHgpMR0ON50U10Bh+vZdpJU7VY4z+Z2y77fJHkoDc69scwwzLuW5MzeUKTwPo3ZMaB29imm6YulqnWfTkgzqRaion+EuD7FN9wZ4aXE1+mRt0gHsU193y+yxtRgpmY7SDMU9hCKoQtYyHsfFR5FUAOAKMdw2fzQqpToei3rnaYvZuYaxolprm9+/+WIETnPUDlxCYOiw7vPeaaYQQH0BF0TxyU3zu36ODx980rJvPAgtJzH1gUrlxcSS1HQeQ9ZaVM1eOK/jl8KJm6ijOwErHGbgf/hVymUQG65rHU2MWz9U8QUjvDWA==',
     orderGroupId: '',
     autoCapture: true,
-    lang: 'vi'
+    lang: 'vi',
 }
-// https://7ba5400fe302.ngrok-free.app
+
 
 
 export const createMomoPayment = async (amount, orderId, requestId) => {

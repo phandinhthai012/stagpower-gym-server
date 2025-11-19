@@ -16,8 +16,9 @@ import { verifyConnection } from './config/nodemailer.js';
 import { generalApiRateLimiter } from './middleware/rateLimit.js';
 import socketHandler from './socket/index.js';
 import { SOCKET_CONFIG } from './config/socket.js';
+import corsOptions from './config/cors.js';
 
-// socket.io
+// socket.io  
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
@@ -32,30 +33,6 @@ const port = process.env.PORT || 5000;
 const server = createServer(app);
 
 const io = new Server(server, SOCKET_CONFIG);
-
-
-// CORS configuration
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:3001',
-    'http://localhost:8080',
-    'https://localhost:5173',
-    'https://localhost:3000'
-  ],
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-    'refreshtoken',
-  ],
-};
 
 (async () => {
   await connectDB();
