@@ -40,7 +40,10 @@ const verifyConnection = async () => {
         console.log('⚠️  Email verification skipped (SKIP_EMAIL_VERIFICATION=true)');
         return;
     }
-
+    console.log(process.env.SKIP_EMAIL_VERIFICATION);
+    console.log(process.env.EMAIL_USER);
+    console.log(process.env.EMAIL_PASS);
+    console.log(process.env.NODE_ENV);
     try {
         await transporter.verify();
         console.log("✅ Gmail SMTP connected successfully");
