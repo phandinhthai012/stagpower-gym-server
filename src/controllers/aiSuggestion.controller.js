@@ -6,7 +6,8 @@ import {
     chatWithAI,
     generateCompleteWorkoutSuggestion,
     generateNutritionOnlySuggestion,
-    generateWorkoutOnlySuggestion
+    generateWorkoutOnlySuggestion,
+    updateAISuggestion
 } from "../services/AISuggestion.service";
 
 import response from "../utils/response";
@@ -149,6 +150,45 @@ export const generateNutritionOnlyController = async (req, res, next) => {
             statusCode: 200,
             message: "Nutrition suggestion generated successfully",
             data: nutritionSuggestion,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// Update AI Suggestion (for PT to edit)
+export const updateAISuggestionController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+        const user = req.user;
+        
+        // If trainer is updating, add trainerId and send notification
+        if (user.role === 'trainer') {
+            updateData.trainerId = user._id;
+        }
+        
+        const updatedSuggestion = await updateAISuggestion(id, updateData);
+        
+        // Send notification to member if trainer updated
+        if (user.role === 'trainer') {
+            const { createNotification } = require("../services/notification.service");
+            const socketService = require("../services/socket.service").default;
+            
+            await createNotification({
+                userId: updatedSuggestion.memberId,
+                title: "Gợi ý AI đã được cập nhật",
+                message: `HLV ${user.fullName} đã cập nhật gợi ý AI của bạn. Vui lòng kiểm tra lại.`,
+                type: "INFO"
+            });
+            
+            socketService.emitToUser(updatedSuggestion.memberId, "ai_suggestion_updated", updatedSuggestion);
+        }
+        
+        response(res, {
+            statusCode: 200,
+            message: "AISuggestion updated successfully",
+            data: updatedSuggestion,
         });
     } catch (error) {
         next(error);

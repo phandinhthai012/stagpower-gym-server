@@ -125,6 +125,16 @@ const aiSuggestionSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    trainerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false,
+    },
+    trainerNotes: {
+        type: String,
+        default: '',
+        maxlength: [2000, 'Trainer notes cannot exceed 2000 characters']
+    },
 }, {
     timestamps: true,
     collection: 'aiSuggestions'

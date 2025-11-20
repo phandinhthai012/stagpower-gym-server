@@ -209,3 +209,40 @@ export const generateNutritionOnlySuggestion = async (data) => {
     
     return savedSuggestion;
 }
+
+export const updateAISuggestion = async (id, updateData) => {
+    const { trainerId, trainerNotes, status, ...otherData } = updateData;
+    
+    const aiSuggestion = await AISuggestion.findById(id);
+    if (!aiSuggestion) {
+        const error = new Error("AISuggestion not found");
+        error.statusCode = 404;
+        error.code = "AISUGGESTION_NOT_FOUND";
+        throw error;
+    }
+    
+    // Update fields
+    if (trainerId !== undefined) {
+        aiSuggestion.trainerId = trainerId;
+    }
+    if (trainerNotes !== undefined) {
+        aiSuggestion.trainerNotes = trainerNotes || '';
+    }
+    if (status !== undefined) {
+        aiSuggestion.status = status;
+    }
+    
+    // Update other fields (but be careful with nested objects)
+    Object.keys(otherData).forEach(key => {
+        if (otherData[key] !== undefined && key !== 'exercises' && key !== 'evaluation' && key !== 'dietPlan') {
+            try {
+                aiSuggestion[key] = otherData[key];
+            } catch (err) {
+                console.warn(`Could not update field ${key}:`, err);
+            }
+        }
+    });
+    
+    await aiSuggestion.save();
+    return aiSuggestion;
+}
