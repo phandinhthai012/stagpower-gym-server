@@ -12,8 +12,7 @@ import errorHandler from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import router from './routes/index.js';
 import { initCronJobs } from './jobs/index.js';
-// import { verifyConnection } from './config/nodemailer.js';
-import { verifyConnection } from './config/resend.js'
+import { verifyConnection } from './config/resend.js';
 import { generalApiRateLimiter } from './middleware/rateLimit.js';
 import socketHandler from './socket/index.js';
 import { SOCKET_CONFIG } from './config/socket.js';

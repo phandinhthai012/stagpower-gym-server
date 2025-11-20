@@ -1,10 +1,9 @@
 // src/config/cors.js
 const getCorsOrigins = () => {
-    // Nếu có CORS_ORIGIN từ env, split bằng dấu phẩy
+
     if (process.env.CORS_ORIGIN) {
         return process.env.CORS_ORIGIN.split(',').map(origin => origin.trim());
     }
-
     // Mặc định cho development
     return [
         'http://localhost:3000',

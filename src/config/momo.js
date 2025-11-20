@@ -1,7 +1,8 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import dotenv from 'dotenv';
-dotenv.config();
+
+
+
 const endpoint = 'https://test-payment.momo.vn';
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5000';
 export const momoConfig = {
@@ -10,7 +11,6 @@ export const momoConfig = {
     orderInfo: 'pay with MoMo',
     partnerCode: 'MOMO',
     redirectUrl: 'http://localhost:3000/',
-    // ipnUrl: 'https://fb4206e827d9.ngrok-free.app/api/payments/momo/ipn',
     ipnUrl: `${SERVER_URL}/api/payments/momo/ipn` || 'https://fb4206e827d9.ngrok-free.app/api/payments/momo/ipn',
     requestType: "captureWallet",
     extraData: '',
@@ -59,21 +59,6 @@ export const createMomoPayment = async (amount, orderId, requestId) => {
 }
 
 
-/*{
-    partnerCode: 'MOMO',đá
-    orderId: 'MOMO1712108682648',dá
-    requestId: 'MOMO1712108682648',á
-    amount: 10000,dá
-    orderInfo: 'pay with MoMo',dá
-    orderType: 'momo_wallet',
-    transId: 4014083433,
-    resultCode: 0,
-    message: 'Thành công.',
-    payType: 'qr',
-    responseTime: 1712108811069,
-    extraData: '',
-    signature: '10398fbe70cd3052f443da99f7c4befbf49ab0d0c6cd7dc14efffd6e09a526c0'
-  }*/
 export function verifyIpnSignature(payload) {
     const { secretKey, accessKey } = momoConfig;
     const rawSignature =

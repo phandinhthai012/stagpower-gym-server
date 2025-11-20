@@ -1,41 +1,20 @@
 import nodemailer from 'nodemailer';
-import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+// không sử dụng nodemailer thay bằng resend
 
 const emailConfig = {
     host: "smtp.gmail.com",
     port: 465,
-    secure: true, // Gmail bắt buộc khi dùng port 465
+    secure: true, 
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS  // App password, không phải mật khẩu Gmail
+        pass: process.env.EMAIL_PASS
     }
 };
 
 const transporter = nodemailer.createTransport(emailConfig);
 
-// Email templates configuration
-const emailTemplates = {
-    otp: {
-        subject: 'Mã Xác Thực - StagPower Gym',
-        html: fs.readFileSync(path.join(__dirname, '../templates/otp.html'), 'utf8')
-    },
-    welcome: {
-        subject: 'Chào Mừng - StagPower Gym',
-        html: fs.readFileSync(path.join(__dirname, '../templates/welcome.html'), 'utf8')
-    },
-    subscriptionExpiryWarning: {
-        subject: 'Thông Báo - StagPower Gym',
-        html: fs.readFileSync(path.join(__dirname, '../templates/subscription-expiry-warning.html'), 'utf8')
-    }
-};
 
 const verifyConnection = async () => {
-    // Skip verification trong production nếu có flag
     if (process.env.SKIP_EMAIL_VERIFICATION === 'true') {
         console.log('⚠️  Email verification skipped (SKIP_EMAIL_VERIFICATION=true)');
         return;
@@ -56,5 +35,4 @@ const verifyConnection = async () => {
 export { 
     transporter,
     verifyConnection,
-    emailTemplates
 }
