@@ -3,109 +3,127 @@ import Schedule from '../models/Schedule.js';
 import CheckIn from '../models/CheckIn.js';
 import Notification from '../models/Notification.js';
 import socketService from '../services/socket.service.js';
+import { updatePointsSession } from '../services/schedule.service.js';
 
 const TIMEZONE = 'Asia/Ho_Chi_Minh';
-const CONFIRM_THRESHOLD_MINUTES = 60;    // tự động xác nhận trước 1 giờ
-const END_GRACE_MINUTES = 30;            // thời gian chờ sau khi kết thúc
-const PENDING_CANCEL_DAYS = 7;           // hủy lịch Pending quá hạn 7 ngày
+const PENDING_CANCEL_AFTER_HOURS = 2;    // hủy lịch Pending quá hạn 2 giờ
+const AUTO_COMPLETE_HOURS = 24;        // hoàn thành lịch sau 24 giờ
 
 async function emitNotification(userId, title, message) {
   if (!userId) return;
-  const notification = await Notification.create({
-    userId,
-    type: 'INFO',
-    title,
-    message,
-  });
-  socketService.emitToUser(userId, 'notification', notification);
+  try {
+    const notification = await Notification.create({
+      userId,
+      type: 'WARNING',
+      title,
+      message,
+    });
+    socketService.emitToUser(userId, 'notification', notification);
+  } catch (e) {
+    console.error('Failed to emit notification', e);
+  }
 }
 
+// Job 1: CHẠY MỖI 1 GIỜ - Cancel các lịch Pending quá hạn
 export function autoUpdateSchedules() {
-  const schedule = '0 1 * * *'; // 01:00 hàng ngày
+  const schedule = '0 * * * *'; // Chạy mỗi 1 giờ vào đầu giờ (00:00, 01:00, 02:00, ...)
 
   cron.schedule(schedule, async () => {
     const now = new Date();
-    const confirmThreshold = new Date(now.getTime() + CONFIRM_THRESHOLD_MINUTES * 60000);
-    const cancelThreshold = new Date(now.getTime() - PENDING_CANCEL_DAYS * 24 * 60 * 60000); // ngày hôm nay trừ đi 7 ngày
+    const cancelThreshold = new Date(now.getTime() - PENDING_CANCEL_AFTER_HOURS * 60 * 60 * 1000);
+
+    console.log(`[cron] Running schedule auto-cancel job at ${now.toISOString()}...`);
 
     try {
-      // 1. Auto-confirm lịch sắp diễn ra
-    //   const confirmedResult = await Schedule.updateMany(
-    //     {
-    //       status: 'Pending',
-    //       dateTime: { $gt: now, $lte: confirmThreshold },
-    //     },
-    //     { $set: { status: 'Confirmed' } }
-    //   );
-    //   if (confirmedResult.modifiedCount > 0) {
-    //     console.log(`[cron] Auto-confirmed ${confirmedResult.modifiedCount} schedules`);
-    //   }
+      // 1. Tìm các schedule sẽ bị cancel để gửi thông báo
+      const schedulesToCancel = await Schedule.find({
+        status: 'Pending',
+        dateTime: { $lt: cancelThreshold },
+      });
 
-      // 2 & 3. Auto-complete / NoShow
-    //   const candidates = await Schedule.find({
-    //     status: { $in: ['Pending', 'Confirmed'] },
-    //     dateTime: { $lte: new Date(now.getTime() - END_GRACE_MINUTES * 60000) },
-    //   });
+      if (schedulesToCancel.length === 0) {
+        // console.log('[cron] No pending schedules to cancel.');
+        return;
+      }
 
-    //   for (const schedule of candidates) {
-    //     const endTime = new Date(schedule.dateTime.getTime() + schedule.durationMinutes * 60000);
-    //     if (endTime.getTime() + END_GRACE_MINUTES * 60000 > now.getTime()) continue;
+      console.log(`[cron] Found ${schedulesToCancel.length} schedules to cancel.`);
 
-    //     // Tìm check-in hoàn thành của member trong khoảng thời gian buổi tập
-    //     const checkIn = await CheckIn.findOne({
-    //       memberId: schedule.memberId,
-    //       status: 'Completed',
-    //       checkInTime: { $lte: endTime },
-    //       checkOutTime: { $gte: schedule.dateTime },
-    //     });
-
-    //     if (checkIn) {
-    //       if (schedule.status !== 'Completed') {
-    //         schedule.status = 'Completed';
-    //         await schedule.save();
-    //         await emitNotification(
-    //           schedule.memberId,
-    //           'Buổi tập đã hoàn thành',
-    //           'Buổi tập với huấn luyện viên đã được ghi nhận hoàn thành.'
-    //         );
-    //         await emitNotification(
-    //           schedule.trainerId,
-    //           'Buổi tập đã hoàn thành',
-    //           'Buổi tập với học viên đã được ghi nhận hoàn thành.'
-    //         );
-    //       }
-    //     } else if (schedule.status !== 'NoShow') {
-    //       schedule.status = 'NoShow';
-    //       await schedule.save();
-    //       await emitNotification(
-    //         schedule.memberId,
-    //         'Buổi tập bị đánh dấu vắng mặt',
-    //         'Buổi tập đã qua nhưng không ghi nhận check-in. Vui lòng liên hệ huấn luyện viên nếu có nhầm lẫn.'
-    //       );
-    //       await emitNotification(
-    //         schedule.trainerId,
-    //         'Học viên vắng buổi tập',
-    //         'Buổi tập đã qua nhưng không ghi nhận check-in từ học viên.'
-    //       );
-    //     }
-    //   }
-
-      // 4. Cancel các lịch Pending đã quá hạn > 7 ngày
+      // 2. Cancel các lịch Pending đã quá hạn > 2 giờ
       const cancelledResult = await Schedule.updateMany(
         {
           status: 'Pending',
           dateTime: { $lt: cancelThreshold },
         },
-        { $set: { 
+        {
+          $set: {
             status: 'Cancelled',
-            notes: 'Hủy lịch do quá hạn đã quá 7 ngày'
-         } }
+            notes: 'Hệ thống tự động hủy do quá hạn xác nhận (quá 2 giờ so với giờ tập).'
+          }
+        }
       );
+
       if (cancelledResult.modifiedCount > 0) {
         console.log(`[cron] Auto-cancelled ${cancelledResult.modifiedCount} stale pending schedules`);
+
+        // 3. Gửi thông báo cho các member có lịch bị cancel
+        for (const schedule of schedulesToCancel) {
+          if (schedule.memberId) {
+            await emitNotification(
+              schedule.memberId,
+              'Hủy lịch PT',
+              `Lịch PT của bạn vào lúc ${new Date(schedule.dateTime).toLocaleTimeString('vi-VN')} ngày ${new Date(schedule.dateTime).toLocaleDateString('vi-VN')} đã bị hủy do quá hạn xác nhận (quá 2 giờ so với giờ tập).`
+            );
+          }
+        }
       }
     } catch (error) {
       console.error('[cron] Error running schedule auto-update job:', error);
+    }
+  }, { timezone: TIMEZONE });
+}
+
+// job 2: CHẠY HÀNG NGÀY (Lúc 02:00 sáng) ===
+export function handleDailyScheduleJobs() {
+  const schedule = '0 2 * * *'; // 02:00 AM mỗi ngày
+
+  cron.schedule(schedule, async () => {
+    console.log(`[cron-daily] Running daily schedule cleanup...`);
+    const now = new Date();
+    const completeThreshold = new Date(now.getTime() - AUTO_COMPLETE_HOURS * 60 * 60 * 1000);
+
+    try {
+      const schedulesToComplete = await Schedule.find({
+        status: 'Confirmed',
+        dateTime: { $lt: completeThreshold }
+      });
+
+      if (schedulesToComplete.length > 0) {
+        console.log(`[cron-daily] Found ${schedulesToComplete.length} schedules to auto-complete.`);
+
+        for (const schedule of schedulesToComplete) {
+          try {
+            schedule.status = 'Completed';
+            schedule.notes = (schedule.notes ? schedule.notes + ". " : "") + "[System] Auto-completed.";
+            await schedule.save();
+
+            // Trừ buổi tập
+            const result = await updatePointsSession(schedule._id);
+
+            // Gửi thông báo (chỉ cần gửi 1 lần/ngày nên để ở đây hợp lý)
+            await emitNotification(
+              schedule.memberId,
+              'Buổi tập hoàn thành',
+              `Hệ thống đã tự động xác nhận hoàn thành buổi tập ngày ${new Date(schedule.dateTime).toLocaleDateString('vi-VN')}.`
+            );
+          } catch (err) {
+            console.error(`[cron-daily] Failed schedule ${schedule._id}:`, err.message);
+          }
+        }
+      } else {
+        console.log('[cron-daily] No schedules to complete.');
+      }
+    } catch (error) {
+      console.error('[cron-daily] Error:', error);
     }
   }, { timezone: TIMEZONE });
 }

@@ -1,10 +1,8 @@
 import cron from 'node-cron';
-import { format, addDays } from 'date-fns';
 import Subscription from '../models/Subscription.js';
 import Notification from '../models/Notification.js';
 import { autoUnsuspend } from '../services/subscription.service.js';
 import socketService from '../services/socket.service.js';
-import { sendSubscriptionExpiringSoonEmail } from '../utils/emailHelper.js';
 
 export function expireSubscriptionJobs() {
 
@@ -115,14 +113,18 @@ export function informSubscriptionIscomingToExpire() {
                     }
                     const message = `Gói tập "${pkg.name}" của bạn sẽ hết hạn trong ${days} ngày tới. Vui lòng gia hạn để không bị gián đoạn.`;
                     // tạo notification 
-                    const notification = await Notification.create({
-                        userId: user._id,
-                        type: 'WARNING',
-                        title: 'Gói tập sắp hết hạn!',
-                        message: message,
-                    });
-                    // socket 
-                    socketService.emitToUser(user._id, 'subscription_expiring_soon', notification);
+                    try {
+                        const notification = await Notification.create({
+                            userId: user._id,
+                            type: 'WARNING',
+                            title: 'Gói tập sắp hết hạn!',
+                            message: message,
+                        });
+                        // socket 
+                        socketService.emitToUser(user._id, 'subscription_expiring_soon', notification);
+                    } catch (notifError) {
+                        console.error(`[cron] Failed to create notification for subscription ${sub._id}:`, notifError.message);
+                    }
 
                     // gửi mail triển khai sau 
                 }
