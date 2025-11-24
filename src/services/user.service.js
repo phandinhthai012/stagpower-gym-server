@@ -250,7 +250,7 @@ export const getAllMembersWithPagination = async (options = {}) => {
     }
 
     if (options.membership_level) {
-        query.memberInfo.membership_level = options.membership_level;
+        query['memberInfo.membership_level'] = options.membership_level;
     }
 
     return await paginate(User, query, {
