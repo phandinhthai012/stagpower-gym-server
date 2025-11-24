@@ -5,7 +5,7 @@ import {
 } from './subscription.jobs.js';
 import { expireOldBookingRequests } from './booking.jobs.js';
 import { autoCheckoutStaleCheckins } from './checkIn.jobs.js';
-import { autoUpdateSchedules } from './schedule.jobs.js';
+import { autoUpdateSchedules, handleDailyScheduleJobs } from './schedule.jobs.js';
 import { keepServerAlive } from './server.jobs.js';
 
 export function initCronJobs() {
@@ -21,6 +21,7 @@ export function initCronJobs() {
     autoCheckoutStaleCheckins();
     // schedule jobs
     autoUpdateSchedules();
+    handleDailyScheduleJobs();
 }
 
 
