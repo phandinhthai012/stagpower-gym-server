@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Rating from "../models/Rating.js";
 import User from "../models/User.js";
 import Schedule from "../models/Schedule.js";
+import Subscription from "../models/Subscription.js";
 
 // Check if member has completed sessions with trainer
 const hasCompletedSessionsWithTrainer = async (memberId, trainerId) => {
@@ -210,5 +211,107 @@ export const getTrainerAverageRating = async (trainerId) => {
         averageRating: Math.round(result[0].averageRating * 10) / 10,
         totalRatings: result[0].totalRatings
     };
+};
+
+// Get top 6 highest ratings for landing page
+export const getTopRatings = async (limit = 6) => {
+    // Get top ratings sorted by rating (descending), then by createdAt (descending)
+    const ratings = await Rating.find({})
+        .populate('memberId', 'fullName email photo memberInfo')
+        .populate('trainerId', 'fullName email photo trainerInfo')
+        .sort({ rating: -1, createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+    // Get subscription info for each member
+    const memberIds = ratings.map(r => {
+        const member = r.memberId;
+        return member._id ? member._id.toString() : member.toString();
+    });
+    const uniqueMemberIds = [...new Set(memberIds)];
+    
+    // Get most recent active or completed subscription for each member
+    const subscriptions = await Subscription.find({
+        memberId: { $in: uniqueMemberIds }
+    })
+        .populate('packageId', 'name type membershipType durationMonths ptSessions')
+        .populate('branchId', 'name address')
+        .sort({ createdAt: -1 })
+        .lean();
+
+    // Group subscriptions by memberId
+    const subscriptionsByMember = {};
+    subscriptions.forEach(sub => {
+        // memberId in Subscription is not populated, so it's an ObjectId
+        const memberId = sub.memberId.toString();
+        if (!subscriptionsByMember[memberId] || 
+            new Date(sub.createdAt) > new Date(subscriptionsByMember[memberId].createdAt)) {
+            subscriptionsByMember[memberId] = sub;
+        }
+    });
+
+    // Format ratings with subscription info
+    const formattedRatings = ratings.map(rating => {
+        const member = rating.memberId;
+        const memberId = member._id ? member._id.toString() : member.toString();
+        const subscription = subscriptionsByMember[memberId];
+        
+        // Format package name
+        let packageName = 'Chưa có gói';
+        if (subscription && subscription.packageId) {
+            const pkg = subscription.packageId;
+            if (pkg.type === 'Membership') {
+                const months = pkg.durationMonths || 0;
+                const membershipType = pkg.membershipType === 'VIP' ? 'VIP' : 'Basic';
+                packageName = `Gói ${membershipType} ${months} tháng`;
+            } else if (pkg.type === 'Combo') {
+                const months = pkg.durationMonths || 0;
+                const ptSessions = pkg.ptSessions || 0;
+                packageName = `Gói Combo ${months} tháng + ${ptSessions} PT`;
+            } else if (pkg.type === 'PT') {
+                const ptSessions = pkg.ptSessions || 0;
+                packageName = `${ptSessions} buổi PT cá nhân`;
+            }
+        }
+
+        // Format branch name
+        let branchName = 'Tất cả chi nhánh';
+        if (subscription && subscription.branchId) {
+            branchName = subscription.branchId.name || 'Tất cả chi nhánh';
+        } else if (subscription && !subscription.branchId) {
+            branchName = 'Tất cả chi nhánh';
+        }
+
+        // Format member role
+        let memberRole = 'Hội viên';
+        if (rating.memberId.memberInfo) {
+            if (rating.memberId.memberInfo.is_student) {
+                memberRole = 'Hội viên HSSV';
+            } else if (rating.memberId.memberInfo.membership_level === 'vip') {
+                memberRole = 'Hội viên VIP';
+            } else {
+                memberRole = 'Hội viên Basic';
+            }
+        }
+
+        // Get trainer name
+        const trainerName = rating.trainerId && rating.trainerId.fullName 
+            ? rating.trainerId.fullName 
+            : 'PT';
+
+        return {
+            id: rating._id.toString(),
+            name: rating.memberId.fullName,
+            role: memberRole,
+            avatar: rating.memberId.photo || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
+            rating: rating.rating,
+            text: rating.comment || 'Đánh giá tuyệt vời!',
+            package: packageName,
+            branch: branchName,
+            trainerName: trainerName
+        };
+    });
+
+    return formattedRatings;
 };
 

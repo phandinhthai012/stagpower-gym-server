@@ -7,11 +7,15 @@ import {
     deleteRatingController,
     getRatingsByTrainerController,
     getTrainerAverageRatingController,
-    getRateableTrainersController
+    getRateableTrainersController,
+    getTopRatingsController
 } from "../controllers/rating.controller.js";
 import { authenticateToken, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
+
+// Public routes (for landing page)
+router.get("/top", getTopRatingsController);
 
 // Member routes (require authentication)
 router.get("/member/my-ratings", authenticateToken, getRatingsByMemberController);

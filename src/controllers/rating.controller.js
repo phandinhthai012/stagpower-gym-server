@@ -6,7 +6,8 @@ import {
     deleteRating,
     getRatingsByTrainer,
     getTrainerAverageRating,
-    getRateableTrainers
+    getRateableTrainers,
+    getTopRatings
 } from "../services/rating.service.js";
 import response from "../utils/response.js";
 
@@ -144,6 +145,22 @@ export const getRateableTrainersController = async (req, res, next) => {
             statusCode: 200,
             message: "Rateable trainers fetched successfully",
             data: trainers
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getTopRatingsController = async (req, res, next) => {
+    try {
+        const limit = parseInt(req.query.limit) || 6;
+        const ratings = await getTopRatings(limit);
+
+        response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Top ratings fetched successfully",
+            data: ratings
         });
     } catch (error) {
         next(error);
