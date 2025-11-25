@@ -249,8 +249,8 @@ Hãy phân tích message này và tạo kế hoạch phù hợp với yêu cầu
       }
     ],
     "notes": "Gợi ý về hydration, timing, chia sẻ calo giữa các bữa...",
-    "status": "Pending"
-  }
+  },
+  "status": "Pending"
 }
 
 [QUY TẮC NGHIÊM NGẶT - PHẢI TUÂN THỦ]
