@@ -11,7 +11,7 @@
     "start": "node dist/app.js",
     "dev": "nodemon -r @babel/register src/app.js",
     "start:prod": "node dist/app.js",
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   },
   "keywords": [],
   "author": "",

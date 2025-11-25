@@ -1,44 +1,82 @@
+# Tên của workflow - hiển thị trong GitHub Actions tab
 name: CI/CD to Render
 
+# Định nghĩa các sự kiện trigger workflow này
 on:
+  # Trigger khi có code được push lên branch main
   push:
     branches: [ "main" ]
+  # Trigger khi có pull request vào branch main (để test trước khi merge)
   pull_request:
     branches: [ "main" ]
 
+# Định nghĩa các jobs (công việc) sẽ chạy trong workflow
 jobs:
+  # Job 1: Build và test code
   build-and-test:
+    # Chạy trên runner Ubuntu mới nhất (máy ảo được GitHub cung cấp)
     runs-on: ubuntu-latest
     
+    # Các bước (steps) sẽ thực hiện trong job này
     steps:
+      # Bước 1: Checkout code từ repository về runner
+      # Sử dụng action chính thức của GitHub để lấy code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Bước 2: Setup môi trường Node.js
+      # Sử dụng action chính thức để cài đặt Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
+          # Phiên bản Node.js cần dùng (phải khớp với engines trong package.json)
           node-version: '18'
+          # Bật cache cho npm để tăng tốc độ install dependencies
+          # GitHub sẽ cache node_modules dựa trên package-lock.json
           cache: 'npm'
 
+      # Bước 3: Cài đặt dependencies
+      # npm ci: Clean install - xóa node_modules và cài lại từ package-lock.json
+      # Nhanh hơn và đảm bảo version chính xác hơn npm install
       - name: Install dependencies
         run: npm ci
 
+      # Bước 4: Kiểm tra xem project có test files không
+      # Để tránh chạy test khi không có test files (sẽ gây lỗi)
       - name: Check if tests exist
+        # id: đặt tên cho step này để có thể reference ở các step khác
         id: check-tests
         run: |
+          # Kiểm tra các điều kiện sau (OR):
+          # - Có thư mục tests/ hoặc __tests__/
+          # - Có file jest.config.js hoặc jest.config.json
+          # - Có file *.test.js hoặc *.spec.js trong project
+          # Nếu có bất kỳ điều kiện nào đúng -> set has_tests=true
+          # Ngược lại -> set has_tests=false
           if [ -d "tests" ] || [ -d "__tests__" ] || [ -f "jest.config.js" ] || [ -f "jest.config.json" ] || find . -name "*.test.js" -o -name "*.spec.js" | grep -q .; then
             echo "has_tests=true" >> $GITHUB_OUTPUT
           else
             echo "has_tests=false" >> $GITHUB_OUTPUT
           fi
 
+      # Bước 5: Chạy tests (chỉ chạy nếu có test files)
+      # if: điều kiện - chỉ chạy step này nếu has_tests == 'true'
+      # npm test sẽ chạy script "test" trong package.json
+      # Lưu ý: package.json đã có flag --passWithNoTests để tránh fail khi không có tests
       - name: Run tests
         if: steps.check-tests.outputs.has_tests == 'true'
         run: npm test
 
+      # Bước 6: Build project
+      # npm run build sẽ chạy Babel để transpile code từ src/ sang dist/
+      # Babel sẽ convert ES6+ code thành code tương thích với Node.js
       - name: Build project
         run: npm run build
 
+      # Bước 7: Verify build output
+      # Kiểm tra xem thư mục dist/ đã được tạo thành công chưa
+      # Nếu không có dist/ -> build failed -> exit 1 (fail workflow)
+      # Nếu có dist/ -> build successful -> tiếp tục
       - name: Verify build
         run: |
           if [ ! -d "dist" ]; then
@@ -47,12 +85,23 @@ jobs:
           fi
           echo "Build successful!"
 
+  # Job 2: Deploy lên Render
   deploy-to-render:
+    # Chỉ chạy job này sau khi job build-and-test hoàn thành thành công
     needs: build-and-test
+    # Chạy trên runner Ubuntu
     runs-on: ubuntu-latest
+    # Điều kiện: chỉ chạy khi:
+    # - Đang ở branch main (github.ref == 'refs/heads/main')
+    # - Và event là push (không phải pull_request)
+    # Điều này đảm bảo chỉ deploy khi code được merge vào main, không deploy khi PR
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
+      # Bước duy nhất: Trigger Render deployment
+      # Gửi POST request đến Render Deploy Hook URL
+      # URL này được lưu trong GitHub Secrets với tên RENDER_DEPLOY_HOOK
+      # Render sẽ tự động deploy code mới nhất từ repository
       - name: Trigger Render Deploy
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
