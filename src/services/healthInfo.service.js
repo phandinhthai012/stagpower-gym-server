@@ -25,9 +25,10 @@ export const getHealthInfoById = async (id) => {
 }
 
 export const getHealthInfoByMemberId = async (memberId) => {
-    // Lấy HealthInfo mới nhất của member (thay vì chỉ lấy một bản ghi đầu tiên)
+    // Lấy HealthInfo mới nhất của member (member 1-N healthInfo relationship)
+    // Sort theo updatedAt để lấy bản được cập nhật gần nhất, nếu không có thì lấy theo createdAt
     const healthInfo = await HealthInfo.findOne({ memberId })
-        .sort({ createdAt: -1 })
+        .sort({ updatedAt: -1, createdAt: -1 })
         .limit(1);
     if (!healthInfo) {
         const error = new Error("Health info not found");
@@ -39,8 +40,10 @@ export const getHealthInfoByMemberId = async (memberId) => {
 }
 
 export const getLatestHealthInfoByMemberId = async (memberId) => {
+    // Lấy HealthInfo mới nhất của member (member 1-N healthInfo relationship)
+    // Sort theo updatedAt để lấy bản được cập nhật gần nhất, nếu không có thì lấy theo createdAt
     const healthInfo = await HealthInfo.findOne({ memberId })
-        .sort({createdAt: -1 })
+        .sort({ updatedAt: -1, createdAt: -1 })
         .limit(1);
     
     if (!healthInfo) {
