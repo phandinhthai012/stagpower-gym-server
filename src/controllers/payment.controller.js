@@ -7,7 +7,9 @@ import {
     deletePayment,
     completePaymentMomo,
     completePayment,
-    getPaymentStats
+    getPaymentStats,
+    sendPaymentReminder,
+    bulkSendReminders
 } from '../services/payment.service.js';
 import {
     createMomoPayment,
@@ -326,6 +328,43 @@ export const getPaymentStatsController = async (req, res, next) => {
             statusCode: 200,
             message: "Payment stats retrieved successfully",
             data: stats
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const sendPaymentReminderController = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await sendPaymentReminder(id);
+        return response(res, {
+            success: true,
+            statusCode: 200,
+            message: "Payment reminder sent successfully",
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const bulkSendRemindersController = async (req, res, next) => {
+    try {
+        const { invoiceIds } = req.body;
+        if (!invoiceIds || !Array.isArray(invoiceIds) || invoiceIds.length === 0) {
+            return response(res, {
+                success: false,
+                statusCode: 400,
+                message: "invoiceIds array is required"
+            });
+        }
+        const result = await bulkSendReminders(invoiceIds);
+        return response(res, {
+            success: result.success,
+            statusCode: 200,
+            message: `Sent ${result.successful} reminders, ${result.failed} failed`,
+            data: result
         });
     } catch (error) {
         next(error);

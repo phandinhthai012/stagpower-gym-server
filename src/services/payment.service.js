@@ -390,3 +390,76 @@ export const getPaymentStats = async () => {
         monthlyCount: monthlyStats[0]?.count || 0
     };
 }
+
+export const sendPaymentReminder = async (paymentId) => {
+    const payment = await Payment.findById(paymentId)
+        .populate('memberId', 'fullName email phone')
+        .populate({
+            path: 'subscriptionId',
+            populate: {
+                path: 'packageId',
+                select: 'name price'
+            }
+        });
+    
+    if (!payment) {
+        const error = new Error("Payment not found");
+        error.statusCode = 404;
+        error.code = "PAYMENT_NOT_FOUND";
+        throw error;
+    }
+
+    if (!payment.memberId) {
+        const error = new Error("Member not found for this payment");
+        error.statusCode = 404;
+        error.code = "MEMBER_NOT_FOUND";
+        throw error;
+    }
+
+    if (payment.paymentStatus === 'Completed') {
+        const error = new Error("Payment already completed");
+        error.statusCode = 400;
+        error.code = "PAYMENT_ALREADY_COMPLETED";
+        throw error;
+    }
+
+    // Create notification for the member
+    const { createNotification } = await import('./notification.service.js');
+    const amount = payment.amount || 0;
+    const invoiceInfo = payment.invoiceNumber ? ` - Mã HĐ: ${payment.invoiceNumber}` : '';
+    await createNotification({
+        userId: payment.memberId._id,
+        title: 'Nhắc nhở thanh toán',
+        message: `Bạn có một hóa đơn chưa thanh toán. Số tiền: ${amount.toLocaleString('vi-VN')} VND${invoiceInfo}`,
+        type: 'WARNING',
+        status: 'UNREAD'
+    });
+
+    return {
+        payment,
+        message: 'Reminder sent successfully'
+    };
+}
+
+export const bulkSendReminders = async (paymentIds) => {
+    const results = [];
+    const errors = [];
+
+    for (const paymentId of paymentIds) {
+        try {
+            const result = await sendPaymentReminder(paymentId);
+            results.push({ paymentId, success: true, data: result });
+        } catch (error) {
+            errors.push({ paymentId, success: false, error: error.message });
+        }
+    }
+
+    return {
+        success: errors.length === 0,
+        results,
+        errors,
+        total: paymentIds.length,
+        successful: results.length,
+        failed: errors.length
+    };
+}
