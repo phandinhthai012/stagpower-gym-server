@@ -107,6 +107,14 @@ export const updateScheduleByIdController = async (req, res, next) => {
             notes,
             assignedExercises
         } = req.body;
+
+        // Get old schedule info BEFORE updating to detect changes
+        const oldSchedule = await getScheduleById(id);
+        // Handle both populated (object with _id) and non-populated (ObjectId) trainerId
+        const oldTrainerId = oldSchedule.trainerId?._id || oldSchedule.trainerId;
+        const isChangingTrainer = trainerId && oldTrainerId && 
+            String(trainerId) !== String(oldTrainerId);
+
         const schedule = await updateScheduleById(id, {
             memberId,
             trainerId,
@@ -117,44 +125,93 @@ export const updateScheduleByIdController = async (req, res, next) => {
             status,
             notes,
             assignedExercises
-        });
+        }, req.user);
 
         // Fetch member and trainer info for better notifications
         const User = require('../models/User.js').default;
         const member = await User.findById(schedule.memberId).select('fullName email');
-        const trainer = await User.findById(schedule.trainerId).select('fullName email');
+        const newTrainer = await User.findById(schedule.trainerId).select('fullName email');
+        const oldTrainer = isChangingTrainer ? await User.findById(oldTrainerId).select('fullName email') : null;
 
         const scheduleDate = new Date(schedule.dateTime);
         const formattedDate = scheduleDate.toLocaleDateString('vi-VN', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
-            day: 'numeric',
+            day: 'numeric'
+        });
+        const formattedTime = scheduleDate.toLocaleTimeString('vi-VN', {
             hour: '2-digit',
             minute: '2-digit'
         });
 
-        // 🔔 TẠO NOTIFICATION CHO MEMBER
-        await createNotification({
-            userId: schedule.memberId,
-            title: "Lịch tập đã được cập nhật",
-            message: `Lịch tập với HLV ${trainer?.fullName || 'N/A'} vào ${formattedDate} đã được cập nhật. Vui lòng kiểm tra lại thông tin.`,
-            type: "INFO"
-        });
+        // Check if it's a direct schedule (no member)
+        const isDirectSchedule = schedule.notes?.includes('[LỊCH TRỰC]') || 
+            schedule.memberId.toString() === schedule.trainerId.toString();
 
-        // 🔔 TẠO NOTIFICATION CHO TRAINER
-        await createNotification({
-            userId: schedule.trainerId,
-            title: "Lịch dạy đã được cập nhật",
-            message: `Lịch dạy với hội viên ${member?.fullName || 'N/A'} vào ${formattedDate} đã được cập nhật.`,
-            type: "INFO"
-        });
+        // 🔔 TẠO NOTIFICATION CHO MEMBER (chỉ cho lịch PT, không phải lịch trực)
+        if (!isDirectSchedule) {
+            let memberNotificationTitle = "Lịch tập đã được cập nhật";
+            let memberNotificationMessage = "";
+
+            if (isChangingTrainer) {
+                // Thông báo rõ ràng khi đổi PT
+                memberNotificationTitle = "PT của bạn đã được thay đổi";
+                memberNotificationMessage = `Lịch tập của bạn vào lúc ${formattedTime} ngày ${formattedDate} đã được đổi từ HLV ${oldTrainer?.fullName || 'N/A'} sang HLV ${newTrainer?.fullName || 'N/A'}. Vui lòng kiểm tra lại thông tin.`;
+            } else {
+                // Thông báo khi cập nhật khác
+                memberNotificationMessage = `Lịch tập với HLV ${newTrainer?.fullName || 'N/A'} vào lúc ${formattedTime} ngày ${formattedDate} đã được cập nhật. Vui lòng kiểm tra lại thông tin.`;
+            }
+
+            await createNotification({
+                userId: schedule.memberId,
+                title: memberNotificationTitle,
+                message: memberNotificationMessage,
+                type: "INFO"
+            });
+        }
+
+        // 🔔 TẠO NOTIFICATION CHO TRAINER MỚI
+        if (isChangingTrainer) {
+            // Thông báo cho PT mới
+            await createNotification({
+                userId: schedule.trainerId,
+                title: "Lịch dạy mới đã được giao",
+                message: `Bạn đã được phân công dạy hội viên ${member?.fullName || 'N/A'} vào lúc ${formattedTime} ngày ${formattedDate}. Lịch này được chuyển từ HLV ${oldTrainer?.fullName || 'N/A'}.`,
+                type: "INFO"
+            });
+
+            // Thông báo cho PT cũ (nếu có và không phải là lịch trực)
+            if (!isDirectSchedule && oldTrainerId && oldTrainerId.toString() !== schedule.trainerId.toString()) {
+                await createNotification({
+                    userId: oldTrainerId,
+                    title: "Lịch dạy đã được chuyển",
+                    message: `Lịch dạy với hội viên ${member?.fullName || 'N/A'} vào lúc ${formattedTime} ngày ${formattedDate} đã được chuyển sang HLV ${newTrainer?.fullName || 'N/A'}.`,
+                    type: "WARNING"
+                });
+            }
+        } else {
+            // Thông báo khi cập nhật khác (không đổi PT)
+            await createNotification({
+                userId: schedule.trainerId,
+                title: "Lịch dạy đã được cập nhật",
+                message: `Lịch dạy với hội viên ${member?.fullName || 'N/A'} vào lúc ${formattedTime} ngày ${formattedDate} đã được cập nhật.`,
+                type: "INFO"
+            });
+        }
 
         // 📡 SOCKET EMIT CHO MEMBER
-        socketService.emitToUser(schedule.memberId, "schedule_updated", schedule);
+        if (!isDirectSchedule) {
+            socketService.emitToUser(schedule.memberId, "schedule_updated", schedule);
+        }
 
-        // 📡 SOCKET EMIT CHO TRAINER
+        // 📡 SOCKET EMIT CHO TRAINER MỚI
         socketService.emitToUser(schedule.trainerId, "schedule_updated", schedule);
+
+        // 📡 SOCKET EMIT CHO TRAINER CŨ (nếu đổi PT)
+        if (isChangingTrainer && oldTrainerId && oldTrainerId.toString() !== schedule.trainerId.toString()) {
+            socketService.emitToUser(oldTrainerId, "schedule_updated", schedule);
+        }
 
         // 📡 SOCKET EMIT CHO ADMIN
         socketService.emitToRoom(roleRoomMap.admin, "schedule_updated", schedule);

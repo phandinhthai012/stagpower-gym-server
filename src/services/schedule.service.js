@@ -210,7 +210,7 @@ export const getScheduleById = async (id) => {
     return schedule;
 };
 
-export const updateScheduleById = async (id, scheduleNewData) => {
+export const updateScheduleById = async (id, scheduleNewData, currentUser = null) => {
     const schedule = await Schedule.findById(id);
     if (!schedule) {
         const error = new Error("Schedule not found");
@@ -218,6 +218,101 @@ export const updateScheduleById = async (id, scheduleNewData) => {
         error.code = "SCHEDULE_NOT_FOUND";
         throw error;
     }
+
+    // Check if trying to change trainerId/staffId
+    const newTrainerId = scheduleNewData?.trainerId;
+    const isChangingTrainer = newTrainerId && 
+        newTrainerId.toString() !== schedule.trainerId.toString();
+
+    // Prevent changing trainer/staff if schedule is already completed, cancelled, or no-show
+    // Allow changing for 'Confirmed' status ONLY if user is admin or staff
+    if (isChangingTrainer) {
+        const restrictedStatuses = ['Completed', 'NoShow', 'Cancelled'];
+        
+        // Check if schedule status is restricted
+        if (restrictedStatuses.includes(schedule.status)) {
+            const error = new Error(
+                `Cannot change PT/Staff for schedule with status '${schedule.status}'. ` +
+                `Only schedules with status 'Pending' or 'Confirmed' can have their trainer/staff changed.`
+            );
+            error.statusCode = 400;
+            error.code = "CANNOT_CHANGE_TRAINER_COMPLETED";
+            throw error;
+        }
+
+        // If schedule is 'Confirmed', only admin/staff can change trainer
+        if (schedule.status === 'Confirmed') {
+            const userRole = currentUser?.role;
+            if (!currentUser || (userRole !== 'admin' && userRole !== 'staff')) {
+                const error = new Error(
+                    `Cannot change PT/Staff for schedule with status 'Confirmed'. ` +
+                    `Only admin or staff can change trainer/staff for confirmed schedules. ` +
+                    `Please cancel the schedule first if you need to change the trainer/staff.`
+                );
+                error.statusCode = 403;
+                error.code = "INSUFFICIENT_PERMISSIONS";
+                throw error;
+            }
+        }
+
+        // Validate new trainer exists and is valid
+        const newTrainer = await User.findById(newTrainerId);
+        if (!newTrainer) {
+            const error = new Error("Invalid trainer/staff");
+            error.statusCode = 400;
+            error.code = "INVALID_TRAINER";
+            throw error;
+        }
+
+        // Check if it's a direct schedule or PT schedule
+        const isDirectSchedule = schedule.notes?.includes('[LỊCH TRỰC]') || 
+            schedule.memberId.toString() === schedule.trainerId.toString();
+        
+        // For PT schedules, new trainer must be a trainer
+        if (!isDirectSchedule && newTrainer.role !== 'trainer') {
+            const error = new Error("Invalid trainer - must be a trainer for PT schedule");
+            error.statusCode = 400;
+            error.code = "INVALID_TRAINER";
+            throw error;
+        }
+
+        // Check new trainer availability if dateTime is being changed or kept
+        const newDateTime = scheduleNewData?.dateTime ? new Date(scheduleNewData.dateTime) : schedule.dateTime;
+        const newDuration = scheduleNewData?.durationMinutes || schedule.durationMinutes;
+        
+        if (newDateTime >= new Date()) {
+            const BUFFER_TIME_MINUTES = 15;
+            const startTime = new Date(newDateTime.getTime());
+            const endTime = new Date(newDateTime.getTime() + newDuration * 60000);
+            const endTimeWithBuffer = new Date(endTime.getTime() + BUFFER_TIME_MINUTES * 60000);
+            
+            const conflictingSchedule = await Schedule.findOne({
+                trainerId: newTrainerId,
+                _id: { $ne: id }, // Exclude current schedule
+                status: { $in: ['Pending', 'Confirmed'] },
+                dateTime: {
+                    $gte: new Date(startTime.getTime() - 180 * 60000),
+                    $lte: new Date(endTimeWithBuffer.getTime() + 180 * 60000)
+                }
+            });
+
+            if (conflictingSchedule) {
+                const conflictEnd = new Date(
+                    new Date(conflictingSchedule.dateTime).getTime() +
+                    conflictingSchedule.durationMinutes * 60000 +
+                    BUFFER_TIME_MINUTES * 60000
+                );
+
+                if (startTime < conflictEnd && endTimeWithBuffer > new Date(conflictingSchedule.dateTime)) {
+                    const error = new Error("New trainer/staff is not available at this time");
+                    error.statusCode = 400;
+                    error.code = "TRAINER_NOT_AVAILABLE";
+                    throw error;
+                }
+            }
+        }
+    }
+
     const oldStatus = schedule.status;
     const newStatus = scheduleNewData?.status;
     console.log(oldStatus, newStatus);

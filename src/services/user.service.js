@@ -1,6 +1,7 @@
 import User from "../models/User";
 import { paginate } from "../utils/pagination";
 import Subscription from '../models/Subscription.js';
+import Schedule from '../models/Schedule.js';
 export const getAllUsers = async () => {
     const users = await User.find();
     return users;
@@ -158,7 +159,7 @@ export const updateUserProfile = async (userId, updateData) => {
     return updatedUser;
 }
 
-export const changeStatus = async ({ userId, status }) => {
+export const changeStatus = async ({ userId, status, currentUserId }) => {
     const allowed = ["active", "inactive", "pending", "banned"];
     if (!allowed.includes(status)) {
         const error = new Error("Invalid status value");
@@ -178,9 +179,45 @@ export const changeStatus = async ({ userId, status }) => {
         return user;
     }
 
+    // Prevent self-deactivation
+    if (currentUserId && userId === currentUserId.toString() && 
+        (status === 'inactive' || status === 'banned')) {
+        const error = new Error("You cannot deactivate your own account");
+        error.statusCode = 400;
+        error.code = "CANNOT_DEACTIVATE_SELF";
+        throw error;
+    }
+
+    // Check if trying to deactivate (inactive or banned)
+    if (status === 'inactive' || status === 'banned') {
+        // Check if user is trainer or staff
+        if (user.role === 'trainer' || user.role === 'staff') {
+            // Check if user has active schedules (future schedules that are not completed/cancelled)
+            const now = new Date();
+            const activeSchedules = await Schedule.find({
+                trainerId: userId,
+                dateTime: { $gte: now }, // Future schedules
+                status: { $in: ['Pending', 'Confirmed'] } // Only active statuses
+            });
+
+            if (activeSchedules.length > 0) {
+                const error = new Error(
+                    `Cannot deactivate ${user.role === 'trainer' ? 'PT' : 'nhân viên'} because they have ${activeSchedules.length} active schedule(s) in the future. Please cancel or complete all schedules first.`
+                );
+                error.statusCode = 400;
+                error.code = "HAS_ACTIVE_SCHEDULES";
+                error.data = { scheduleCount: activeSchedules.length };
+                throw error;
+            }
+        }
+    }
+
+    // Invalidate tokens when deactivating
     const updated = await User.findByIdAndUpdate(
         userId,
-        { $set: { status } },
+        status === 'inactive' || status === 'banned' 
+            ? { $set: { status }, $inc: { tokenVersion: 1 } }
+            : { $set: { status } },
         { new: true, runValidators: true }
     );
     return updated;

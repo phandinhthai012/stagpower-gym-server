@@ -32,6 +32,15 @@ export const authenticateToken = async (req, res, next) => {
             error.code = 'UNAUTHORIZED';
             return next(error);
         }
+
+        // Check if user account is active
+        if (user.status === 'banned' || user.status === 'inactive') {
+            const error = new Error('Your account has been ' + 
+                (user.status === 'banned' ? 'banned' : 'deactivated'));
+            error.statusCode = 403;
+            error.code = 'ACCOUNT_DISABLED';
+            return next(error);
+        }
         
         req.user = user;
 

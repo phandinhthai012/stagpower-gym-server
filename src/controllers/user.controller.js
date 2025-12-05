@@ -117,7 +117,20 @@ export const changeStatusController = async (req, res, next) => {
     try {
         const { userId } = req.params;
         const { status } = req.body || {};
-        const updated = await changeStatus({ userId, status });
+        
+        if (!status) {
+            const error = new Error("Status is required");
+            error.statusCode = 400;
+            error.code = "STATUS_REQUIRED";
+            return next(error);
+        }
+
+        const currentUserId = req.user?._id;
+        const updated = await changeStatus({ 
+            userId, 
+            status, 
+            currentUserId 
+        });
         return response(res, {
             success: true,
             statusCode: 200,
