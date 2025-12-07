@@ -1,3 +1,25 @@
+const STAGPOWER_GYM_CONTEXT = `
+[THÔNG TIN VỀ PHÒNG GYM STAGPOWER]
+- Tên: StagPower Gym - Hệ thống phòng gym chuyên nghiệp tại TP.HCM
+- Vị trí: Có nhiều chi nhánh tại TP.HCM
+- Giờ hoạt động: 6:00 AM - 10:00 PM (tùy chi nhánh)
+- Thiết bị: Đầy đủ thiết bị hiện đại bao gồm:
+  + Khu vực cardio: máy chạy bộ, xe đạp, máy elliptical, máy leo cầu thang
+  + Khu vực free weights: tạ đơn, tạ đôi, barbell, dumbbell đầy đủ trọng lượng
+  + Máy tập chuyên biệt: máy tập ngực, lưng, chân, vai, tay
+  + Khu vực functional training: TRX, kettlebells, battle ropes, resistance bands
+  + Khu vực stretching: thảm yoga, bóng tập, foam rollers
+- Dịch vụ: 
+  + Personal Training với huấn luyện viên chuyên nghiệp
+  + Tư vấn dinh dưỡng và sức khỏe
+  + Đo InBody phân tích thành phần cơ thể
+  + Hệ thống check-in thông minh bằng QR Code
+  + Theo dõi tiến độ tập luyện qua app
+- Văn hóa: Môi trường thân thiện, chuyên nghiệp, khuyến khích hội viên đạt mục tiêu sức khỏe
+- Đối tượng: Phù hợp cho mọi trình độ từ người mới bắt đầu đến vận động viên chuyên nghiệp
+`;
+
+
 export const createChatbotConsultationPrompt = (healthInfo, userInfo, conversationHistory, currentMessage) => {
   // Format conversation history
   const historyText = conversationHistory && conversationHistory.length > 0
@@ -25,6 +47,8 @@ export const createChatbotConsultationPrompt = (healthInfo, userInfo, conversati
 
   return `
 Bạn là AI Trainer Assistant của phòng gym StagPower. Bạn là huấn luyện viên cá nhân thân thiện, nhiệt tình và chuyên nghiệp với hơn 15 năm kinh nghiệm trong việc tập luyện và dinh dưỡng.
+
+${STAGPOWER_GYM_CONTEXT}
 
 [THÔNG TIN HỘI VIÊN]
 - Họ tên: ${userInfo?.fullName || 'Hội viên'}
@@ -129,6 +153,8 @@ export const createCompleteWorkoutSuggestionPrompt = (healthInfo, userInfo, mess
     : '';
   return `
 Bạn là Huấn luyện viên Cá nhân và Chuyên gia Dinh dưỡng cao cấp với hơn 15 năm kinh nghiệm.
+
+${STAGPOWER_GYM_CONTEXT}
 
 [THÔNG TIN HỘI VIÊN]
 - Họ tên: ${userInfo.fullName || 'Hội viên'}
@@ -300,6 +326,8 @@ const segmentalFatText = healthInfo?.segmentalFatAnalysis
 Bạn là Huấn luyện viên Thể hình chuyên nghiệp với hơn 15 năm kinh nghiệm. 
 Nhiệm vụ của bạn là tạo kế hoạch tập luyện an toàn, hiệu quả và phù hợp với hội viên.
 
+${STAGPOWER_GYM_CONTEXT}
+
 [THÔNG TIN HỘI VIÊN]
 - Họ tên: ${userInfo?.fullName || 'Hội viên'}
 - Giới tính: ${healthInfo?.gender || 'N/A'}
@@ -422,6 +450,8 @@ export const createNutritionOnlySuggestionPrompt = (healthInfo, userInfo, messag
   return `
 Bạn là Chuyên gia Dinh dưỡng Thể thao với hơn 15 năm kinh nghiệm. 
 Nhiệm vụ của bạn là tạo kế hoạch dinh dưỡng phù hợp với mục tiêu và tình trạng sức khỏe của hội viên.
+
+${STAGPOWER_GYM_CONTEXT}
 
 [THÔNG TIN HỘI VIÊN]
 - Họ tên: ${userInfo?.fullName || 'Hội viên'}
