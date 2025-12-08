@@ -14,7 +14,7 @@ export const aiConfig = {
         apiKey: process.env.GEMINI_API_KEY || "your-api-key",
         model: "gemini-2.5-flash", 
         // model: "gemini-1.5-flash",
-        maxTokens: 1000,
+        // maxTokens: 1000,
         // Giảm mạnh độ "sáng tạo" để model tập trung vào logic và cú pháp đúng.
         // 0.0 là xác định nhất, 0.2 là một lựa chọn an toàn để code nhất quán.
         temperature: 0.2,
@@ -24,7 +24,7 @@ export const aiConfig = {
         // Hoạt động cùng với temperature, đảm bảo model chọn từ một nhóm token hợp lý.
         topP: 0.85,
         // Đặt giới hạn đầu ra đủ lớn để chứa được các file code API hoàn chỉnh.
-        maxOutputTokens: 4096,
+        // maxOutputTokens: 4096,
     },
 };
 
@@ -66,14 +66,96 @@ if (aiConfig.provider === "gemini") {
 
     aiClient = {
         generate: async (prompt) => {
-            const result = await gModel.generateContent(prompt);
-            const rawText = result.response.text();
-            if (!rawText || rawText.trim().length === 0) {
-                throw new Error('AI returned empty response');
+            try {
+                const result = await gModel.generateContent(prompt);
+                
+                // Kiểm tra response có tồn tại không
+                if (!result || !result.response) {
+                    console.error('❌ AI response không hợp lệ: result hoặc result.response là null/undefined');
+                    throw new Error('AI returned invalid response structure');
+                }
+                
+                // Kiểm tra finishReason để biết tại sao response rỗng
+                const finishReason = result.response.candidates?.[0]?.finishReason;
+                if (finishReason) {
+                    console.log('📋 Finish reason:', finishReason);
+                    
+                    if (finishReason === 'SAFETY') {
+                        console.error('❌ Response bị block bởi safety filters');
+                        throw new Error('AI response was blocked by safety filters. Please try again with different content.');
+                    } else if (finishReason === 'MAX_TOKENS') {
+                        console.warn('⚠️ Response bị truncate do vượt quá token limit');
+                    } else if (finishReason === 'RECITATION') {
+                        console.warn('⚠️ Response bị block do recitation policy');
+                        throw new Error('AI response was blocked due to content policy. Please try again.');
+                    }
+                }
+                
+                // Lấy text từ response
+                let rawText;
+                try {
+                    rawText = result.response.text();
+                } catch (textError) {
+                    // Nếu text() fail, thử lấy từ candidates
+                    console.warn('⚠️ result.response.text() failed, trying to get from candidates...');
+                    rawText = result.response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    
+                    if (!rawText) {
+                        console.error('❌ Không thể lấy text từ response:', {
+                            finishReason: finishReason,
+                            candidates: result.response.candidates,
+                            candidatesLength: result.response.candidates?.length,
+                            textError: textError.message
+                        });
+                        throw new Error(`AI returned empty response. Finish reason: ${finishReason || 'unknown'}`);
+                    }
+                }
+                
+                // Kiểm tra rawText có rỗng không
+                if (!rawText || rawText.trim().length === 0) {
+                    console.error('❌ AI returned empty response. Details:', {
+                        finishReason: finishReason,
+                        candidatesCount: result.response.candidates?.length,
+                        candidates: result.response.candidates,
+                        promptLength: prompt?.length
+                    });
+                    throw new Error(`AI returned empty response. This may be due to safety filters or invalid prompt. Finish reason: ${finishReason || 'unknown'}`);
+                }
+                
+                console.log('✅ AI response received, length:', rawText.length);
+                
+                // Parse JSON
+                try {
+                    const fixed = jsonrepair(rawText);
+                    const json = JSON.parse(fixed);
+                    return json;
+                } catch (parseError) {
+                    console.error('❌ Lỗi parse JSON từ AI response:', {
+                        error: parseError.message,
+                        rawTextPreview: rawText.substring(0, 200)
+                    });
+                    throw new Error(`Failed to parse AI response as JSON: ${parseError.message}`);
+                }
+                
+            } catch (error) {
+                // Re-throw nếu đã là custom error
+                if (error.message && (
+                    error.message.includes('AI returned') ||
+                    error.message.includes('safety filters') ||
+                    error.message.includes('content policy') ||
+                    error.message.includes('Failed to parse')
+                )) {
+                    throw error;
+                }
+                
+                // Wrap other errors
+                console.error('❌ AI Generation Error:', {
+                    message: error.message,
+                    stack: error.stack,
+                    errorType: error.constructor.name
+                });
+                throw new Error(`AI generation failed: ${error.message}`);
             }
-            const fixed = jsonrepair(rawText);
-            const json = JSON.parse(fixed);
-            return json;
         },
     };
 }
