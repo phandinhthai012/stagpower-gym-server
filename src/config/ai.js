@@ -1,7 +1,8 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { jsonrepair } from 'jsonrepair';
-
+import dotenv from "dotenv";
+dotenv.config();
 export const aiConfig = {
     provider: "gemini", // hoặc "openai"
     openai: {
@@ -11,7 +12,8 @@ export const aiConfig = {
     },
     gemini: {
         apiKey: process.env.GEMINI_API_KEY || "your-api-key",
-        model: "gemini-2.0-flash", 
+        model: "gemini-2.5-flash", 
+        // model: "gemini-1.5-flash",
         maxTokens: 1000,
         // Giảm mạnh độ "sáng tạo" để model tập trung vào logic và cú pháp đúng.
         // 0.0 là xác định nhất, 0.2 là một lựa chọn an toàn để code nhất quán.
