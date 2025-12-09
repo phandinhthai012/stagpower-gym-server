@@ -7,6 +7,7 @@ import { expireOldBookingRequests } from './booking.jobs.js';
 import { autoCheckoutStaleCheckins } from './checkIn.jobs.js';
 import { autoUpdateSchedules, handleDailyScheduleJobs } from './schedule.jobs.js';
 import { keepServerAlive } from './server.jobs.js';
+import { autoChangeDiscountStatus } from './discount.jobs.js';
 
 export function initCronJobs() {
     // server jobs
@@ -22,6 +23,8 @@ export function initCronJobs() {
     // schedule jobs
     autoUpdateSchedules();
     handleDailyScheduleJobs();
+    // discount jobs
+    autoChangeDiscountStatus();
 }
 
 

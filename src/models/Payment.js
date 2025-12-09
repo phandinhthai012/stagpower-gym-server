@@ -27,7 +27,6 @@ const paymentSchema = new mongoose.Schema({
         },
         type: {
             type: String,
-            enum: ['HSSV', 'VIP', 'Group', 'Company', 'Voucher'],
         },
         discountPercentage: {
             type: Number,

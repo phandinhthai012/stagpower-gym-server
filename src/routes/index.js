@@ -14,7 +14,7 @@ import exerciseRoutes from "./exercise.route.js";
 import aiSuggestionRoutes from "./aiSuggestion.route.js";
 import notificationRoutes from "./notification.route.js";
 import ratingRoutes from "./rating.route.js";
-
+import discountTypeRoutes from "./discountType.route.js";
 const router = express.Router();
 
 router.get("/ping", (req, res) => {
@@ -48,8 +48,10 @@ router.use("/exercises", exerciseRoutes);
 
 router.use("/ai-suggestions", aiSuggestionRoutes);
 
-router.use("/notifications", notificationRoutes);//  not test yet
+router.use("/notifications", notificationRoutes);
 
 router.use("/ratings", ratingRoutes);
+
+router.use('/discount-types', discountTypeRoutes);
 
 export default router;

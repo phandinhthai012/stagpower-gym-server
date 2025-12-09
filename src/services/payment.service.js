@@ -2,6 +2,7 @@ import Payment from "../models/Payment";
 import Subscription from "../models/Subscription";
 import Package from "../models/Package";
 import User from "../models/User";
+import Discount from "../models/Discount.js";
 import {
     changeSubscriptionStatus
 
@@ -272,6 +273,23 @@ export const updatePayment = async (id, paymentData) => {
     if (payment && paymentData.paymentStatus === "Completed" && payment.subscriptionId) {
         await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
         
+        // NEW: Tăng usageCount cho discount nếu có
+        if (wasNotCompleted && payment.discountDetails && payment.discountDetails.length > 0) {
+            for (const discountDetail of payment.discountDetails) {
+                if (discountDetail.discountId) {
+                    try {
+                        const discount = await Discount.findById(discountDetail.discountId);
+                        if (discount) {
+                            await discount.incrementUsage();
+                        }
+                    } catch (error) {
+                        console.error('Error incrementing discount usage:', error);
+                        // Không throw error để không ảnh hưởng payment flow
+                    }
+                }
+            }
+        }
+
         // Update member's total spending (only if status changed from not-completed to completed)
         if (wasNotCompleted) {
             await updateMemberTotalSpending(payment.memberId, payment.amount);
@@ -305,6 +323,22 @@ export const completePayment = async (id) => {
     
     // Handle subscription activation
     await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
+
+
+    if (payment.discountDetails && payment.discountDetails.length > 0) {
+        for (const discountDetail of payment.discountDetails) {
+            if (discountDetail.discountId) {
+                try {
+                    const discount = await Discount.findById(discountDetail.discountId);
+                    if (discount) {
+                        await discount.incrementUsage();
+                    }
+                } catch (error) {
+                    console.error('Error incrementing discount usage:', error);
+                }
+            }
+        }
+    }
     
     // Update member's total spending
     await updateMemberTotalSpending(payment.memberId, payment.amount);
@@ -339,6 +373,21 @@ export const completePaymentMomo = async (id, transactionId, resultCode) => {
     // Handle subscription activation
     await handleSubscriptionActivation(payment.subscriptionId, payment.paymentDate);
     
+
+    if (payment.discountDetails && payment.discountDetails.length > 0) {
+        for (const discountDetail of payment.discountDetails) {
+            if (discountDetail.discountId) {
+                try {
+                    const discount = await Discount.findById(discountDetail.discountId);
+                    if (discount) {
+                        await discount.incrementUsage();
+                    }
+                } catch (error) {
+                    console.error('Error incrementing discount usage:', error);
+                }
+            }
+        }
+    }
     // Update member's total spending
     await updateMemberTotalSpending(payment.memberId, payment.amount);
     
