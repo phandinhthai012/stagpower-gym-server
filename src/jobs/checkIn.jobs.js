@@ -14,8 +14,8 @@ export function autoCheckoutStaleCheckins() {
         console.log('[cron] Running job: Auto-checkout stale check-ins...');
 
         try {
-            // Đặt ngưỡng thời gian, ví dụ: 12 giờ
-            const STALE_THRESHOLD_HOURS = 12;
+            // Đặt ngưỡng thời gian, ví dụ: 8 giờ (vì thời gian tập và thời gian mở của gym)
+            const STALE_THRESHOLD_HOURS = 8;
             const thresholdTime = new Date();
             // thời gian hết hạn là 12 giờ trước
             thresholdTime.setHours(thresholdTime.getHours() - STALE_THRESHOLD_HOURS);
@@ -50,6 +50,9 @@ export function autoCheckoutStaleCheckins() {
                         // socket đến user và admin
                         socketService.emitToUser(checkin.memberId, 'checkIn_checked_out', notification);
                         socketService.emitToRoom(roleRoomMap.admin, 'checkIn_checked_out', notification);
+                        if (checkin.branchId) {
+                            socketService.emitToBranch(checkin.branchId, 'checkIn_checked_out', notification);
+                        }
                     } catch (notifError) {
                         console.error(`[cron] Failed to create notification for check-in ${checkin._id}:`, notifError.message);
                     }

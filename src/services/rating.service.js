@@ -222,6 +222,10 @@ export const getTopRatings = async (limit = 6) => {
         .sort({ rating: -1, createdAt: -1 })
         .limit(limit)
         .lean();
+    
+    if (!ratings || ratings.length === 0) {
+        return [];
+    }
 
     // Get subscription info for each member
     const memberIds = ratings.map(r => {
