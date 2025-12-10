@@ -222,6 +222,10 @@ export const getTopRatings = async (limit = 6) => {
         .sort({ rating: -1, createdAt: -1 })
         .limit(limit * 2) // Get more to account for filtering
         .lean();
+    
+    if (!ratings || ratings.length === 0) {
+        return [];
+    }
 
     // Filter out ratings with null memberId (member was deleted)
     const validRatings = ratings.filter(r => r.memberId && r.memberId._id);

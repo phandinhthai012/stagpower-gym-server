@@ -244,7 +244,7 @@ Hãy phân tích message này và tạo kế hoạch phù hợp với yêu cầu
   "workoutDuration": 90,
   "difficultyLevel": "Beginner",
   "notes": "Lưu ý về khởi động, giãn cơ, an toàn...",
-  "nutrition": "string",
+  "nutrition": "Gợi ý về di động, chia sẻ calo giữa các bữa, nên ăn như thế nào lưu ý gì...",
   "dietPlan": {
     "dailyCalories": 2000,
     "macros": {
@@ -375,7 +375,7 @@ Hãy phân tích message này và tạo kế hoạch tập luyện phù hợp v�
 {
   "recommendationDate": "${today}",
   "goal": "mục tiêu cụ thể bằng tiếng Việt",
-  "nutrition": "string",
+  "nutrition": "Gợi ý về di động, chia sẻ calo giữa các bữa, nên ăn như thế nào lưu ý gì...",
   "exercises": [
     {
       "name": "Tên bài tập (tiếng Việt hoặc tiếng Anh)",
@@ -411,7 +411,7 @@ Hãy phân tích message này và tạo kế hoạch tập luyện phù hợp v�
 {
   "recommendationDate": "${today}",
   "goal": "Tăng cơ bắp và sức mạnh",
-  "nutrition": "string",
+  "nutrition": "Gợi ý về di động, chia sẻ calo giữa các bữa, nên ăn như thế nào lưu ý gì...",
   "exercises": [
     {
       "name": "Barbell Bench Press",
@@ -553,7 +553,7 @@ Hãy phân tích message này và tạo kế hoạch dinh dưỡng phù hợp v�
     ],
     "notes": "Lưu ý về hydration (2-3 lít nước/ngày), timing, chia sẻ calo giữa các bữa, lưu ý dị ứng nếu có..."
   },
-  "nutrition": String,
+  "nutrition": "Gợi ý về di động, chia sẻ calo giữa các bữa, nên ăn như thế nào lưu ý gì...",
   "status": "Pending",
 }
 
@@ -612,7 +612,7 @@ Hãy phân tích message này và tạo kế hoạch dinh dưỡng phù hợp v�
     ],
     "notes": "Uống 2-3 lít nước mỗi ngày. Ăn chậm, nhai kỹ để no lâu hơn. Tránh đồ ngọt và nước uống có ga. Nếu cảm thấy quá đói, có thể tăng bữa phụ nhưng không vượt quá dailyCalories. Lưu ý: Có dị ứng hải sản."
   },
-  "nutrition": "nên ăn gì, không nên ăn gì",
+  "nutrition": "Gợi ý về di động, chia sẻ calo giữa các bữa, nên ăn như thế nào lưu ý gì...",
   "status": "Pending",
 }
 
