@@ -220,28 +220,41 @@ export const getTopRatings = async (limit = 6) => {
         .populate('memberId', 'fullName email photo memberInfo')
         .populate('trainerId', 'fullName email photo trainerInfo')
         .sort({ rating: -1, createdAt: -1 })
-        .limit(limit)
+        .limit(limit * 2) // Get more to account for filtering
         .lean();
 
+    // Filter out ratings with null memberId (member was deleted)
+    const validRatings = ratings.filter(r => r.memberId && r.memberId._id);
+
+    // Limit to requested amount after filtering
+    const limitedRatings = validRatings.slice(0, limit);
+
+    if (limitedRatings.length === 0) {
+        return [];
+    }
+
     // Get subscription info for each member
-    const memberIds = ratings.map(r => {
+    const memberIds = limitedRatings.map(r => {
         const member = r.memberId;
-        return member._id ? member._id.toString() : member.toString();
-    });
+        if (!member || !member._id) return null;
+        return member._id.toString();
+    }).filter(id => id !== null);
+    
     const uniqueMemberIds = [...new Set(memberIds)];
     
     // Get most recent active or completed subscription for each member
-    const subscriptions = await Subscription.find({
+    const subscriptions = uniqueMemberIds.length > 0 ? await Subscription.find({
         memberId: { $in: uniqueMemberIds }
     })
         .populate('packageId', 'name type membershipType durationMonths ptSessions')
         .populate('branchId', 'name address')
         .sort({ createdAt: -1 })
-        .lean();
+        .lean() : [];
 
     // Group subscriptions by memberId
     const subscriptionsByMember = {};
     subscriptions.forEach(sub => {
+        if (!sub || !sub.memberId) return;
         // memberId in Subscription is not populated, so it's an ObjectId
         const memberId = sub.memberId.toString();
         if (!subscriptionsByMember[memberId] || 
@@ -251,24 +264,29 @@ export const getTopRatings = async (limit = 6) => {
     });
 
     // Format ratings with subscription info
-    const formattedRatings = ratings.map(rating => {
+    const formattedRatings = limitedRatings.map(rating => {
+        // Null check for memberId
+        if (!rating.memberId || !rating.memberId._id) {
+            return null;
+        }
+
         const member = rating.memberId;
-        const memberId = member._id ? member._id.toString() : member.toString();
+        const memberId = member._id.toString();
         const subscription = subscriptionsByMember[memberId];
         
         // Format package name
         let packageName = 'Chưa có gói';
         if (subscription && subscription.packageId) {
             const pkg = subscription.packageId;
-            if (pkg.type === 'Membership') {
+            if (pkg && pkg.type === 'Membership') {
                 const months = pkg.durationMonths || 0;
                 const membershipType = pkg.membershipType === 'VIP' ? 'VIP' : 'Basic';
                 packageName = `Gói ${membershipType} ${months} tháng`;
-            } else if (pkg.type === 'Combo') {
+            } else if (pkg && pkg.type === 'Combo') {
                 const months = pkg.durationMonths || 0;
                 const ptSessions = pkg.ptSessions || 0;
                 packageName = `Gói Combo ${months} tháng + ${ptSessions} PT`;
-            } else if (pkg.type === 'PT') {
+            } else if (pkg && pkg.type === 'PT') {
                 const ptSessions = pkg.ptSessions || 0;
                 packageName = `${ptSessions} buổi PT cá nhân`;
             }
@@ -284,10 +302,10 @@ export const getTopRatings = async (limit = 6) => {
 
         // Format member role
         let memberRole = 'Hội viên';
-        if (rating.memberId.memberInfo) {
-            if (rating.memberId.memberInfo.is_student) {
+        if (member && member.memberInfo) {
+            if (member.memberInfo.is_student) {
                 memberRole = 'Hội viên HSSV';
-            } else if (rating.memberId.memberInfo.membership_level === 'vip') {
+            } else if (member.memberInfo.membership_level === 'vip') {
                 memberRole = 'Hội viên VIP';
             } else {
                 memberRole = 'Hội viên Basic';
@@ -299,18 +317,21 @@ export const getTopRatings = async (limit = 6) => {
             ? rating.trainerId.fullName 
             : 'PT';
 
+        // Null check for member fullName
+        const memberName = member.fullName || 'Hội viên';
+
         return {
             id: rating._id.toString(),
-            name: rating.memberId.fullName,
+            name: memberName,
             role: memberRole,
-            avatar: rating.memberId.photo || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
-            rating: rating.rating,
+            avatar: member.photo || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80',
+            rating: rating.rating || 5,
             text: rating.comment || 'Đánh giá tuyệt vời!',
             package: packageName,
             branch: branchName,
             trainerName: trainerName
         };
-    });
+    }).filter(r => r !== null); // Remove any null entries
 
     return formattedRatings;
 };
