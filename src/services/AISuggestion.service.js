@@ -88,7 +88,6 @@ export const chatWithAI = async (data) => {
     // Tạo prompt
     const prompt = createChatbotConsultationPrompt(healthInfo, user, conversationHistory, message);
     
-    // Gọi AI
     const aiResponse = await aiClient.generate(prompt);
     
     return {

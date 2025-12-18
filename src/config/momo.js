@@ -3,14 +3,19 @@ import crypto from 'crypto';
 
 
 
-const endpoint = 'https://test-payment.momo.vn';
+const endpoint = process.env.MOMO_ENDPOINT || 'https://test-payment.momo.vn';
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5000';
+const MOMO_PARTNER_CODE = process.env.MOMO_PARTNER_CODE || 'MOMO';
+const MOMO_ACCESS_KEY = process.env.MOMO_ACCESS_KEY || 'F8BBA842ECF85';
+const MOMO_SECRET_KEY = process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
+const MOMO_REDIRECT_URL = process.env.MOMO_REDIRECT_URL || 'http://localhost:3000/';
+
 export const momoConfig = {
-    accessKey: 'F8BBA842ECF85',
-    secretKey: 'K951B6PE1waDMi640xX08PD3vg6EkVlz',
+    accessKey: MOMO_ACCESS_KEY, //'F8BBA842ECF85',
+    secretKey: MOMO_SECRET_KEY, //'K951B6PE1waDMi640xX08PD3vg6EkVlz',
     orderInfo: 'pay with MoMo',
-    partnerCode: 'MOMO',
-    redirectUrl: 'http://localhost:3000/',
+    partnerCode: MOMO_PARTNER_CODE, //'MOMO',
+    redirectUrl: MOMO_REDIRECT_URL, //'http://localhost:3000/',
     ipnUrl: `${SERVER_URL}/api/payments/momo/ipn` || 'https://fb4206e827d9.ngrok-free.app/api/payments/momo/ipn',
     requestType: "captureWallet",
     extraData: '',
@@ -103,3 +108,10 @@ export const queryMomoTransaction = async (orderId, requestId) => {
 
     return response.data;
 }
+
+//env example
+// MOMO_ENDPOINT=https://test-payment.momo.vn
+// MOMO_PARTNER_CODE=MOMO
+// MOMO_ACCESS_KEY=F8BBA842ECF85
+// MOMO_SECRET_KEY=K951B6PE1waDMi640xX08PD3vg6EkVlz
+// MOMO_REDIRECT_URL=http://localhost:3000/
